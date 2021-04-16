@@ -406,15 +406,6 @@ def get_info_connexions(connexions, chains):
                 near_chains_list.append(i)                          # mark chain as near_chain
         connexions_info.append([connexion, near_chains_list])
     
-
-    #delete connexions with only one near chain, possible due to the deletion of short chains
-    connexion_del_list = list()
-    for i, c_info in enumerate(connexions_info):
-        if len(c_info[1])<=1:
-            connexion_del_list.append(i)
-    for i in sorted(connexion_del_list, reverse=True):
-        del connexions_info[i]
-
     # merge connexions that are near
     connexion_del_list = list()
     new_connexions_info = list()
@@ -435,7 +426,15 @@ def get_info_connexions(connexions, chains):
 
     connexions_info = connexions_info + new_connexions_info     # concatenate remaining connexions with new connexions
 
-    # delete connexions with only two near chains, possible due to the deletion of short chains
+    #delete connexions with only one near chain, possible due to the deletion of short chains
+    connexion_del_list = list()
+    for i, c_info in enumerate(connexions_info):
+        if len(c_info[1])<=1:
+            connexion_del_list.append(i)
+    for i in sorted(connexion_del_list, reverse=True):
+        del connexions_info[i]
+
+    # delete connexions with only two near chains, possible due to the deletion of short chains, and merge chains
     connexion_del_list = list()
     for i, c_info in enumerate(connexions_info):
         if len(c_info[1])==2:
@@ -510,7 +509,7 @@ def get_info_connexions(connexions, chains):
                 near_chains_list.append(i)                        
         connexions_info2.append([connexion, near_chains_list])
 
-    return connexions_info, chains
+    return connexions_info2, chains
 
 
 def get_info_skeleton(instance):
@@ -659,8 +658,6 @@ def get_info_skeleton(instance):
         chain_point_np = np.array(chain_point)
         chains_points.append(chain_point_np)
 
-    # find elbows
-
     
     info_chains = list()
     for i, chain in enumerate(chains_points):                           # for each chain
@@ -670,7 +667,7 @@ def get_info_skeleton(instance):
         #chain_o3d.points = o3d.utility.Vector3dVector(chain[:,0:3])
         #print_o3d(chain_o3d)
 
-        elbow_idx_list = get_elbows(chain)
+        elbow_idx_list = get_elbows(chain)                              # find elbows
 
         elbow_list = list()
         for i in elbow_idx_list:                                        # append elbow points
@@ -695,7 +692,7 @@ def get_info_skeleton(instance):
         # get % points
         mid = get_position_idx1(chain, 50)
 
-        info_chain = [chain, elbow_list, vector_chain_list, mid]            # //PARAM return chain or not
+        info_chain = [chain, elbow_list, vector_chain_list, mid]      # //PARAM return chain or not
         #info_chain = [elbow_list, vector_chain_list, mid]            # //PARAM return chain or not
         info_chains.append(info_chain)
     
@@ -721,7 +718,7 @@ def refine_valves(valves_info, pipes_info):
                     near_type_list.append(0)                            # append start is near
                     break  
                 if d_to_end <= 0.1:                                     # if distance < thr             //PARAM
-                    near_pipes_list.append(j)
+                    near_pipes_list.append(j)                           # append pipe as near
                     near_type_list.append(-1)                           # append end is near
                     break  
 
@@ -927,9 +924,9 @@ def unify_chains(chains_info, connexions_info):
         near_chains_list = list()
         for i, chain_info in enumerate(chains_info):
             chain = chain_info[0]
-            d_to_start = distance.cityblock(connexion, chain[0])
-            d_to_end = distance.cityblock(connexion, chain[-1])
-            if d_to_start <= 3 or d_to_end <= 3:                    # //PARAM (3 to reach further diagonally)
+            d_to_start = get_distance(connexion, chain[0], 3)  
+            d_to_end = get_distance(connexion, chain[-1], 3)  
+            if d_to_start <= 0.1 or d_to_end <= 0.1:                    # //PARAM (3 to reach further diagonally)
                 near_chains_list.append(i)                        
         connexions_info2.append([connexion, near_chains_list])
   
