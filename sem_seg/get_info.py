@@ -725,6 +725,8 @@ def refine_valves(valves_info, pipes_info):
                     near_type_list.append(-1)                           # append end is near
                     break  
 
+        valves_info[i].append(near_pipes_list)                          # append near pipes to valve info
+
         if len(near_pipes_list)==0:                                     # if valve has no near pipes
             delete_valve_list.append(i)                                 # append to delete valve
         

@@ -253,6 +253,7 @@ class Pointcloud_Seg:
                 stolen_points = descarted_points[stolen_idx, :-2]                               # recover stolen points
                 stolen_points = np.concatenate((stolen_points,stolen_cls),axis=1)               # concatenate stolen points and stolen class
                 pred_sub_pipe_ref = np.concatenate((pred_sub_pipe_ref,stolen_points),axis=0)    # add points and class pipe prediction points
+        
         for index in sorted(descart_valves_list, reverse=True):                                 # delete discarted valve info                                                                             
             del info_valves_list[index]
             del instances_ref_valve_list[index]     # for print only  
@@ -329,7 +330,7 @@ class Pointcloud_Seg:
 
         print("INFO VALVES2:")
         for valve in info_valves_list2:
-            valve.pop(-1)
+            valve.pop(-2)
             print(valve)
         print(" ")
 
