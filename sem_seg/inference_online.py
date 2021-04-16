@@ -7,7 +7,6 @@ import argparse
 import get_info
 import numpy as np
 from model import *
-import project_inst
 import open3d as o3d
 import indoor3d_util
 import get_instances
@@ -25,7 +24,6 @@ parser.add_argument('--path_cls', help='path to classes txt.')
 parser.add_argument('--model_path', required=True, help='model checkpoint file path')
 parser.add_argument('--points_sub', type=int, default=256, help='Point number sub [default: 4096]')
 parser.add_argument('--test_name', help='name of the test')
-parser.add_argument('--down_pred', default = True, help='downsample prediction')
 parser.add_argument('--targets_path', help='path in valve models.')
 
 parsed_args = parser.parse_args()
@@ -34,7 +32,6 @@ path_data = parsed_args.path_data
 path_cls = parsed_args.path_cls
 model_path = os.path.join(parsed_args.model_path, "model.ckpt")
 points_sub = parsed_args.points_sub
-down_pred = parsed_args.down_pred
 test_name = parsed_args.test_name
 targets_path = parsed_args.targets_path
 dump_path = os.path.join(parsed_args.model_path, "dump_" + test_name)
@@ -47,8 +44,6 @@ batch_size = 1
 gpu_index = 0
 block_sub = 0.1
 stride_sub = 0.1
-block_proj = 0.1
-stride_proj = 0.1
 
 
 def evaluate(data, label, xyz_max, sess, ops):
@@ -172,8 +167,8 @@ if __name__=='__main__':
                     pred_sub = np.unique(pred_sub, axis=0)                            # delete duplicates from room2blocks
                     pred_sub[:, 0:3] += xyz_min                                       # recover PC's original position
 
-                    if down_pred == True:                  # if subsampling of prediciton is wanted
-                        down = 128/points_sub                 # down_pred to 128
+                    if points_sub >= 128:                  # if subsampling of prediciton is wanted
+                        down = 128/points_sub              
                         n_idx_pred_sub_down = int(pred_sub.shape[0] * down)  
                         idx_pred_sub_down = np.random.choice(pred_sub.shape[0], n_idx_pred_sub_down, replace=False)
                         pred_sub = pred_sub[idx_pred_sub_down, 0:7]     # downsample prediciton
@@ -235,8 +230,7 @@ if __name__=='__main__':
 
                         info_valves_list.append([xyz_central, max_info, vector, max_idx, inst[:,0:3]])  
 
-                    descart_valves_list = [i for i, x in enumerate(info_valves_list) if x[1][0] < 0.35] 
-
+                    descart_valves_list = [i for i, x in enumerate(info_valves_list) if x[1][0] < 0.35]
                     for i, idx in enumerate(descart_valves_list):
                         descarted_points = np.vstack(instances_ref_valve_list[idx])
                         stolen_idx = list(np.vstack(stolen_list[idx])[:,0].astype(int))
@@ -307,7 +301,7 @@ if __name__=='__main__':
 
                     print("INFO VALVES2:")
                     for valve in info_valves_list2:
-                        valve.pop(-1)
+                        valve.pop(-2)
                         print(valve)
                     print(" ")
 
@@ -361,7 +355,6 @@ if __name__=='__main__':
                         fout_sub_col.write('v %f %f %f %d %d %d %d\n' % (pred_sub[i,0], pred_sub[i,1], pred_sub[i,2], color[0], color[1], color[2], pred_sub[i,6]))
 
                     if instances_ref is not None: # if instances were found
-                        instances_ref[:, 0:3] += xyz_min                                       # recover PC's original position
                         fout_inst = open(os.path.join(dump_path, os.path.basename(filepath)[:-4]+'_pred_inst_ref.obj'), 'w')
                         fout_inst_col = open(os.path.join(dump_path, os.path.basename(filepath)[:-4]+'_pred_inst_ref_col.obj'), 'w')
                         for i in range(instances_ref.shape[0]):
