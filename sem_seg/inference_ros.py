@@ -315,7 +315,7 @@ class Pointcloud_Seg:
             get_info.info_to_ply(info1, path_out1)
             path_out2 = os.path.join("/home/sparus/PIPES2/out_ros", name+"_2.ply")
             get_info.info_to_ply(info2, path_out2)
-            path_out3 = os.path.join("/home/miguel/Desktop/test_out_info_from_ros", name+"_3.ply")
+            path_out3 = os.path.join("/home/sparus/PIPES2/out_ros", name+"_3.ply")
             get_info.info_to_ply(info3, path_out3)
 
 
