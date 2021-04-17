@@ -515,23 +515,24 @@ def get_info_connexions(connexions, chains):
 def get_info_skeleton(instance):
 
     print_opt = False
-    #print_o3d(instance)
+    print_opt2 = False
+    
+    if print_opt2 == True:
+        print_o3d(instance)
 
     # VOXELS FROM POINTCLOUD
     voxel_grid1 = o3d.geometry.VoxelGrid.create_from_point_cloud(instance,voxel_size=0.008)     # voxelice instance //PARAM
-    #print_o3d(voxel_grid1)
+    
+    if print_opt2 == True:
+        print_o3d(voxel_grid1)
 
     voxels = o3d.geometry.VoxelGrid.get_voxels(voxel_grid1)                                     # get voxels
-    #print("n voxels: " + str(len(voxels)))
-    #print(voxels)
 
     voxels_np = np.zeros((len(voxels),3), dtype=int)                                            # voxels to numpy
     for i in range(len(voxels)):
         voxels_np[i] = voxels[i].grid_index
-    #print(voxels_np)    
 
     voxels_np.T[[0,1,2]] = voxels_np.T[[2,0,1]]                                                 # set cols as X Y Z 
-    #print(voxels_np)
 
     xyz_max = np.amax(voxels_np, axis=0)                                                        # get voxel maxs
 
@@ -539,8 +540,6 @@ def get_info_skeleton(instance):
         voxels_matrix = np.zeros(xyz_max+1, dtype=int)                                            
         for i, v in enumerate(voxels_np):
             voxels_matrix[v[0],v[1],v[2]] = 1
-
-        #print(voxels_matrix)
         z,x,y = voxels_matrix.nonzero()
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
@@ -552,21 +551,23 @@ def get_info_skeleton(instance):
     for i, v in enumerate(voxels_np):
         voxels_matrix_2d[v[1],v[2]] = 1
 
-    #plt.imshow(voxels_matrix_2d)
-    #if print_opt == True:
-    #    plt.show()
+    if print_opt == True:
+        plt.imshow(voxels_matrix_2d)
+        plt.show()
 
     closing_dist = 6                                                                                                           # distance to perform closing //PARAM
     voxels_matrix_2d_proc = scp.ndimage.binary_closing(voxels_matrix_2d, structure=np.ones((closing_dist,closing_dist)))       # closing
-    #plt.imshow(voxels_matrix_2d_proc)
-    #if print_opt == True:
-    #    plt.show()
+    
+    if print_opt == True:
+        plt.imshow(voxels_matrix_2d_proc)
+        plt.show()
 
     opening_dist = 2                                                                                                           # distance to perform opening //PARAM
     voxels_matrix_2d_proc = scp.ndimage.binary_opening(voxels_matrix_2d_proc, structure=np.ones((opening_dist,opening_dist)))  # opening
-    #plt.imshow(voxels_matrix_2d_proc)  
-    #if print_opt == True:
-    #    plt.show()
+
+    if print_opt == True:
+        plt.imshow(voxels_matrix_2d_proc)  
+        plt.show()
 
     skeleton = skeletonize(voxels_matrix_2d_proc)           # obtain skeleton of 2d closed opened matrix
     skeleton = skeleton.astype(int)
@@ -579,10 +580,10 @@ def get_info_skeleton(instance):
 
     chains, connexions = get_connectivity(skeleton)     # get skeleton conectivity -> chains and connexions
 
-    #print("CHAINS ORIGINALS")
-    #if print_opt == True:
-    #    for chain in chains:
-    #        print_chain(chain, xyz_max)
+    print("CHAINS ORIGINALS")
+    if print_opt == True:
+        for chain in chains:
+            print_chain(chain, xyz_max)
 
     # delete short chains
     chain_del_list = list()
@@ -592,10 +593,10 @@ def get_info_skeleton(instance):
     for i in sorted(chain_del_list, reverse=True):  # delete chains
         del chains[i]                               
 
-    #print("CHAINS SMALL DELETED")
-    #if print_opt == True:
-    #    for chain in chains:
-    #        print_chain(chain, xyz_max)
+    print("CHAINS SMALL DELETED")
+    if print_opt == True:
+        for chain in chains:
+            print_chain(chain, xyz_max)
 
     connexions, chains = get_info_connexions(connexions, chains)    # get info from connexions, also refines chains
 
@@ -604,8 +605,6 @@ def get_info_skeleton(instance):
 
         for chain in chains:
             print_chain(chain, xyz_max)
-        print("CONNEXIONS")
-        print(connexions)
 
         print("OVERVIEW")
         chainoverview = chains[0]
@@ -635,13 +634,11 @@ def get_info_skeleton(instance):
     # convert voxels of chains and connexions to points
     corr_list = list()
     instance1_points = np.asarray(instance.points)
-    #print("n points: " + str(instance1_points.shape))
 
     # get correlation list, indicating for each row, onto wich voxel falls the point on same row of the instance1_points array
     for p in instance1_points:
         voxel = o3d.geometry.VoxelGrid.get_voxel(voxel_grid1, p)
         corr_list.append(voxel)
-    #print(corr_list)
 
     connexions_points = list()
     for i, con in enumerate(connexions_proj):   # connexions to points
@@ -663,9 +660,10 @@ def get_info_skeleton(instance):
     for i, chain in enumerate(chains_points):                           # for each chain
         info_chain = list()
 
-        #chain_o3d = o3d.geometry.PointCloud()                              
-        #chain_o3d.points = o3d.utility.Vector3dVector(chain[:,0:3])
-        #print_o3d(chain_o3d)
+        if print_opt2 == True:
+            chain_o3d = o3d.geometry.PointCloud()                              
+            chain_o3d.points = o3d.utility.Vector3dVector(chain[:,0:3])
+            print_o3d(chain_o3d)
 
         elbow_idx_list = get_elbows(chain)                              # find elbows
 
@@ -1044,8 +1042,8 @@ def voxel_to_point(voxel, points, corr):
 def get_info_matching(instance, models):
     info_inst = list()
     for model in models:                             # for each model 
-        best_matching, best_idx = match(instance, model)  # get its best_matching [fitness, degrees] and best model idx
-        info_inst.append([best_matching, best_idx])
+        best_matching, best_angle = match(instance, model)  # get its best_matching [fitness, degrees] and best model idx
+        info_inst.append([best_matching, best_angle])
     return info_inst
 
 
