@@ -41,7 +41,7 @@ class Pointcloud_Seg:
         self.desired_points = int(6000/(128/self.points_sub))  # n of points to wich the received pc will be downsampled    //PARAM
 
         # get valve matching targets
-        self.targets_path = "/home/miguel/Desktop/dgcnn/valve_targets"      # //PARAM
+        self.targets_path = "/home/miguel/Desktop/PIPES2/dgcnn/valve_targets"      # //PARAM
         self.targets_list = list()
         for file_name in natsorted(os.listdir(self.targets_path)):
             target_path = os.path.join(self.targets_path, file_name)
@@ -81,8 +81,8 @@ class Pointcloud_Seg:
         self.min_p_p = 60               # minimum number of points to consider a blob as a pipe     //PARAM
         self.min_p_v = 30 # 40 80 140   # minimum number of points to consider a blob as a valve    //PARAM
 
-        self.model_path = "/home/miguel/Desktop/dgcnn/sem_seg/RUNS/4_256_11_c7/model.ckpt"          # path to model         //PARAM
-        self.path_cls = "/home/miguel/Desktop/dgcnn/sem_seg/RUNS/4_256_11_c7/cls.txt"               # path to clases info   //PARAM
+        self.model_path = "/home/miguel/Desktop/PIPES2/dgcnn/sem_seg/RUNS/4_256_11_c7/model.ckpt"          # path to model         //PARAM
+        self.path_cls = "/home/miguel/Desktop/PIPES2/dgcnn/sem_seg/RUNS/4_256_11_c7/cls.txt"               # path to clases info   //PARAM
         self.classes, self.labels, self.label2color = indoor3d_util.get_info_classes(self.path_cls) # get classes info
 
         self.init = False
@@ -317,11 +317,11 @@ class Pointcloud_Seg:
         if out == True:
             name = str(time.time())
             name = name.replace('.', '')
-            path_out1 = os.path.join("/home/miguel/Desktop/test_out_info_from_ros", name+"_1.ply")
+            path_out1 = os.path.join("/home/miguel/Desktop/PIPES2/out_ros", name+"_1.ply")
             get_info.info_to_ply(info1, path_out1)
-            path_out2 = os.path.join("/home/miguel/Desktop/test_out_info_from_ros", name+"_2.ply")
+            path_out2 = os.path.join("/home/miguel/Desktop/PIPES2/out_ros", name+"_2.ply")
             get_info.info_to_ply(info2, path_out2)
-            path_out3 = os.path.join("/home/miguel/Desktop/test_out_info_from_ros", name+"_3.ply")
+            path_out3 = os.path.join("/home/miguel/Desktop/PIPES2/out_ros", name+"_3.ply")
             get_info.info_to_ply(info3, path_out3)
 
 
@@ -334,7 +334,7 @@ class Pointcloud_Seg:
             print(valve)
         print(" ")
 
-        print("INFO VALVES2:")
+        print("INFO VALVES REF:")
         for valve in info_valves_list2:
             valve.pop(-2)
             print(valve)
@@ -346,7 +346,7 @@ class Pointcloud_Seg:
             print(pipe1)
         print(" ")
 
-        print("INFO PIPES2")
+        print("INFO PIPES REF:")
         for pipe2 in info_pipes_list2:
             pipe2.pop(0)
             print(pipe2)
@@ -357,7 +357,7 @@ class Pointcloud_Seg:
             print(connexion)
         print(" ")
 
-        print("INFO CONNEXIONS2:")
+        print("INFO CONNEXIONS REF:")
         for connexion in info_connexions_list2:
             print(connexion)
         print(" ")
