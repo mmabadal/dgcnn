@@ -48,6 +48,7 @@ class Pointcloud_Seg:
             target = get_info.read_ply(target_path, "model")
             xyz_central = np.mean(target, axis=0)[0:3]
             target[:, 0:3] -= xyz_central  
+            target[:, 2] *= -1                                                  # flip Z axis
             target_o3d = o3d.geometry.PointCloud()
             target_o3d.points = o3d.utility.Vector3dVector(target[:,0:3])
             target_o3d.colors = o3d.utility.Vector3dVector(target[:,3:6])
@@ -193,6 +194,7 @@ class Pointcloud_Seg:
         pred_sub = np.unique(pred_sub, axis=0)  # delete duplicates from room2blocks (if points in block < points_sub, it duplicates them)
 
         pred_sub[:, 0:3] += xyz_min             # recover original position
+        pred_sub[:, 2] *= -1                    # unflip Z axis
 
         t3 = rospy.Time.now()
 
