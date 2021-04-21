@@ -158,9 +158,9 @@ def room2blocks(data, label, num_point, block_size=1.0, stride=1.0,
     limit = np.amax(data, 0)[0:3]
 
     if block_size == 0.1:
-        lessthan = 100
+        lessthan = 25
     if block_size == 0.2:
-        lessthan = 400
+        lessthan = 100
     #print(lessthan)
     # Get the corner location for our sampling blocks    
     xbeg_list = []
@@ -193,7 +193,7 @@ def room2blocks(data, label, num_point, block_size=1.0, stride=1.0,
        xcond = (data[:,0]<=xbeg+block_size) & (data[:,0]>=xbeg)
        ycond = (data[:,1]<=ybeg+block_size) & (data[:,1]>=ybeg)
        cond = xcond & ycond
-       if np.sum(cond) < 0: # discard block if there are less than 100 pts.
+       if np.sum(cond) < 0: # 0 // discard block if there are less than lessthan pts.
            print("DISCARTED BLOCK")
            continue
        
