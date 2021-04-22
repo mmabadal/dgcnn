@@ -233,7 +233,7 @@ def execute_global_registration(source, target, source_fpfh,
 
 def match(source, target):
     
-    threshold = 0.02            # acceptance thr when comparing //PARAM
+    threshold = 0.015            # acceptance thr when comparing //PARAM
     matchings = list()
 
     steps = 32                  # steps on spin //PARAM
