@@ -81,8 +81,8 @@ class Pointcloud_Seg:
         self.min_p_p = 60               # minimum number of points to consider a blob as a pipe     //PARAM
         self.min_p_v = 30 # 40 80 140   # minimum number of points to consider a blob as a valve    //PARAM
 
-        self.model_path = "/home/miguel/Desktop/PIPES2/dgcnn/sem_seg/RUNS/4_256_11_c7/model.ckpt"          # path to model         //PARAM
-        self.path_cls = "/home/miguel/Desktop/PIPES2/dgcnn/sem_seg/RUNS/4_256_11_c7/cls.txt"               # path to clases info   //PARAM
+        self.model_path = "/home/miguel/Desktop/PIPES2/dgcnn/sem_seg/RUNS/sparus_xiroi/128_11_1/model.ckpt"          # path to model         //PARAM
+        self.path_cls = "/home/miguel/Desktop/PIPES2/dgcnn/sem_seg/RUNS/sparus_xiroi/128_11_1/cls.txt"               # path to clases info   //PARAM
         self.classes, self.labels, self.label2color = indoor3d_util.get_info_classes(self.path_cls) # get classes info
 
         self.init = False
