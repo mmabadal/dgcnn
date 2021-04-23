@@ -91,21 +91,19 @@ class Pointcloud_Seg:
         # set subscribers
         pc_sub = message_filters.Subscriber('/stereo_down/scaled_x2/points2_filtered', PointCloud2)     # //PARAM
         #pc_sub = message_filters.Subscriber('/stereo_down/scaled_x2/points2', PointCloud2)             # //PARAM
-        info_sub = message_filters.Subscriber('/stereo_down/left/camera_info', CameraInfo)
-        ts_image = message_filters.TimeSynchronizer([pc_sub, info_sub], 10)
-        ts_image.registerCallback(self.cb_pc)
+        pc_sub.registerCallback(self.cb_pc)
 
         # Set class image publishers
         self.pub_pc_base = rospy.Publisher("/stereo_down/scaled_x2/points2_base", PointCloud2, queue_size=4)
         self.pub_pc_seg = rospy.Publisher("/stereo_down/scaled_x2/points2_seg", PointCloud2, queue_size=4)
         self.pub_pc_inst = rospy.Publisher("/stereo_down/scaled_x2/points2_inst", PointCloud2, queue_size=4)
+        self.pub_pc_info = rospy.Publisher("/stereo_down/scaled_x2/points2_info", PointCloud2, queue_size=4)
 
         # Set segmentation timer
         rospy.Timer(rospy.Duration(self.period), self.run)
 
-    def cb_pc(self, pc, info):
+    def cb_pc(self, pc):
         self.pc = pc
-        self.cam_info = info
         self.new_pc = True
 
     def set_model(self):
@@ -313,6 +311,10 @@ class Pointcloud_Seg:
         info2 = [info_pipes_list2, info_connexions_list2, info_valves_list]         # TODO publish info
         info3 = [info_pipes_list2, info_connexions_list2, info_valves_list2]       # TODO publish info
 
+        info_array = info3 # getinfo.info_to_array(info3)
+        pc_info = self.array2pc_info(header, info_array)
+        self.pub_pc_info.publish(pc_info)
+
         out = True
         if out == True:
             name = str(time.time())
@@ -460,7 +462,7 @@ class Pointcloud_Seg:
             if self.desired_points != 0:                # downsample pointcloud to desired points
                 if pc_np.shape[0] > self.desired_points:
                     idx_sub = np.random.choice(pc_np.shape[0], self.desired_points, replace=False)
-                    pc_np = pc_np[idx_sub, 0:6]
+                    pc_np = pc_np[idx_sub, :]
 
             rgb_list = list()
 
@@ -500,6 +502,35 @@ class Pointcloud_Seg:
             rgb = struct.unpack('I', struct.pack('BBBB', b, g, r, a))[0]
 
             p_rgb = [p[0], p[1], p[2], rgb]
+            points.append(p_rgb)
+
+        pc = pc2.create_cloud(header, fields, points)
+        return pc
+
+
+    def array2pc_info(self, header, array):
+
+        fields =   [PointField('x', 0, PointField.FLOAT32, 1),
+                    PointField('y', 4, PointField.FLOAT32, 1),
+                    PointField('z', 8, PointField.FLOAT32, 1),
+                    PointField('c', 12, PointField.FLOAT32, 1),
+                    PointField('i', 16, PointField.FLOAT32, 1),
+                    PointField('t', 20, PointField.FLOAT32, 1),
+                    PointField('rgba', 24, PointField.UINT32, 1)]
+        
+        points = list()
+
+        for i, p in enumerate(array):
+            c = 0
+            i = 0
+            t = 0
+            r = int(p[3])
+            g = int(p[4])
+            b = int(p[5])
+            a = 255
+            rgb = struct.unpack('I', struct.pack('BBBB', b, g, r, a))[0]
+
+            p_rgb = [p[0], p[1], p[2], c, i, t, rgb]
             points.append(p_rgb)
 
         pc = pc2.create_cloud(header, fields, points)
