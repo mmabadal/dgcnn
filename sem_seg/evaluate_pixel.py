@@ -109,6 +109,7 @@ def main():
         cnf_norm_h_s = np.array_str(cnf_norm_h)
         cnf_norm_v_s = np.array_str(cnf_norm_v)
 
+        '''
         f = open(path_run + '/evaluation_pixel_' + test_name + '.txt', 'w')
         f.write('\n')
         f.write('Confusion matrix \n\n')
@@ -127,7 +128,8 @@ def main():
             f.write(str_prec + '\n')
             f.write(str_rec + '\n\n')
         f.close()
-
+        '''
+        
         filepath = path_run + '/evaluation_pixel_' + test_name + '.xlsx'
         df = pd.DataFrame.from_records(cnf_matrix, index=classes)
         df.to_excel(filepath, header = classes, index_label = 'gt\pred')
