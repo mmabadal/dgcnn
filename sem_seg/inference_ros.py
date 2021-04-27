@@ -81,8 +81,8 @@ class Pointcloud_Seg:
         self.min_p_p = 60               # minimum number of points to consider a blob as a pipe     //PARAM
         self.min_p_v = 30 # 40 80 140   # minimum number of points to consider a blob as a valve    //PARAM
 
-        self.model_path = "/home/miguel/Desktop/PIPES2/dgcnn/sem_seg/RUNS/sparus_xiroi/128_11_1/model.ckpt"          # path to model         //PARAM
-        self.path_cls = "/home/miguel/Desktop/PIPES2/dgcnn/sem_seg/RUNS/sparus_xiroi/128_11_1/cls.txt"               # path to clases info   //PARAM
+        self.model_path = "/home/miguel/Desktop/PIPES2/dgcnn/sem_seg/RUNS/sparus_xiroi/test/128_11_1/model.ckpt"          # path to model         //PARAM
+        self.path_cls = "/home/miguel/Desktop/PIPES2/dgcnn/sem_seg/RUNS/sparus_xiroi/test/128_11_1/cls.txt"               # path to clases info   //PARAM
         self.classes, self.labels, self.label2color = indoor3d_util.get_info_classes(self.path_cls) # get classes info
 
         self.init = False
@@ -311,9 +311,10 @@ class Pointcloud_Seg:
         info2 = [info_pipes_list2, info_connexions_list2, info_valves_list]         # TODO publish info
         info3 = [info_pipes_list2, info_connexions_list2, info_valves_list2]       # TODO publish info
 
-        info_array = info3 # getinfo.info_to_array(info3)
-        pc_info = self.array2pc_info(header, info_array)
-        self.pub_pc_info.publish(pc_info)
+        if len(info3)>0:
+            info_array = get_info.info_to_array(info3)
+            pc_info = self.array2pc_info(header, info_array)
+            self.pub_pc_info.publish(pc_info)
 
         out = True
         if out == True:
@@ -513,24 +514,22 @@ class Pointcloud_Seg:
         fields =   [PointField('x', 0, PointField.FLOAT32, 1),
                     PointField('y', 4, PointField.FLOAT32, 1),
                     PointField('z', 8, PointField.FLOAT32, 1),
-                    PointField('c', 12, PointField.FLOAT32, 1),
-                    PointField('i', 16, PointField.FLOAT32, 1),
-                    PointField('t', 20, PointField.FLOAT32, 1),
-                    PointField('rgba', 24, PointField.UINT32, 1)]
+                    PointField('rgba', 12, PointField.UINT32, 1),
+                    PointField('t', 16, PointField.FLOAT32, 1),
+                    PointField('info', 20, PointField.FLOAT32, 1),
+                    PointField('c', 24, PointField.FLOAT32, 1),
+                    PointField('inst', 28, PointField.FLOAT32, 1)]
         
         points = list()
 
         for i, p in enumerate(array):
-            c = 0
-            i = 0
-            t = 0
             r = int(p[3])
             g = int(p[4])
             b = int(p[5])
             a = 255
             rgb = struct.unpack('I', struct.pack('BBBB', b, g, r, a))[0]
 
-            p_rgb = [p[0], p[1], p[2], c, i, t, rgb]
+            p_rgb = [p[0], p[1], p[2], rgb, p[6], p[7], p[8], p[9]]
             points.append(p_rgb)
 
         pc = pc2.create_cloud(header, fields, points)
@@ -582,7 +581,7 @@ class Pointcloud_Seg:
 
 if __name__ == '__main__':
     try:
-        rospy.init_node('flip_pc')
+        rospy.init_node('seg_pc')
         Pointcloud_Seg(rospy.get_name())
 
         rospy.spin()

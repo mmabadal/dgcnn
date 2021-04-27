@@ -144,6 +144,112 @@ def info_to_ply(info, path_out):
         f.write(line)
     f.close()
 
+def info_to_array(info):
+
+    info_pipes_list = info[0]
+    info_connexions_list = info[1]
+    info_valves_list = info[2]
+    inst = 0
+
+    info_list = list()
+
+
+    for i, pipe_info in enumerate(info_pipes_list):
+
+        skeleton = pipe_info[0]
+        pipe_color = np.array([[0, 255, 0],]*skeleton.shape[0])
+        skeleton = np.hstack((skeleton, pipe_color))  
+        skeleton = np.insert(skeleton, 6, values=0, axis=1) # insert type 0 - skeleton
+        skeleton = np.insert(skeleton, 7, values=0, axis=1) # insert info 0 - nothing
+
+        if len(pipe_info[1]) > 0:
+            elbows = np.array(pipe_info[1])
+            elbows = np.round(elbows, 2)
+            elbow_color = np.array([[255, 0, 0],]*elbows.shape[0])
+            elbows = np.hstack((elbows, elbow_color))  
+            elbows = np.insert(elbows, 6, values=1, axis=1) # insert type 1 - elbow
+            elbows = np.insert(elbows, 7, values=0, axis=1) # insert info 0 - nothing
+
+        vector_list = list()
+        vp1 = pipe_info[0][0]
+        vp2 = pipe_info[0][0]+pipe_info[2][0]
+        vector_list.append(vp1)
+        vector_list.append(vp2)
+        
+        for i, elbow in enumerate(pipe_info[1]):
+            vp1 = elbow
+            vp2 = elbow + pipe_info[2][i+1]
+            vector_list.append(vp1)
+            vector_list.append(vp2)
+
+        vectors = np.array(vector_list)
+        vector_color = np.array([[30, 30, 30],]*vectors.shape[0])
+        vectors = np.hstack((vectors, vector_color))  
+        vectors = np.insert(vectors, 6, values=2, axis=1) # insert type 2 - vector
+        vectors = np.insert(vectors, 7, values=0, axis=1) # insert info 0 - nothing
+
+        if len(pipe_info[1]) > 0:
+            pipe = np.vstack((skeleton,elbows,vectors))
+        else:
+            pipe = np.vstack((skeleton,vectors))
+
+        pipe = np.insert(pipe, 8, values=0, axis=1)     # insert class 0 - pipe
+        pipe = np.insert(pipe, 9, values=inst, axis=1)  # insert inst
+
+        info_list.append(pipe)
+        inst += 1
+
+    for i, valve_info in enumerate(info_valves_list):
+
+        central = np.append(valve_info[0], [0, 0, 255, 3, 0])   # insert color, type 3 - central point and info 0 - nothing
+        
+        vp1 = valve_info[0]-(valve_info[2]/2)
+        vp1 = np.append(vp1, [127,127,127, 2, 0])   # insert color, type 2 - vector and info 0 - nothing
+        vp2 = valve_info[0]+(valve_info[2]/2)
+        vp2 = np.append(vp2, [127,127,127, 2, 0])   # insert color, type 2 - vector and info 0 - nothing
+
+        max_id = np.append(valve_info[0], [0, 0, 255, 5, valve_info[3]])   # insert color, type 5 - max_id and info - max id
+
+        if len(valve_info[5]) > 0:
+            near_pipes_list = list()
+            for i, near_pipe_idx in enumerate(valve_info[5]):
+                near_pipe = np.append(valve_info[0], [0, 0, 255, 4, near_pipe_idx])   # insert color, type 4 - near pipe and info - near_pipe_idx
+                near_pipes_list.append(near_pipe)
+            near_pipes = np.array(near_pipes_list)
+
+            valve = np.vstack((central,vp1,vp2,max_id,near_pipes))
+
+        else:
+            valve = np.vstack((central,vp1,vp2,max_id))
+
+        valve = np.insert(valve, 8, values=1, axis=1)     # insert class 1 - valve
+        valve = np.insert(valve, 9, values=inst, axis=1)  # insert inst
+
+        info_list.append(valve)
+        inst += 1
+
+    for i, connexion_info in enumerate(info_connexions_list):
+
+        central = np.append(connexion_info[0], [0, 0, 0, 3, 0])   # insert color, type 3 - central point and ingo - nothing
+        
+        near_pipes_list = list()
+        for i, near_pipe_idx in enumerate(connexion_info[1]):
+            near_pipe = np.append(connexion_info[0], [0, 0, 0, 4, near_pipe_idx])   # insert color, type 4 - near pipe and info - near_pipe_idx
+            near_pipes_list.append(near_pipe)
+        near_pipes = np.array(near_pipes_list)
+
+
+        connexion = np.vstack((central,near_pipes))
+
+        connexion = np.insert(connexion, 8, values=2, axis=1)     # insert class 2 - connexion
+        connexion = np.insert(connexion, 9, values=inst, axis=1)  # insert inst
+        info_list.append(connexion)
+        inst += 1
+
+    info_array = np.array(info_list)
+    info_array = np.vstack(info_array)
+
+    return info_array
 
 def get_info_classes(cls_path):
 
