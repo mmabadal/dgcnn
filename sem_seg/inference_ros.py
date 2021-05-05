@@ -8,21 +8,16 @@ import struct
 import get_info
 import numpy as np
 from model import *
-#import project_inst
 import open3d as o3d
 import indoor3d_util
 import get_instances
 from natsort import natsorted
 
-from cv_bridge import CvBridge, CvBridgeError
-
 from sensor_msgs.msg import PointField
-
 import message_filters
 import std_msgs.msg
 import sensor_msgs.point_cloud2 as pc2
 from sensor_msgs.msg import PointCloud2
-from sensor_msgs.msg import Image, CameraInfo
 
 
 class Pointcloud_Seg:
@@ -34,7 +29,7 @@ class Pointcloud_Seg:
         self.fps = 2                # target fps        //PARAM
         self.period = 1/self.fps    # target period     //PARAM
         self.batch_size = 1         #                   //PARAM
-        self.points_sub = 256       #                   //PARAM
+        self.points_sub = 128       #                   //PARAM
         self.block_sub = 0.1        #                   //PARAM
         self.stride_sub = 0.1       #                   //PARAM
         self.gpu_index = 0          #                   //PARAM
