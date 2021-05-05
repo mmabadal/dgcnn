@@ -192,7 +192,7 @@ def info_to_array(info):
 
         belonging_insts_list = list()
         for i, belonging_inst_idx in enumerate(pipe_info[3]):
-            belonging_inst = np.append(pipe_info[0][0], [0, 255, 0, 7, belonging_inst_idx])   # insert color, type 4 - near pipe and info - near_pipe_idx
+            belonging_inst = np.append(pipe_info[0][0], [0, 255, 0, 7, belonging_inst_idx])   # insert color, type 7 - belonging inst and info - belonging inst idx
             belonging_insts_list.append(belonging_inst)
         belonging_insts = np.array(belonging_insts_list)
 
