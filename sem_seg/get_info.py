@@ -329,7 +329,7 @@ def print_o3d(pc):
 def preprocess_point_cloud(pcd, radius_feature):
     #print(":: Compute FPFH feature with search radius %.3f." % radius_feature)
     #print("--fpfh")
-    pcd_fpfh = o3d.pipelines.registration.compute_fpfh_feature(
+    pcd_fpfh = o3d.registration.compute_fpfh_feature(
         pcd,
         o3d.geometry.KDTreeSearchParamHybrid(radius=radius_feature, max_nn=100))
     return pcd, pcd_fpfh
@@ -339,16 +339,16 @@ def execute_global_registration(source, target, source_fpfh,
                                 target_fpfh, distance_threshold):
     #print(":: RANSAC registration on downsampled point clouds.")
     #print("   we use a liberal distance threshold %.3f." % distance_threshold)
-    result = o3d.pipelines.registration.registration_ransac_based_on_feature_matching(
+    result = o3d.registration.registration_ransac_based_on_feature_matching(
         source, target, source_fpfh, target_fpfh, True,
         distance_threshold,
-        o3d.pipelines.registration.TransformationEstimationPointToPoint(False),
+        o3d.registration.TransformationEstimationPointToPoint(False),
         3, [
-            o3d.pipelines.registration.CorrespondenceCheckerBasedOnEdgeLength(
+            o3d.registration.CorrespondenceCheckerBasedOnEdgeLength(
                 0.9),
-            o3d.pipelines.registration.CorrespondenceCheckerBasedOnDistance(
+            o3d.registration.CorrespondenceCheckerBasedOnDistance(
                 distance_threshold)
-        ], o3d.pipelines.registration.RANSACConvergenceCriteria(100000, 0.999))
+        ], o3d.registration.RANSACConvergenceCriteria(100000, 0.999))
     return result
 
 
