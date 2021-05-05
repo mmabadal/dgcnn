@@ -302,9 +302,9 @@ class Pointcloud_Seg:
 
         t9 = rospy.Time.now()
 
-        info1 = [info_pipes_list, info_connexions_list, info_valves_list]         # TODO publish info
-        info2 = [info_pipes_list2, info_connexions_list2, info_valves_list]         # TODO publish info
-        info3 = [info_pipes_list2, info_connexions_list2, info_valves_list2]       # TODO publish info
+        info1 = [info_pipes_list, info_connexions_list, info_valves_list, instances_ref_pipe_list]         # TODO publish info
+        info2 = [info_pipes_list2, info_connexions_list2, info_valves_list, instances_ref_pipe_list]         # TODO publish info
+        info3 = [info_pipes_list2, info_connexions_list2, info_valves_list2, instances_ref_pipe_list]       # TODO publish info
 
         if len(info3)>0:
             info_array = get_info.info_to_array(info3)
@@ -522,6 +522,10 @@ class Pointcloud_Seg:
             g = int(p[4])
             b = int(p[5])
             a = 255
+
+            if p[6] == 6:                   # if its type instance data, make it transparent, information still there
+                a = 0
+
             rgb = struct.unpack('I', struct.pack('BBBB', b, g, r, a))[0]
 
             p_rgb = [p[0], p[1], p[2], rgb, p[6], p[7], p[8], p[9]]
