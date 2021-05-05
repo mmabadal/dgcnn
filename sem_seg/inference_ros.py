@@ -280,6 +280,9 @@ class Pointcloud_Seg:
             info_pipe = get_info.get_info(inst_o3d, models=0, method="skeleton") # get pipe instance info list( list( list(chain1, start1, end1, elbow_list1, vector_chain_list1), ...), list(connexions_points)) 
             
             for j, pipe_info in enumerate(info_pipe[0]):                         # stack pipes info
+                inst_list = list()
+                inst_list.append(i)
+                pipe_info.append(inst_list)
                 info_pipes_list.append(pipe_info)
 
             for j, connexion_info in enumerate(info_pipe[1]):                    # stack conenexions info
