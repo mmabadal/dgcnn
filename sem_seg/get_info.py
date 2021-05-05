@@ -922,7 +922,7 @@ def unify_chains(chains_info, connexions_info):
                 end1 = chain1_info[0][-1]
                 for j, chain2_info in enumerate(chains_info2):    # for each chain
                     if j not in seen_list:                  # if not already checked
-                        start2 = chain2_info[0][0]           # get chain2_info start and end points
+                        start2 = chain2_info[0][0]           # get chain2 start and end points
                         end2 = chain2_info[0][-1]
 
                         # get distances between starts and ends
@@ -943,7 +943,7 @@ def unify_chains(chains_info, connexions_info):
                                 for connexion_info in connexions_info:            # for all conenexions
                                     connexion = connexion_info[0]
                                     d1 = get_distance(start1, connexion, 3)       # get distance to chain1
-                                    d2 = get_distance(start2, connexion, 3)       # get distance to chain2_info  
+                                    d2 = get_distance(start2, connexion, 3)       # get distance to chain2 
                                     if d1 < 0.15 or d2 < 0.15:                    # if any distance < thr   # //PARAM
                                         connexion_near = True                     # mark that there is a connexion near
 
