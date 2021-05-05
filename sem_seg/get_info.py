@@ -189,10 +189,17 @@ def info_to_array(info):
         vectors = np.insert(vectors, 6, values=2, axis=1) # insert type 2 - vector
         vectors = np.insert(vectors, 7, values=0, axis=1) # insert info 0 - nothing
 
+
+        belonging_insts_list = list()
+        for i, belonging_inst_idx in enumerate(pipe_info[3]):
+            belonging_inst = np.append(pipe_info[0][0], [0, 255, 0, 7, belonging_inst_idx])   # insert color, type 4 - near pipe and info - near_pipe_idx
+            belonging_insts_list.append(belonging_inst)
+        belonging_insts = np.array(belonging_insts_list)
+
         if len(pipe_info[1]) > 0:
-            pipe = np.vstack((skeleton,elbows,vectors))
+            pipe = np.vstack((skeleton,elbows,vectors,belonging_insts))
         else:
-            pipe = np.vstack((skeleton,vectors))
+            pipe = np.vstack((skeleton,vectors,belonging_insts))
 
         pipe = np.insert(pipe, 8, values=0, axis=1)     # insert class 0 - pipe
         pipe = np.insert(pipe, 9, values=inst, axis=1)  # insert inst
@@ -986,7 +993,7 @@ def unify_chains(chains_info, connexions_info):
                                     vector1 = chain1_info[2][-1]
                                     vector2 = chain2_info[2][-1]
 
-                                angle = angle_between_vectors(vector1, vector2) # get angle berween vectors
+                                angle = angle_between_vectors(vector1, vector2) # get angle between vectors
 
                                 if (angle >= 345 and angle <= 360) or (angle >= 0 and angle <= 15) or (angle >= 165 and angle <= 195):  # if vectors are near parallel   //PARAM
                                     
@@ -1031,9 +1038,12 @@ def unify_chains(chains_info, connexions_info):
 
                                     # get % points
                                     #new_mid = get_position_idx1(new_chain, 50)
+
+                                    new_inst_list = chain1_info[3] + chain2_info[3]
+                                    new_inst_list = list(set(a))
                                     
                                     # create new chain info
-                                    new_chain_info = [new_chain, new_elbow_list, new_vector_chain_list]
+                                    new_chain_info = [new_chain, new_elbow_list, new_vector_chain_list, new_inst_list]
                                     new_info_chains.append(new_chain_info)
 
         for i in sorted(unified_list, reverse=True):      # delete marked chains
