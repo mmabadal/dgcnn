@@ -233,7 +233,7 @@ class Pointcloud_Seg:
             rad = math.radians(max_info[1])
             vector = np.array([math.cos(rad), math.sin(rad), 0])                             # get valve unit vector at zero
             vector = vector*0.18                                                             # resize vector to valve size //PARAM
-            info_valves_list.append([xyz_central, max_info, vector, max_idx, inst[:,0:3]])   # append valve instance info
+            info_valves_list.append([xyz_central, vector, max_idx, inst[:,0:3], max_info])   # append valve instance info
 
             # print best valve matching
             #trans = np.eye(4) 
@@ -241,7 +241,7 @@ class Pointcloud_Seg:
             #get_info.draw_registration_result(inst_o3d, self.targets_list[max_idx], trans)
 
         # based on valve fitness, delete it and return stolen points to pipe prediction
-        descart_valves_list = [i for i, x in enumerate(info_valves_list) if x[1][0] < 0.4]     # if max fitnes < thr  //PARAM
+        descart_valves_list = [i for i, x in enumerate(info_valves_list) if x[4][0] < 0.4]     # if max fitnes < thr  //PARAM
         for i in descart_valves_list:
             print("Valve descarted")
             descarted_points = np.vstack(instances_ref_valve_list[i])                           # notate points to discard
@@ -311,6 +311,13 @@ class Pointcloud_Seg:
 
         if len(info3)>0:
             info_array = get_info.info_to_array(info3)
+            print("AAAAAAAAAAAAAAAAAAAA")
+            print(info_array[0])
+            print(info_array[-1])
+            print(info_array[0][0])
+            print(type(info_array[0][0]))
+
+            print("BBBBBBBBBBBBBBBBBBBB")
             pc_info = self.array2pc_info(header, info_array)
             self.pub_pc_info.publish(pc_info)
 
@@ -331,7 +338,7 @@ class Pointcloud_Seg:
         print(" ")
         print("INFO VALVES:")
         for valve in info_valves_list:
-            valve.pop(-1)
+            valve.pop(-2)
             print(valve)
         print(" ")
 

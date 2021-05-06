@@ -70,8 +70,8 @@ def info_to_ply(info, path_out):
     for i, valve_info in enumerate(info_valves_list):
         valve_ply.append(valve_info[0])
 
-        point1 = valve_info[0]-(valve_info[2]/2)
-        point2 = valve_info[0]+(valve_info[2]/2)
+        point1 = valve_info[0]-(valve_info[1]/2)
+        point2 = valve_info[0]+(valve_info[1]/2)
         vector1_ply.append(point1)
         vector1_ply.append(point2)
 
@@ -184,7 +184,7 @@ def info_to_array(info):
             vector_list.append(vp2)
 
         vectors = np.array(vector_list)
-        vector_color = np.array([[30, 30, 30],]*vectors.shape[0])
+        vector_color = np.array([[127, 127, 127],]*vectors.shape[0])
         vectors = np.hstack((vectors, vector_color))  
         vectors = np.insert(vectors, 6, values=2, axis=1) # insert type 2 - vector
         vectors = np.insert(vectors, 7, values=0, axis=1) # insert info 0 - nothing
@@ -210,7 +210,7 @@ def info_to_array(info):
     for i, pipe_inst in enumerate(pipe_inst_list):
 
         data = pipe_inst[:,0:3]
-        inst_color = np.array([[0, 150, 0],]*data.shape[0])
+        inst_color = np.array([[0, 127, 0],]*data.shape[0])
         data = np.hstack((data, inst_color))  
         data = np.insert(data, 6, values=6, axis=1) # insert type 6 - inst data
         data = np.insert(data, 7, values=i, axis=1) # insert info i - instance number
@@ -225,16 +225,16 @@ def info_to_array(info):
 
         central = np.append(valve_info[0], [0, 0, 255, 3, 0])   # insert color, type 3 - central point and info 0 - nothing
         
-        vp1 = valve_info[0]-(valve_info[2]/2)
+        vp1 = valve_info[0]-(valve_info[1]/2)
         vp1 = np.append(vp1, [127,127,127, 2, 0])   # insert color, type 2 - vector and info 0 - nothing
-        vp2 = valve_info[0]+(valve_info[2]/2)
+        vp2 = valve_info[0]+(valve_info[1]/2)
         vp2 = np.append(vp2, [127,127,127, 2, 0])   # insert color, type 2 - vector and info 0 - nothing
 
-        max_id = np.append(valve_info[0], [0, 0, 255, 5, valve_info[3]])   # insert color, type 5 - max_id and info - max id
+        max_id = np.append(valve_info[0], [0, 0, 255, 5, valve_info[2]])   # insert color, type 5 - max_id and info - max id
 
-        if len(valve_info[5]) > 0:
+        if len(valve_info[3]) > 0:
             near_pipes_list = list()
-            for i, near_pipe_idx in enumerate(valve_info[5]):
+            for i, near_pipe_idx in enumerate(valve_info[3]):
                 near_pipe = np.append(valve_info[0], [0, 0, 255, 4, near_pipe_idx])   # insert color, type 4 - near pipe and info - near_pipe_idx
                 near_pipes_list.append(near_pipe)
             near_pipes = np.array(near_pipes_list)
@@ -841,7 +841,7 @@ def refine_valves(valves_info, pipes_info):
         near_pipes_list = list()
         near_type_list = list()
         for j, pipe_info in enumerate(pipes_info):                      # get near pipes
-            for p in valves_info[i][4]:                                 # for each point of the valve
+            for p in valves_info[i][3]:                                 # for each point of the valve
                 d_to_start = get_distance(p, pipe_info[0][0], 3)        # get distance to pipe start
                 d_to_end = get_distance(p, pipe_info[0][-1], 3)         # get distance to pipe end
                 if d_to_start <= 0.1:                                   # if distance < thr             //PARAM
@@ -853,7 +853,7 @@ def refine_valves(valves_info, pipes_info):
                     near_type_list.append(-1)                           # append end is near
                     break  
 
-        valves_info[i].append(near_pipes_list)                          # append near pipes to valve info
+        valves_info[i].insert(3,near_pipes_list)                         # append near pipes to valve info in position 3 [central_point, vector, max_id, near_pipes, inst_data, max_info]
 
         if len(near_pipes_list)==0:                                     # if valve has no near pipes
             delete_valve_list.append(i)                                 # append to delete valve
@@ -862,7 +862,7 @@ def refine_valves(valves_info, pipes_info):
             new_vector = pipes_info[near_pipes_list[0]][2][near_type_list[0]]   # get new valve vector equal to pipe vector
             new_vector = new_vector / np.linalg.norm(new_vector)                # get unit vector
             new_vector = new_vector * valve_size                                # resize vector
-            valves_info[i][2] = new_vector
+            valves_info[i][1] = new_vector
 
         if len(near_pipes_list)==2:                                             # if valve has two near pipes
             vector1 = pipes_info[near_pipes_list[0]][2][near_type_list[0]]      # vector1 depending on start or end near
@@ -872,14 +872,14 @@ def refine_valves(valves_info, pipes_info):
                 new_vector = (vector1+vector2)/2                                # new valve vector as mean of two pipes vectors
                 new_vector = new_vector / np.linalg.norm(new_vector)            
                 new_vector = new_vector * valve_size 
-                valves_info[i][2] = new_vector
+                valves_info[i][1] = new_vector
 
         if len(near_pipes_list)==3:
 
-            if valves_info[i][3] == 0:      # set valve as a 3 way valve, trying to match handle possition
-                valves_info[i][3] = 2       # index of 3 way valve model with handle set to 0
-            if valves_info[i][3] == 1:      # set valve as a 3 way valve, trying to match handle possition
-                valves_info[i][3] = 3       # index of 3 way valve model with handle set to 1
+            if valves_info[i][2] == 0:      # set valve as a 3 way valve, trying to match handle possition
+                valves_info[i][2] = 2       # index of 3 way valve model with handle set to 0
+            if valves_info[i][2] == 1:      # set valve as a 3 way valve, trying to match handle possition
+                valves_info[i][2] = 3       # index of 3 way valve model with handle set to 1
 
             vector1 = pipes_info[near_pipes_list[0]][2][near_type_list[0]]  # vector1 depending on start or end near
             vector2 = pipes_info[near_pipes_list[1]][2][near_type_list[1]]  # vector2 depending on start or end near
@@ -893,17 +893,17 @@ def refine_valves(valves_info, pipes_info):
                 new_vector = (vector1+vector2)/2
                 new_vector = new_vector / np.linalg.norm(new_vector)
                 new_vector = new_vector * valve_size                                                             
-                valves_info[i][2] = new_vector
+                valves_info[i][1] = new_vector
             if (angle13 >= 345 and angle13 <= 360) or (angle13 >= 0 and angle13 <= 15) or (angle13 >= 165 and angle13 <= 195):      # if vectors13 near parallel  //PARAM
                 new_vector = (vector1+vector3)/2
                 new_vector = new_vector / np.linalg.norm(new_vector)
                 new_vector = new_vector * valve_size
-                valves_info[i][2] = new_vector
+                valves_info[i][1] = new_vector
             if (angle23 >= 345 and angle23 <= 360) or (angle23 >= 0 and angle23 <= 15) or (angle23 >= 165 and angle23 <= 195):      # if vectors23 near parallel  //PARAM
                 new_vector = (vector2+vector3)/2
                 new_vector = new_vector / np.linalg.norm(new_vector)
                 new_vector = new_vector * valve_size
-                valves_info[i][2] = new_vector
+                valves_info[i][1] = new_vector
 
     for i in sorted(delete_valve_list, reverse=True):      # delete marked valves       //PARAM
         #del valves_info[i] 
