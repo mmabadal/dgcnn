@@ -26,6 +26,10 @@ class Pointcloud_Sub:
 
         # init info
         self.info_world_all = list()
+        self.info_pipes_list_overall = list()
+        self.instances_pipe_list_overall = list()
+        self.info_valves_list_overall = list()
+        self.info_connexions_list_overall = list()
 
         # Params inference
         self.fps = 4.0                # target fps        //PARAM
@@ -72,15 +76,15 @@ class Pointcloud_Sub:
             return
             
         left_frame_id = "turbot/stereo_down/left_optical"
-        world_frame_id = "world_ned"                 
+        world_frame_id = "world_ned"         
+        header.frame_id = "world_ned"    
+        
         left2worldned = self.get_transform(world_frame_id, left_frame_id)
 
-        header.frame_id = "world_ned"    
-
-        pc_np_info = self.pc_info2array(pc)
-        pc_np_info_world = pc_np.copy()
-
         if isinstance(left2worldned,int) == False:
+
+            pc_np_info = self.pc_info2array(pc)
+            pc_np_info_world = pc_np.copy()
 
             for i in range(pc_np.shape[0]):
                 xyz = np.array([[pc_np_info[i,0]],
@@ -90,14 +94,16 @@ class Pointcloud_Sub:
                 xyz_trans_rot = np.matmul(left2worldned, xyz)
                 pc_np_info_world[i,0:3] = [xyz_trans_rot[0], xyz_trans_rot[1], xyz_trans_rot[2]]
 
+            info_pipes_list, info_inst_pipe_list, info_valves_list, info_connexions_list = self.extract_info(pc_np_info_world)
 
-        # descifrar pc_np_info_world into pipe_list, valve_list, conn_list
 
-        # juntar (si se juntan pipes, pasar union de puntos por 128)
-        # si se juntan pipes, recarcular connexions y pipes_near
+            # descifrar pc_np_info_world into pipe_list, valve_list, conn_list
 
-        # si k = x, hacer check de info world all y borrar instances aparecidas menos de y veces, k = 0
-        # si se borra pipe, recalcular pipes near
+            # juntar (si se juntan pipes, pasar union de puntos por 128)
+            # si se juntan pipes, recarcular connexions y pipes_near
+
+            # si k = x, hacer check de info world all y borrar instances aparecidas menos de y veces, k = 0
+            # si se borra pipe, recalcular pipes near
 
 
             
@@ -153,6 +159,40 @@ class Pointcloud_Sub:
 
         pc = pc2.create_cloud(header, fields, points)
         return pc
+
+
+    def extract_info(self, pc_np_info):
+
+        info_pipes_list = list()
+        info_inst_pipe_list = list()
+        info_valves_list = list()
+        info_connexions_list = list()
+
+        for i in set(pc_np_info[:,6]):  # for each instance
+            inst = pc_np_info[pc_np_info[:,6] == i]
+
+            if inst[0,5] == 0:
+
+                if inst[0,3] == 0:
+                    info_pipe = list()
+                    #pipe
+                    info_pipes_list.append(info_pipe)
+
+                else:
+                    info_inst_pipe_list.append(inst[:,0:3])
+
+            elif: inst[0.5] == 1:
+                info_valve = list()
+                #valve
+                info_valves_list.append(info_valve)
+
+            else:
+                info_connexion = list()
+                #conn
+                info_connexions_list.append(info_connexion)
+
+        return info_pipes_list, info_inst_pipe_list, info_valves_list, info_connexions_list
+
 
 
 if __name__ == '__main__':
