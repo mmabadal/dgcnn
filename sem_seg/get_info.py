@@ -1040,7 +1040,7 @@ def unify_chains(chains_info, connexions_info):
                                     #new_mid = get_position_idx1(new_chain, 50)
 
                                     new_inst_list = chain1_info[3] + chain2_info[3]
-                                    new_inst_list = list(set(a))
+                                    new_inst_list = list(set(new_inst_list))
                                     
                                     # create new chain info
                                     new_chain_info = [new_chain, new_elbow_list, new_vector_chain_list, new_inst_list]
