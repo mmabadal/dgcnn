@@ -11,7 +11,7 @@ https://medium.com/repro-repo/install-cuda-and-cudnn-for-tensorflow-gpu-on-ubunt
 
 - OPEN3D
   * pip uninstall open3d open3d-python
-  * pip3 install open3d==0.12
+  * pip3 install open3d==0.12 (ubuntu 18, with ubuntu 16 use 0.9.0)
   * pip install numpy --upgrade  (1.19.5 works)
   
 - conda install scikit-image
@@ -78,6 +78,11 @@ mirar donde estan instaladas las cosas, quiza hay que hacer python3
    * Python 3.6
    * pip install tensorflow=1.14
 
+# Python2  
+
+pip2 install plyfile
+pip2 install tensorflow==1.14
+pip2 install open3d==0.9 pyrsistent==0.16.1
 
 # ----------------------------------------------------------------------------------------------
 # https://medium.com/repro-repo/install-cuda-and-cudnn-for-tensorflow-gpu-on-ubuntu-79306e4ac04e
