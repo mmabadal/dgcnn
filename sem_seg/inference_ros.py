@@ -26,8 +26,8 @@ class Pointcloud_Seg:
         self.name = name
 
         # Params inference
-        self.fps = 2                # target fps        //PARAM
-        self.period = 1/self.fps    # target period     //PARAM
+        self.fps = 2.0                # target fps        //PARAM
+        self.period = 1.0/self.fps    # target period     //PARAM
         self.batch_size = 1         #                   //PARAM
         self.points_sub = 128       #                   //PARAM
         self.block_sub = 0.1        #                   //PARAM
@@ -102,22 +102,22 @@ class Pointcloud_Seg:
         self.new_pc = True
 
     def set_model(self):
-        with tf.device('/gpu:'+str(self.gpu_index)):
+        with tfw.device('/gpu:'+str(self.gpu_index)):
             pointclouds_pl, labels_pl = placeholder_inputs(self.batch_size, self.points_sub)
-            is_training_pl = tf.placeholder(tf.bool, shape=())
+            is_training_pl = tfw.placeholder(tfw.bool, shape=())
 
             pred = get_model(pointclouds_pl, is_training_pl)
             loss = get_loss(pred, labels_pl)
-            pred_softmax = tf.nn.softmax(pred)
+            pred_softmax = tfw.nn.softmax(pred)
 
-            saver = tf.train.Saver() # Add ops to save and restore all the variables.
+            saver = tfw.train.Saver() # Add ops to save and restore all the variables.
             
         # Create a session
-        config = tf.ConfigProto()
+        config = tfw.ConfigProto()
         config.gpu_options.allow_growth = True
         config.allow_soft_placement = True
         config.log_device_placement = True
-        self.sess = tf.Session(config=config)
+        self.sess = tfw.Session(config=config)
 
         # Restore variables from disk.
         saver.restore(self.sess, self.model_path)
@@ -177,7 +177,7 @@ class Pointcloud_Seg:
 
         t2 = rospy.Time.now()
 
-        with tf.Graph().as_default():
+        with tfw.Graph().as_default():
             pred_sub = self.evaluate(data_sub, label_sub, xyz_max)  # evaluate PC
 
         if pred_sub.size == 0:      # return if no prediction
@@ -305,19 +305,12 @@ class Pointcloud_Seg:
 
         t9 = rospy.Time.now()
 
-        info1 = [info_pipes_list, info_connexions_list, info_valves_list, instances_ref_pipe_list]         # TODO publish info
-        info2 = [info_pipes_list2, info_connexions_list2, info_valves_list, instances_ref_pipe_list]         # TODO publish info
-        info3 = [info_pipes_list2, info_connexions_list2, info_valves_list2, instances_ref_pipe_list]       # TODO publish info
+        info1 = [info_pipes_list, info_connexions_list, info_valves_list, instances_ref_pipe_list]
+        info2 = [info_pipes_list2, info_connexions_list2, info_valves_list, instances_ref_pipe_list] 
+        info3 = [info_pipes_list2, info_connexions_list2, info_valves_list2, instances_ref_pipe_list]
 
-        if len(info3)>0:
+        if len(info_pipes_list2)>0 or len(info_valves_list2)>0:
             info_array = get_info.info_to_array(info3)
-            print("AAAAAAAAAAAAAAAAAAAA")
-            print(info_array[0])
-            print(info_array[-1])
-            print(info_array[0][0])
-            print(type(info_array[0][0]))
-
-            print("BBBBBBBBBBBBBBBBBBBB")
             pc_info = self.array2pc_info(header, info_array)
             self.pub_pc_info.publish(pc_info)
 
