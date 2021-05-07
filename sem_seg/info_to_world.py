@@ -8,9 +8,8 @@ import ctypes
 import struct
 import get_info
 import numpy as np
-from model import *
-import open3d as o3d
-import indoor3d_util
+#import open3d as o3d
+#import indoor3d_util
 from natsort import natsorted
 
 from sensor_msgs.msg import PointField
@@ -19,7 +18,7 @@ import std_msgs.msg
 import sensor_msgs.point_cloud2 as pc2
 from sensor_msgs.msg import PointCloud2
 
-class Pointcloud_Sub:
+class Pointcloud_World:
 
     def __init__(self, name):
         self.name = name
@@ -47,6 +46,7 @@ class Pointcloud_Sub:
 
         # set publishers
         self.pub_pc_info_world = rospy.Publisher("/stereo_down/scaled_x2/points2_info_world", PointCloud2, queue_size=4)
+        self.pub_pc_info_world_all = rospy.Publisher("/stereo_down/scaled_x2/points2_info_world_all", PointCloud2, queue_size=4)
 
         # Set segmentation timer
         rospy.Timer(rospy.Duration(self.period), self.run)
@@ -84,9 +84,9 @@ class Pointcloud_Sub:
         if isinstance(left2worldned,int) == False:
 
             pc_np_info = self.pc_info2array(pc)
-            pc_np_info_world = pc_np.copy()
+            pc_np_info_world = pc_np_info.copy()
 
-            for i in range(pc_np.shape[0]):
+            for i in range(pc_np_info.shape[0]):
                 xyz = np.array([[pc_np_info[i,0]],
                                  [pc_np_info[i,1]],
                                  [pc_np_info[i,2]],
@@ -95,9 +95,30 @@ class Pointcloud_Sub:
                 pc_np_info_world[i,0:3] = [xyz_trans_rot[0], xyz_trans_rot[1], xyz_trans_rot[2]]
 
             info_pipes_list, info_inst_pipe_list, info_valves_list, info_connexions_list = self.extract_info(pc_np_info_world)
+            info_world = [info_pipes_list, info_connexions_list, info_valves_list, info_inst_pipe_list]
 
+            if len(info_world)>0:
+                pc_np_info_world = get_info.info_to_array(info_world)
+                pc_info_world = self.array2pc_info(header, pc_np_info_world)
+                self.pub_pc_info_world.publish(pc_info_world)
 
-            # descifrar pc_np_info_world into pipe_list, valve_list, conn_list
+            print(" ")
+            print("INFO VALVES:")
+            for valve in info_valves_list:
+                print(valve)
+            print(" ")
+
+            print("INFO PIPES:")
+            for pipe1 in info_pipes_list:
+                print(type(pipe1[0]))
+                pipe1.pop(0)
+                print(pipe1)
+            print(" ")
+
+            print("INFO CONNEXIONS:")
+            for connexion in info_connexions_list:
+                print(connexion)
+            print(" ")
 
             # juntar (si se juntan pipes, pasar union de puntos por 128)
             # si se juntan pipes, recarcular connexions y pipes_near
@@ -106,11 +127,12 @@ class Pointcloud_Sub:
             # si se borra pipe, recalcular pipes near
 
 
+
             
-        if len(info3)>0:
-            pc_np_info_world_all = get_info.info_to_array(self.info_world_all)
-            pc_info_world_all = self.array2pc_info(header, pc_np_info_world_all)
-            self.pub_pc_info_world.publish(pc_info_world_all)
+        #if len(info_world_all)>0:
+        #    pc_np_info_world_all = get_info.info_to_array(self.info_world_all)
+        #    pc_info_world_all = self.array2pc_info(header, pc_np_info_world_all)
+        #    self.pub_pc_info_world_all.publish(pc_info_world_all)
 
 
 
@@ -152,6 +174,10 @@ class Pointcloud_Sub:
             g = int(p[4])
             b = int(p[5])
             a = 255
+
+            if p[6] == 6:                   # if its type instance data, make it transparent, information still there
+                a = 0
+
             rgb = struct.unpack('I', struct.pack('BBBB', b, g, r, a))[0]
 
             p_rgb = [p[0], p[1], p[2], rgb, p[6], p[7], p[8], p[9]]
@@ -173,22 +199,71 @@ class Pointcloud_Sub:
 
             if inst[0,5] == 0:
 
-                if inst[0,3] == 0:
+                if inst[0,3] == 0:                              # PIPE
                     info_pipe = list()
-                    #pipe
+                    
+                    skeleton = inst[inst[:,3] == 0]
+                    info_pipe.append(skeleton[:,0:3])
+
+                    elbows = inst[inst[:,3] == 1]
+                    elbows_list = list()
+                    for j in range(elbows.shape[0]):
+                        elbows_list.append(elbows[j,0:3])
+                    info_pipe.append(elbows_list)
+
+                    vectors = inst[inst[:,3] == 2]
+                    vectors_list = list()
+                    for j in range(int(vectors.shape[0]/2)):
+                        k = 2*j
+                        vp1 = vectors[k,0:3]
+                        vp2 = vectors[k+1,0:3]
+                        v = vp2-vp1
+                        vectors_list.append(v)
+                    info_pipe.append(vectors_list)
+
+                    belong_insts = inst[inst[:,3] == 7]
+                    belong_insts_list = list()
+                    for j in range(int(belong_insts.shape[0])):
+                        belong_insts_list.append(int(belong_insts[j,4]))
+                    info_pipe.append(belong_insts_list)
+
                     info_pipes_list.append(info_pipe)
 
-                else:
+                else:                                           # INST PIPE
                     info_inst_pipe_list.append(inst[:,0:3])
 
-            elif: inst[0.5] == 1:
+
+            elif inst[0,5] == 1:                                # VALVE
                 info_valve = list()
-                #valve
+
+                info_valve.append(inst[0,0:3])      # central point
+
+                vp1 = inst[1,0:3]
+                vp2 = inst[2,0:3]
+                v = vp2 -vp1
+                info_valve.append(v)
+
+                info_valve.append(int(inst[3,4]))      # max_id
+
+                near_pipes = inst[inst[:,3] == 4]
+                near_pipes_list = list()
+                for j in range(int(near_pipes.shape[0])):
+                    near_pipes_list.append(int(near_pipes[j,4]))
+                info_valve.append(near_pipes_list)
+
                 info_valves_list.append(info_valve)
 
-            else:
+            else:                                               # CONNEXION
                 info_connexion = list()
-                #conn
+
+                info_connexion.append(inst[0,0:3])      # central point
+
+                near_pipes = inst[inst[:,3] == 4]
+                near_pipes_list = list()
+                for j in range(int(near_pipes.shape[0])):
+                    near_pipes_list.append(int(near_pipes[j,4]))
+                info_connexion.append(near_pipes_list)
+
                 info_connexions_list.append(info_connexion)
 
         return info_pipes_list, info_inst_pipe_list, info_valves_list, info_connexions_list
@@ -197,8 +272,8 @@ class Pointcloud_Sub:
 
 if __name__ == '__main__':
     try:
-        rospy.init_node('sub_pc2')
-        Pointcloud_Sub(rospy.get_name())
+        rospy.init_node('info_world')
+        Pointcloud_World(rospy.get_name())
 
         rospy.spin()
     except rospy.ROSInterruptException:
