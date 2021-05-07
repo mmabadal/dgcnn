@@ -81,7 +81,9 @@ mirar donde estan instaladas las cosas, quiza hay que hacer python3
 # Python2  
 
 pip2 install plyfile
+
 pip2 install tensorflow==1.14
+
 pip2 install open3d==0.9 pyrsistent==0.16.1
 
 # ----------------------------------------------------------------------------------------------
