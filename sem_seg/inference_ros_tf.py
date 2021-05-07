@@ -1,4 +1,5 @@
 import os
+import tf
 import sys
 import time
 import copy
@@ -24,6 +25,9 @@ class Pointcloud_Seg:
 
     def __init__(self, name):
         self.name = name
+        
+        # listener
+        self.listener = tf.TransformListener()
 
         # Params inference
         self.fps = 2.0                # target fps        //PARAM
@@ -93,6 +97,7 @@ class Pointcloud_Seg:
         self.pub_pc_seg = rospy.Publisher("/stereo_down/scaled_x2/points2_seg", PointCloud2, queue_size=4)
         self.pub_pc_inst = rospy.Publisher("/stereo_down/scaled_x2/points2_inst", PointCloud2, queue_size=4)
         self.pub_pc_info = rospy.Publisher("/stereo_down/scaled_x2/points2_info", PointCloud2, queue_size=4)
+        self.pub_pc_info_world = rospy.Publisher("/stereo_down/scaled_x2/points2_info_world", PointCloud2, queue_size=4)
 
         # Set segmentation timer
         rospy.Timer(rospy.Duration(self.period), self.run)
@@ -153,11 +158,16 @@ class Pointcloud_Seg:
         if not self.init:
             self.set_model()
             self.init = True
+            return
 
         pc_np = self.pc2array(pc)
         if pc_np.shape[0] < 2000:               # return if points < thr   //PARAM
             rospy.loginfo('[%s]: Not enough input points', self.name)
             return
+
+        left_frame_id = "turbot/stereo_down/left_optical"
+        world_frame_id = "world_ned" 
+        left2worldned = self.get_transform(world_frame_id, left_frame_id)
 
         pc_np[:, 2] *= -1  # flip Z axis        # //PARAM
         #pc_np[:, 1] *= -1  # flip Y axis       # //PARAM
@@ -313,6 +323,20 @@ class Pointcloud_Seg:
             info_array = get_info.info_to_array(info3)
             pc_info = self.array2pc_info(header, info_array)
             self.pub_pc_info.publish(pc_info)
+
+            if isinstance(left2worldned,int) == False:
+                info_array_world = info_array.copy()
+                for i in range(info_array.shape[0]):
+                    xyz = np.array([[info_array[i,0]],
+                                    [info_array[i,1]],
+                                    [info_array[i,2]],
+                                    [1]])
+                    xyz_trans_rot = np.matmul(left2worldned, xyz)
+                    info_array_world[i,0:3] = [xyz_trans_rot[0], xyz_trans_rot[1], xyz_trans_rot[2]]
+                header.frame_id = "world_ned"
+                pc_info_world = self.array2pc_info(header, info_array_world)
+                self.pub_pc_info_world.publish(pc_info_world)
+                header.frame_id = "turbot/stereo_down/left_optical"
 
         out = True
         if out == True:
@@ -579,6 +603,19 @@ class Pointcloud_Seg:
         else:
             pred_sub = np.array([])
         return pred_sub
+
+
+    def get_transform(self, parent, child):
+        try:
+            rospy.logwarn("[%s]: waiting transform from %s to %s", self.name, parent, child)
+            self.listener.waitForTransform(parent, child, rospy.Time(), rospy.Duration(0.1))
+            (trans, rot) = self.listener.lookupTransform(parent, child, rospy.Time())
+            rospy.loginfo("[%s]: transform for %s found", self.name, child)
+            transform = tf.transformations.concatenate_matrices(tf.transformations.translation_matrix(trans), tf.transformations.quaternion_matrix(rot))
+        except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException, tf.Exception):
+            rospy.logerr('[%s]: define %s transform!', self.name, child)
+            transform = 0
+        return transform
 
 
 if __name__ == '__main__':
