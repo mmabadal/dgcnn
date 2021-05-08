@@ -1,4 +1,4 @@
-import tensorflow as tf
+import tensorflow as tfw
 import math
 import time
 import numpy as np
@@ -11,9 +11,9 @@ sys.path.append(os.path.join(BASE_DIR, '../models'))
 import tf_util
 
 def placeholder_inputs(batch_size, num_point):
-  pointclouds_pl = tf.placeholder(tf.float32,
+  pointclouds_pl = tfw.placeholder(tfw.float32,
                    shape=(batch_size, num_point, 9))
-  labels_pl = tf.placeholder(tf.int32,
+  labels_pl = tfw.placeholder(tfw.int32,
                 shape=(batch_size, num_point))
   return pointclouds_pl, labels_pl
 
@@ -21,7 +21,7 @@ def get_model(point_cloud, is_training, bn_decay=None):
   """ ConvNet baseline, input is BxNx9 gray image """
   batch_size = point_cloud.get_shape()[0].value
   num_point = point_cloud.get_shape()[1].value
-  input_image = tf.expand_dims(point_cloud, -1)
+  input_image = tfw.expand_dims(point_cloud, -1)
 
   k = 20
 
@@ -39,7 +39,7 @@ def get_model(point_cloud, is_training, bn_decay=None):
                        bn=True, is_training=is_training, weight_decay=0.0,
                        scope='adj_conv2', bn_decay=bn_decay, is_dist=True)
 
-  net_1 = tf.reduce_max(out2, axis=-2, keep_dims=True)
+  net_1 = tfw.reduce_max(out2, axis=-2, keep_dims=True)
 
 
 
@@ -57,7 +57,7 @@ def get_model(point_cloud, is_training, bn_decay=None):
                        bn=True, is_training=is_training, weight_decay=0.0,
                        scope='adj_conv4', bn_decay=bn_decay, is_dist=True)
   
-  net_2 = tf.reduce_max(out4, axis=-2, keep_dims=True)
+  net_2 = tfw.reduce_max(out4, axis=-2, keep_dims=True)
   
   
 
@@ -75,11 +75,11 @@ def get_model(point_cloud, is_training, bn_decay=None):
   #                      bn=True, is_training=is_training, weight_decay=0.0,
   #                      scope='adj_conv6', bn_decay=bn_decay, is_dist=True)
 
-  net_3 = tf.reduce_max(out5, axis=-2, keep_dims=True)
+  net_3 = tfw.reduce_max(out5, axis=-2, keep_dims=True)
 
 
 
-  out7 = tf_util.conv2d(tf.concat([net_1, net_2, net_3], axis=-1), 1024, [1, 1], 
+  out7 = tf_util.conv2d(tfw.concat([net_1, net_2, net_3], axis=-1), 1024, [1, 1], 
                        padding='VALID', stride=[1,1],
                        bn=True, is_training=is_training,
                        scope='adj_conv7', bn_decay=bn_decay, is_dist=True)
@@ -87,9 +87,9 @@ def get_model(point_cloud, is_training, bn_decay=None):
   out_max = tf_util.max_pool2d(out7, [num_point, 1], padding='VALID', scope='maxpool')
 
 
-  expand = tf.tile(out_max, [1, num_point, 1, 1])
+  expand = tfw.tile(out_max, [1, num_point, 1, 1])
 
-  concat = tf.concat(axis=3, values=[expand, 
+  concat = tfw.concat(axis=3, values=[expand, 
                                      net_1,
                                      net_2,
                                      net_3])
@@ -102,11 +102,11 @@ def get_model(point_cloud, is_training, bn_decay=None):
   net = tf_util.dropout(net, keep_prob=0.7, is_training=is_training, scope='dp1')
   net = tf_util.conv2d(net, 13, [1,1], padding='VALID', stride=[1,1],
              activation_fn=None, scope='seg/conv3', is_dist=True)
-  net = tf.squeeze(net, [2])
+  net = tfw.squeeze(net, [2])
 
   return net
 
 def get_loss(pred, label):
   """ pred: B,N,13; label: B,N """
-  loss = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=pred, labels=label)
-  return tf.reduce_mean(loss)
+  loss = tfw.nn.sparse_softmax_cross_entropy_with_logits(logits=pred, labels=label)
+  return tfw.reduce_mean(loss)

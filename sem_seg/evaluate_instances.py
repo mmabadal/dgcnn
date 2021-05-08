@@ -2,6 +2,7 @@
 import os
 import re
 import numpy as np
+from os import listdir
 import argparse
 import sys
 from natsort import natsorted

@@ -1,4 +1,5 @@
 import os
+import tf
 import sys
 import time
 import copy
@@ -24,7 +25,7 @@ class Pointcloud_Seg:
 
     def __init__(self, name):
         self.name = name
-
+        
         # Params inference
         self.fps = 2.0                # target fps        //PARAM
         self.period = 1.0/self.fps    # target period     //PARAM
@@ -36,11 +37,7 @@ class Pointcloud_Seg:
         self.desired_points = int(6000/(128/self.points_sub))  # n of points to wich the received pc will be downsampled    //PARAM
 
         # get valve matching targets
-<<<<<<< HEAD
-        self.targets_path = "/home/sparus/PIPES2/dgcnn/valve_targets"      # //PARAM
-=======
         self.targets_path = "/home/miguel/Desktop/PIPES2/dgcnn/valve_targets"      # //PARAM
->>>>>>> 89c72f3a4e2e8a4f903cface73c1bac9c7fb2c41
         self.targets_list = list()
         for file_name in natsorted(os.listdir(self.targets_path)):
             target_path = os.path.join(self.targets_path, file_name)
@@ -80,14 +77,23 @@ class Pointcloud_Seg:
         self.min_p_p = 60               # minimum number of points to consider a blob as a pipe     //PARAM
         self.min_p_v = 30 # 40 80 140   # minimum number of points to consider a blob as a valve    //PARAM
 
-<<<<<<< HEAD
-        self.model_path = "/home/sparus/PIPES2/dgcnn/sem_seg/RUNS/4_128_11_c9/model.ckpt"          # path to model         //PARAM
-        self.path_cls = "/home/sparus/PIPES2/dgcnn/sem_seg/RUNS/4_128_11_c9/cls.txt"               # path to clases info   //PARAM
-=======
         self.model_path = "/home/miguel/Desktop/PIPES2/dgcnn/sem_seg/RUNS/sparus_xiroi/test/128_11_1/model.ckpt"          # path to model         //PARAM
         self.path_cls = "/home/miguel/Desktop/PIPES2/dgcnn/sem_seg/RUNS/sparus_xiroi/test/128_11_1/cls.txt"               # path to clases info   //PARAM
->>>>>>> 89c72f3a4e2e8a4f903cface73c1bac9c7fb2c41
         self.classes, self.labels, self.label2color = indoor3d_util.get_info_classes(self.path_cls) # get classes info
+
+        # listener
+        self.listener = tf.TransformListener()
+
+        # inits info map
+        self.info_map_key = False
+        self.info_pipes_list_map = list()
+        self.info_connexions_list_map = list()
+        self.info_valves_list_map = list()
+        self.instances_ref_pipe_list_map = list()
+        self.info_map = [self.info_pipes_list_map, self.info_connexions_list_map, self.info_valves_list_map, self.instances_ref_pipe_list_map]
+        self.count = 0
+        self.count_target = 5
+        self.count_thr = 2
 
         self.init = False
         self.new_pc = False
@@ -95,11 +101,6 @@ class Pointcloud_Seg:
         # set subscribers
         pc_sub = message_filters.Subscriber('/stereo_down/scaled_x2/points2_filtered', PointCloud2)     # //PARAM
         #pc_sub = message_filters.Subscriber('/stereo_down/scaled_x2/points2', PointCloud2)             # //PARAM
-<<<<<<< HEAD
-        info_sub = message_filters.Subscriber('/stereo_down/left/camera_info', CameraInfo)
-        #ts_image = message_filters.TimeSynchronizer([pc_sub, info_sub], 10)
-=======
->>>>>>> 89c72f3a4e2e8a4f903cface73c1bac9c7fb2c41
         pc_sub.registerCallback(self.cb_pc)
 
         # Set class image publishers
@@ -107,16 +108,14 @@ class Pointcloud_Seg:
         self.pub_pc_seg = rospy.Publisher("/stereo_down/scaled_x2/points2_seg", PointCloud2, queue_size=4)
         self.pub_pc_inst = rospy.Publisher("/stereo_down/scaled_x2/points2_inst", PointCloud2, queue_size=4)
         self.pub_pc_info = rospy.Publisher("/stereo_down/scaled_x2/points2_info", PointCloud2, queue_size=4)
+        self.pub_pc_info_world = rospy.Publisher("/stereo_down/scaled_x2/points2_info_world", PointCloud2, queue_size=4)
+        self.pub_pc_info_map = rospy.Publisher("/stereo_down/scaled_x2/points2_info_map", PointCloud2, queue_size=4)
 
         # Set segmentation timer
         rospy.Timer(rospy.Duration(self.period), self.run)
 
     def cb_pc(self, pc):
         self.pc = pc
-<<<<<<< HEAD
-        #self.cam_info = info
-=======
->>>>>>> 89c72f3a4e2e8a4f903cface73c1bac9c7fb2c41
         self.new_pc = True
 
     def set_model(self):
@@ -171,11 +170,16 @@ class Pointcloud_Seg:
         if not self.init:
             self.set_model()
             self.init = True
+            return
 
         pc_np = self.pc2array(pc)
         if pc_np.shape[0] < 2000:               # return if points < thr   //PARAM
             rospy.loginfo('[%s]: Not enough input points', self.name)
             return
+
+        left_frame_id = "turbot/stereo_down/left_optical"
+        world_frame_id = "world_ned" 
+        left2worldned = self.get_transform(world_frame_id, left_frame_id, header.stamp)
 
         pc_np[:, 2] *= -1  # flip Z axis        # //PARAM
         #pc_np[:, 1] *= -1  # flip Y axis       # //PARAM
@@ -323,31 +327,59 @@ class Pointcloud_Seg:
 
         t9 = rospy.Time.now()
 
-        info1 = [info_pipes_list, info_connexions_list, info_valves_list, instances_ref_pipe_list]
-        info2 = [info_pipes_list2, info_connexions_list2, info_valves_list, instances_ref_pipe_list] 
+        #info1 = [info_pipes_list, info_connexions_list, info_valves_list, instances_ref_pipe_list]
+        #info2 = [info_pipes_list2, info_connexions_list2, info_valves_list, instances_ref_pipe_list] 
         info3 = [info_pipes_list2, info_connexions_list2, info_valves_list2, instances_ref_pipe_list]
 
         if len(info_pipes_list2)>0 or len(info_valves_list2)>0:
-            info_array = get_info.info_to_array(info3)
+
+            self.count +=1
+
+            info_array = conversion_utils.info_to_array(info3)
             pc_info = self.array2pc_info(header, info_array)
             self.pub_pc_info.publish(pc_info)
+
+            if isinstance(left2worldned,int) == False:
+                info_array_world = info_array.copy()
+                for i in range(info_array.shape[0]):
+                    xyz = np.array([[info_array[i,0]],
+                                    [info_array[i,1]],
+                                    [info_array[i,2]],
+                                    [1]])
+                    xyz_trans_rot = np.matmul(left2worldned, xyz)
+                    info_array_world[i,0:3] = [xyz_trans_rot[0], xyz_trans_rot[1], xyz_trans_rot[2]]
+                header.frame_id = "world_ned"
+                pc_info_world = self.array2pc_info(header, info_array_world)
+                self.pub_pc_info_world.publish(pc_info_world)
+
+                if self.info_map_key = True:
+
+                    info_pipes_list, info_valves_list, info_connexions_list, info_inst_pipe_list = conversion_utils.array_to_info(info_array_world)
+                    info_world = [info_pipes_list, info_valves_list, info_connexions_list, info_inst_pipe_list]
+
+                    self.info_map = map_utils.get_info_map(self.info_map, info_world)
+
+
+                    if self.count == self.count_target:
+                        self.count = 0
+                        self.info_map = map_utils.clean_map(self.info_map, self.count_thr)
+                    
+                    info_map_array = conversion_utils.info_to_array(info_map)
+                    pc_info_map = self.array2pc_info(header, info_map_array)
+                    self.pub_pc_info_map.publish(pc_info_map)
+
+                header.frame_id = "turbot/stereo_down/left_optical"
 
         out = True
         if out == True:
             name = str(time.time())
             name = name.replace('.', '')
-<<<<<<< HEAD
-            path_out1 = os.path.join("/home/sparus/PIPES2/out_ros", name+"_1.ply")
-            get_info.info_to_ply(info1, path_out1)
-            path_out2 = os.path.join("/home/sparus/PIPES2/out_ros", name+"_2.ply")
-=======
             path_out1 = os.path.join("/home/miguel/Desktop/PIPES2/out_ros", name+"_1.ply")
-            get_info.info_to_ply(info1, path_out1)
+            conversion_utils.info_to_ply(info1, path_out1)
             path_out2 = os.path.join("/home/miguel/Desktop/PIPES2/out_ros", name+"_2.ply")
->>>>>>> 89c72f3a4e2e8a4f903cface73c1bac9c7fb2c41
-            get_info.info_to_ply(info2, path_out2)
+            conversion_utils.info_to_ply(info2, path_out2)
             path_out3 = os.path.join("/home/miguel/Desktop/PIPES2/out_ros", name+"_3.ply")
-            get_info.info_to_ply(info3, path_out3)
+            conversion_utils.info_to_ply(info3, path_out3)
 
 
         # print info
@@ -562,6 +594,13 @@ class Pointcloud_Seg:
         return pc
 
 
+    def pc_info2array(self, ros_pc):
+        gen = pc2.read_points(ros_pc, skip_nans=True)   # ROS pointcloud into generator
+        pc_np = np.array(list(gen))                     # generator to list to numpy
+        pc_np = np.delete(pc_np, 3, 1) 
+        return pc_np
+
+
     def evaluate(self, data, label, xyz_max):
 
         is_training = False
@@ -603,6 +642,19 @@ class Pointcloud_Seg:
         else:
             pred_sub = np.array([])
         return pred_sub
+
+
+    def get_transform(self, parent, child, stamp):
+        try:
+            rospy.logwarn("[%s]: waiting transform from %s to %s", self.name, parent, child)
+            #self.listener.waitForTransform(parent, child, rospy.Time(), rospy.Duration(0.1))
+            (trans, rot) = self.listener.lookupTransform(parent, child, stamp)
+            rospy.loginfo("[%s]: transform for %s found", self.name, child)
+            transform = tf.transformations.concatenate_matrices(tf.transformations.translation_matrix(trans), tf.transformations.quaternion_matrix(rot))
+        except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException, tf.Exception):
+            rospy.logerr('[%s]: define %s transform!', self.name, child)
+            transform = 0
+        return transform
 
 
 if __name__ == '__main__':

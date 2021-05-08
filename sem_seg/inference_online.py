@@ -96,6 +96,8 @@ if __name__=='__main__':
     for file_name in natsorted(os.listdir(targets_path)):
         target_path = os.path.join(targets_path, file_name)
         target = get_info.read_ply(target_path, "model")
+        xyz_central = np.mean(target, axis=0)[0:3]
+        target[:, 0:3] -= xyz_central  
         target_o3d = o3d.geometry.PointCloud()
         target_o3d.points = o3d.utility.Vector3dVector(target[:,0:3])
         target_o3d.colors = o3d.utility.Vector3dVector(target[:,3:6])
