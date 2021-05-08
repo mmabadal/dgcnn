@@ -11,9 +11,7 @@ import open3d as o3d
 from natsort import natsorted
 import matplotlib.pyplot as plt
 from scipy.spatial import distance
-from plyfile import PlyData, PlyElement
 from mpl_toolkits.mplot3d import Axes3D
-from skimage.morphology import skeletonize
 
 
 
