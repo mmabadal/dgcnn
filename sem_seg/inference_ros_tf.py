@@ -158,7 +158,7 @@ class Pointcloud_Seg:
         if not self.init:
             self.set_model()
             self.init = True
-            return
+            #return
 
         pc_np = self.pc2array(pc)
         if pc_np.shape[0] < 2000:               # return if points < thr   //PARAM
@@ -167,7 +167,7 @@ class Pointcloud_Seg:
 
         left_frame_id = "turbot/stereo_down/left_optical"
         world_frame_id = "world_ned" 
-        left2worldned = self.get_transform(world_frame_id, left_frame_id)
+        left2worldned = self.get_transform(world_frame_id, left_frame_id, header.stamp)
 
         pc_np[:, 2] *= -1  # flip Z axis        # //PARAM
         #pc_np[:, 1] *= -1  # flip Y axis       # //PARAM
@@ -605,11 +605,11 @@ class Pointcloud_Seg:
         return pred_sub
 
 
-    def get_transform(self, parent, child):
+    def get_transform(self, parent, child, stamp):
         try:
             rospy.logwarn("[%s]: waiting transform from %s to %s", self.name, parent, child)
-            self.listener.waitForTransform(parent, child, rospy.Time(), rospy.Duration(0.1))
-            (trans, rot) = self.listener.lookupTransform(parent, child, rospy.Time())
+            #self.listener.waitForTransform(parent, child, rospy.Time(), rospy.Duration(0.1))
+            (trans, rot) = self.listener.lookupTransform(parent, child, stamp)
             rospy.loginfo("[%s]: transform for %s found", self.name, child)
             transform = tf.transformations.concatenate_matrices(tf.transformations.translation_matrix(trans), tf.transformations.quaternion_matrix(rot))
         except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException, tf.Exception):
