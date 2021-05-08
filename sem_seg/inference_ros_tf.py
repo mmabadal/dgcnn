@@ -158,7 +158,7 @@ class Pointcloud_Seg:
         if not self.init:
             self.set_model()
             self.init = True
-            #return
+            return
 
         pc_np = self.pc2array(pc)
         if pc_np.shape[0] < 2000:               # return if points < thr   //PARAM
