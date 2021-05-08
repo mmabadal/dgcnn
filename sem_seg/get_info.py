@@ -404,33 +404,16 @@ def get_info_skeleton(instance):
     if print_opt2 == True:
         print_o3d(voxel_grid1)
 
-<<<<<<< HEAD
-=======
     # get voxels
->>>>>>> 89c72f3a4e2e8a4f903cface73c1bac9c7fb2c41
     voxels_list = list()
     instance1_points = np.asarray(instance.points)
     for p in instance1_points:
         voxel = o3d.geometry.VoxelGrid.get_voxel(voxel_grid1, p)
         voxels_list.append(voxel)
-<<<<<<< HEAD
-    voxels_np = np.array(voxels_list)
-    voxels_np = np.unique(voxels_np, axis=0)                            # delete duplicates from room2blocks
-
-    #voxels = o3d.geometry.VoxelGrid.get_voxels(voxel_grid1)                                     # get voxels
-    #print("n voxels: " + str(len(voxels)))
-    #print(voxels)
-
-    #voxels_np = np.zeros((len(voxels),3), dtype=int)                                            # voxels to numpy
-    #for i in range(len(voxels)):
-    #    voxels_np[i] = voxels[i].grid_index
-    #print(voxels_np)    
-=======
 
     #voxels to numpy
     voxels_np = np.array(voxels_list)
     voxels_np = np.unique(voxels_np, axis=0) 
->>>>>>> 89c72f3a4e2e8a4f903cface73c1bac9c7fb2c41
 
     voxels_np.T[[0,1,2]] = voxels_np.T[[2,0,1]]                                                 # set cols as X Y Z 
 
@@ -590,13 +573,8 @@ def get_info_skeleton(instance):
         # get % points
         #mid = get_position_idx1(chain, 50)
 
-<<<<<<< HEAD
-        info_chain = [chain, elbow_list, vector_chain_list, mid]      # //PARAM return chain or not
-        #info_chain = [elbow_list, vector_chain_list, mid]            # //PARAM return chain or not
-=======
         info_chain = [chain, elbow_list, vector_chain_list]      # //PARAM return chain or not
         #info_chain = [elbow_list, vector_chain_list]            # //PARAM return chain or not
->>>>>>> 89c72f3a4e2e8a4f903cface73c1bac9c7fb2c41
         info_chains.append(info_chain)
     
     info = [info_chains, connexions_points]
@@ -625,11 +603,7 @@ def refine_valves(valves_info, pipes_info):
                     near_type_list.append(-1)                           # append end is near
                     break  
 
-<<<<<<< HEAD
-        valves_info[i].append(near_pipes_list)                          # append near pipes to valve info
-=======
         valves_info[i].insert(3,near_pipes_list)                         # append near pipes to valve info in position 3 [central_point, vector, max_id, near_pipes, inst_data, max_info]
->>>>>>> 89c72f3a4e2e8a4f903cface73c1bac9c7fb2c41
 
         if len(near_pipes_list)==0:                                     # if valve has no near pipes
             delete_valve_list.append(i)                                 # append to delete valve
@@ -698,17 +672,6 @@ def unify_chains(chains_info, connexions_info):
         new_info_chains = list()    
         unified_list = list()
         seen_list = list()
-<<<<<<< HEAD
-        for i, chain1 in enumerate(chains_info2):    # for each chain
-            if i not in seen_list:                  # if not already cheked
-                seen_list.append(i)                 # mark as checked
-                start1 = chain1[0][0]               # get chain1 start and end points
-                end1 = chain1[0][-1]
-                for j, chain2 in enumerate(chains_info2):    # for each chain
-                    if j not in seen_list:                  # if not already checked
-                        start2 = chain2[0][0]           # get chain2 start and end points
-                        end2 = chain2[0][-1]
-=======
         for i, chain1_info in enumerate(chains_info2):    # for each chain
             if i not in seen_list:                  # if not already cheked
                 seen_list.append(i)                 # mark as checked
@@ -718,7 +681,6 @@ def unify_chains(chains_info, connexions_info):
                     if j not in seen_list:                  # if not already checked
                         start2 = chain2_info[0][0]           # get chain2 start and end points
                         end2 = chain2_info[0][-1]
->>>>>>> 89c72f3a4e2e8a4f903cface73c1bac9c7fb2c41
 
                         # get distances between starts and ends
                         ds1s2 = get_distance(start1, start2, 3) 
@@ -738,11 +700,7 @@ def unify_chains(chains_info, connexions_info):
                                 for connexion_info in connexions_info:            # for all conenexions
                                     connexion = connexion_info[0]
                                     d1 = get_distance(start1, connexion, 3)       # get distance to chain1
-<<<<<<< HEAD
-                                    d2 = get_distance(start2, connexion, 3)       # get distance to chain2  
-=======
                                     d2 = get_distance(start2, connexion, 3)       # get distance to chain2 
->>>>>>> 89c72f3a4e2e8a4f903cface73c1bac9c7fb2c41
                                     if d1 < 0.15 or d2 < 0.15:                    # if any distance < thr   # //PARAM
                                         connexion_near = True                     # mark that there is a connexion near
 
@@ -773,21 +731,6 @@ def unify_chains(chains_info, connexions_info):
                             if connexion_near == False:      # if there ar no connexion near the chains
                                 # get corresponding vectors depending on which are the closes points between chains
                                 if closer_idx == 0:
-<<<<<<< HEAD
-                                    vector1 = chain1[2][0]
-                                    vector2 = chain2[2][0]
-                                elif closer_idx ==1:
-                                    vector1 = chain1[2][0]
-                                    vector2 = chain2[2][-1]
-                                elif closer_idx ==2:
-                                    vector1 = chain1[2][-1]
-                                    vector2 = chain2[2][0]
-                                else:
-                                    vector1 = chain1[2][-1]
-                                    vector2 = chain2[2][-1]
-
-                                angle = angle_between_vectors(vector1, vector2) # get angle berween vectors
-=======
                                     vector1 = chain1_info[2][0]
                                     vector2 = chain2_info[2][0]
                                 elif closer_idx ==1:
@@ -801,7 +744,6 @@ def unify_chains(chains_info, connexions_info):
                                     vector2 = chain2_info[2][-1]
 
                                 angle = angle_between_vectors(vector1, vector2) # get angle between vectors
->>>>>>> 89c72f3a4e2e8a4f903cface73c1bac9c7fb2c41
 
                                 if (angle >= 345 and angle <= 360) or (angle >= 0 and angle <= 15) or (angle >= 165 and angle <= 195):  # if vectors are near parallel   //PARAM
                                     
@@ -810,13 +752,8 @@ def unify_chains(chains_info, connexions_info):
                                     unified_list.append(j)
 
                                     # unify chains depending on which are the closes points between chains
-<<<<<<< HEAD
-                                    points1 = chain1[0]
-                                    points2 = chain2[0]
-=======
                                     points1 = chain1_info[0]
                                     points2 = chain2_info[0]
->>>>>>> 89c72f3a4e2e8a4f903cface73c1bac9c7fb2c41
                                     if closer_idx == 0:
                                         points2 = np.flipud(points2)
                                         new_chain = np.vstack((points2, points1))
@@ -827,7 +764,6 @@ def unify_chains(chains_info, connexions_info):
                                     else:
                                         points2 = np.flipud(points2)
                                         new_chain = np.vstack((points1, points2))
-<<<<<<< HEAD
 
                                     elbow_idx_list = get_elbows(new_chain)                  # get new elbow idx list
                                     new_elbow_list = list()                                 # get new elbow list
@@ -843,23 +779,6 @@ def unify_chains(chains_info, connexions_info):
                                         vector_chain = new_chain[elbow_idx_list[0]] - new_chain[0] 
                                         new_vector_chain_list.append(vector_chain)
 
-=======
-
-                                    elbow_idx_list = get_elbows(new_chain)                  # get new elbow idx list
-                                    new_elbow_list = list()                                 # get new elbow list
-                                    for i in elbow_idx_list:                                
-                                        new_elbow_list.append(new_chain[i])
-
-
-                                    new_vector_chain_list = list()                          # get new vector chain list
-                                    if len(elbow_idx_list) == 0:                            
-                                        vector_chain = new_chain[-1] - new_chain[0]            
-                                        new_vector_chain_list.append(vector_chain)
-                                    else:                                                              
-                                        vector_chain = new_chain[elbow_idx_list[0]] - new_chain[0] 
-                                        new_vector_chain_list.append(vector_chain)
-
->>>>>>> 89c72f3a4e2e8a4f903cface73c1bac9c7fb2c41
                                         for e in range(len(elbow_idx_list)-1):                                                   
                                             vector_chain = new_chain[elbow_idx_list[e+1]] - new_chain[elbow_idx_list[e]]  
                                             new_vector_chain_list.append(vector_chain)
@@ -868,12 +787,6 @@ def unify_chains(chains_info, connexions_info):
                                         new_vector_chain_list.append(vector_chain)
 
                                     # get % points
-<<<<<<< HEAD
-                                    new_mid = get_position_idx1(new_chain, 50)
-                                    
-                                    # create new chain info
-                                    new_chain_info = [new_chain, new_elbow_list, new_vector_chain_list, new_mid]
-=======
                                     #new_mid = get_position_idx1(new_chain, 50)
 
                                     new_inst_list = chain1_info[3] + chain2_info[3]
@@ -881,7 +794,6 @@ def unify_chains(chains_info, connexions_info):
                                     
                                     # create new chain info
                                     new_chain_info = [new_chain, new_elbow_list, new_vector_chain_list, new_inst_list]
->>>>>>> 89c72f3a4e2e8a4f903cface73c1bac9c7fb2c41
                                     new_info_chains.append(new_chain_info)
 
         for i in sorted(unified_list, reverse=True):      # delete marked chains
