@@ -549,6 +549,7 @@ def get_info_connexions(connexions, chains):
                             new_near_chains_list = list(set(c_info1[1]+c_info2[1]))         # new near chain list as a set of both lists concatenated
                             new_connexions_info.append([c_info1[0], new_near_chains_list])  # append new connexion
 
+    connexion_del_list = sorted(list(set(connexion_del_list)))
     for i in sorted(connexion_del_list, reverse=True):          # delete marked connexions
         del connexions_info[i]
 
