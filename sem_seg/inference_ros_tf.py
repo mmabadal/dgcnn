@@ -26,9 +26,6 @@ class Pointcloud_Seg:
     def __init__(self, name):
         self.name = name
         
-        # listener
-        self.listener = tf.TransformListener()
-
         # Params inference
         self.fps = 2.0                # target fps        //PARAM
         self.period = 1.0/self.fps    # target period     //PARAM
@@ -84,6 +81,20 @@ class Pointcloud_Seg:
         self.path_cls = "/home/miguel/Desktop/PIPES2/dgcnn/sem_seg/RUNS/sparus_xiroi/test/128_11_1/cls.txt"               # path to clases info   //PARAM
         self.classes, self.labels, self.label2color = indoor3d_util.get_info_classes(self.path_cls) # get classes info
 
+        # listener
+        self.listener = tf.TransformListener()
+
+        # inits info map
+        self.info_map_key = False
+        self.info_pipes_list_map = list()
+        self.info_connexions_list_map = list()
+        self.info_valves_list_map = list()
+        self.instances_ref_pipe_list_map = list()
+        self.info_map = [self.info_pipes_list_map, self.info_connexions_list_map, self.info_valves_list_map, self.instances_ref_pipe_list_map]
+        self.count = 0
+        self.count_target = 5
+        self.count_thr = 2
+
         self.init = False
         self.new_pc = False
 
@@ -98,6 +109,7 @@ class Pointcloud_Seg:
         self.pub_pc_inst = rospy.Publisher("/stereo_down/scaled_x2/points2_inst", PointCloud2, queue_size=4)
         self.pub_pc_info = rospy.Publisher("/stereo_down/scaled_x2/points2_info", PointCloud2, queue_size=4)
         self.pub_pc_info_world = rospy.Publisher("/stereo_down/scaled_x2/points2_info_world", PointCloud2, queue_size=4)
+        self.pub_pc_info_map = rospy.Publisher("/stereo_down/scaled_x2/points2_info_map", PointCloud2, queue_size=4)
 
         # Set segmentation timer
         rospy.Timer(rospy.Duration(self.period), self.run)
@@ -315,12 +327,15 @@ class Pointcloud_Seg:
 
         t9 = rospy.Time.now()
 
-        info1 = [info_pipes_list, info_connexions_list, info_valves_list, instances_ref_pipe_list]
-        info2 = [info_pipes_list2, info_connexions_list2, info_valves_list, instances_ref_pipe_list] 
+        #info1 = [info_pipes_list, info_connexions_list, info_valves_list, instances_ref_pipe_list]
+        #info2 = [info_pipes_list2, info_connexions_list2, info_valves_list, instances_ref_pipe_list] 
         info3 = [info_pipes_list2, info_connexions_list2, info_valves_list2, instances_ref_pipe_list]
 
         if len(info_pipes_list2)>0 or len(info_valves_list2)>0:
-            info_array = get_info.info_to_array(info3)
+
+            self.count +=1
+
+            info_array = conversion_utils.info_to_array(info3)
             pc_info = self.array2pc_info(header, info_array)
             self.pub_pc_info.publish(pc_info)
 
@@ -336,6 +351,23 @@ class Pointcloud_Seg:
                 header.frame_id = "world_ned"
                 pc_info_world = self.array2pc_info(header, info_array_world)
                 self.pub_pc_info_world.publish(pc_info_world)
+
+                if self.info_map_key = True:
+
+                    info_pipes_list, info_valves_list, info_connexions_list, info_inst_pipe_list = conversion_utils.array_to_info(info_array_world)
+                    info_world = [info_pipes_list, info_valves_list, info_connexions_list, info_inst_pipe_list]
+
+                    self.info_map = map_utils.get_info_map(self.info_map, info_world)
+
+
+                    if self.count == self.count_target:
+                        self.count = 0
+                        self.info_map = map_utils.clean_map(self.info_map, self.count_thr)
+                    
+                    info_map_array = conversion_utils.info_to_array(info_map)
+                    pc_info_map = self.array2pc_info(header, info_map_array)
+                    self.pub_pc_info_map.publish(pc_info_map)
+
                 header.frame_id = "turbot/stereo_down/left_optical"
 
         out = True
@@ -343,11 +375,11 @@ class Pointcloud_Seg:
             name = str(time.time())
             name = name.replace('.', '')
             path_out1 = os.path.join("/home/miguel/Desktop/PIPES2/out_ros", name+"_1.ply")
-            get_info.info_to_ply(info1, path_out1)
+            conversion_utils.info_to_ply(info1, path_out1)
             path_out2 = os.path.join("/home/miguel/Desktop/PIPES2/out_ros", name+"_2.ply")
-            get_info.info_to_ply(info2, path_out2)
+            conversion_utils.info_to_ply(info2, path_out2)
             path_out3 = os.path.join("/home/miguel/Desktop/PIPES2/out_ros", name+"_3.ply")
-            get_info.info_to_ply(info3, path_out3)
+            conversion_utils.info_to_ply(info3, path_out3)
 
 
         # print info
@@ -560,6 +592,13 @@ class Pointcloud_Seg:
 
         pc = pc2.create_cloud(header, fields, points)
         return pc
+
+
+    def pc_info2array(self, ros_pc):
+        gen = pc2.read_points(ros_pc, skip_nans=True)   # ROS pointcloud into generator
+        pc_np = np.array(list(gen))                     # generator to list to numpy
+        pc_np = np.delete(pc_np, 3, 1) 
+        return pc_np
 
 
     def evaluate(self, data, label, xyz_max):
