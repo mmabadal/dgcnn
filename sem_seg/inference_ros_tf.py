@@ -7,11 +7,13 @@ import rospy
 import ctypes
 import struct
 import get_info
+import map_utils
 import numpy as np
 from model import *
 import open3d as o3d
 import indoor3d_util
 import get_instances
+import conversion_utils
 from natsort import natsorted
 
 from sensor_msgs.msg import PointField
@@ -348,14 +350,24 @@ class Pointcloud_Seg:
                                     [1]])
                     xyz_trans_rot = np.matmul(left2worldned, xyz)
                     info_array_world[i,0:3] = [xyz_trans_rot[0], xyz_trans_rot[1], xyz_trans_rot[2]]
+                    
+                out1 = False
+                if out1 == True:         
+                    path_out_world1 = os.path.join("/home/miguel/Desktop/PIPES2/out_ros_world", str(header.stamp)+".npy")
+                    path_out_world2 = os.path.join("/home/miguel/Desktop/PIPES2/out_ros_world", str(header.stamp)+".ply")
+                    np.save(path_out_world1, info_array_world)
+                    info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list = conversion_utils.array_to_info(info_array_world)
+                    info_world = [info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list]
+                    conversion_utils.info_to_ply(info_world, path_out_world2)
+
                 header.frame_id = "world_ned"
                 pc_info_world = self.array2pc_info(header, info_array_world)
                 self.pub_pc_info_world.publish(pc_info_world)
 
-                if self.info_map_key = True:
+                if self.info_map_key == True:
 
-                    info_pipes_list, info_valves_list, info_connexions_list, info_inst_pipe_list = conversion_utils.array_to_info(info_array_world)
-                    info_world = [info_pipes_list, info_valves_list, info_connexions_list, info_inst_pipe_list]
+                    info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list = conversion_utils.array_to_info(info_array_world)
+                    info_world = [info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list]
 
                     self.info_map = map_utils.get_info_map(self.info_map, info_world)
 
@@ -370,14 +382,14 @@ class Pointcloud_Seg:
 
                 header.frame_id = "turbot/stereo_down/left_optical"
 
-        out = True
-        if out == True:
-            name = str(time.time())
+        out2 = False
+        if out2 == True:
+            name = str(time.time())  # TODO COGER NOMBRE DE HEADER
             name = name.replace('.', '')
-            path_out1 = os.path.join("/home/miguel/Desktop/PIPES2/out_ros", name+"_1.ply")
-            conversion_utils.info_to_ply(info1, path_out1)
-            path_out2 = os.path.join("/home/miguel/Desktop/PIPES2/out_ros", name+"_2.ply")
-            conversion_utils.info_to_ply(info2, path_out2)
+            #path_out1 = os.path.join("/home/miguel/Desktop/PIPES2/out_ros", name+"_1.ply")
+            #conversion_utils.info_to_ply(info1, path_out1)
+            #path_out2 = os.path.join("/home/miguel/Desktop/PIPES2/out_ros", name+"_2.ply")
+            #conversion_utils.info_to_ply(info2, path_out2)
             path_out3 = os.path.join("/home/miguel/Desktop/PIPES2/out_ros", name+"_3.ply")
             conversion_utils.info_to_ply(info3, path_out3)
 

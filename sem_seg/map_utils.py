@@ -8,6 +8,7 @@ import argparse
 import numpy as np
 import scipy as scp
 import open3d as o3d
+import conversion_utils
 from natsort import natsorted
 import matplotlib.pyplot as plt
 from scipy.spatial import distance
@@ -59,3 +60,49 @@ def clean_map(info_map, count_thr):
         # delete near pipes that are in pipes deleted
     # refine connexions?
     ####################################
+
+
+
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--path_in', help='path in info.')
+    parser.add_argument('--path_out', help='path out info.')
+    parsed_args = parser.parse_args(sys.argv[1:])
+
+    path_in = parsed_args.path_in
+    path_out = parsed_args.path_out
+
+    info_pipes_list_map = list()
+    info_connexions_list_map = list()
+    info_valves_list_map = list()
+    instances_ref_pipe_list_map = list()
+    info_map = [info_pipes_list_map, info_connexions_list_map, info_valves_list_map, instances_ref_pipe_list_map]
+
+    count = 0
+    count_target = 5
+    count_thr = 2
+
+    for file in listdir(path_in):
+
+        count += 1
+
+        file_path = os.path.join(path_in, file)
+        info_array = np.load(file_path)
+
+        info_pipes_list, info_valves_list, info_connexions_list, info_inst_pipe_list = conversion_utils.array_to_info(info_array_world)
+        info_world = [info_pipes_list, info_valves_list, info_connexions_list, info_inst_pipe_list]
+
+        
+        info_map = map_utils.get_info_map(info_map, info_world)
+        # TODO PASAR A PLY Y GUARDAR PLY CON NOMBRE QUE HA ENTRADO PERO MAP
+
+        if count == count_target:
+            count = 0
+            info_map = map_utils.clean_map(info_map, count_thr)
+            # TODO PASAR A PLY Y GUARDAR PLY CON NOMBRE QUE HA ENTRADO PERO MAP CLEAN
+
+        
+
+
+

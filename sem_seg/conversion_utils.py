@@ -128,9 +128,10 @@ def info_to_ply(info, path_out):
 def info_to_array(info):
 
     info_pipes_list = info[0]
-    pipe_inst_list = info[3]
     info_connexions_list = info[1]
     info_valves_list = info[2]
+    pipe_inst_list = info[3]
+
     inst = 0
 
     info_list = list()
@@ -173,7 +174,7 @@ def info_to_array(info):
 
         belonging_insts_list = list()
         for i, belonging_inst_idx in enumerate(pipe_info[3]):
-            belonging_inst = np.append(pipe_info[0][0], [0, 255, 0, 7, belonging_inst_idx])   # insert color, type 7 - belonging inst and info - belonging inst idx
+            belonging_inst = np.append(pipe_info[0][1], [0, 255, 0, 7, belonging_inst_idx])   # insert color, type 7 - belonging inst and info - belonging inst idx
             belonging_insts_list.append(belonging_inst)
         belonging_insts = np.array(belonging_insts_list)
 
@@ -257,6 +258,9 @@ def info_to_array(info):
 
 def array_to_info(pc_np_info):
 
+    if pc_np_info.shape[1] == 10:               # delete R G B info
+        pc_np_info = np.delete(pc_np_info, [3,4,5], 1)
+        
     info_pipes_list = list()
     info_inst_pipe_list = list()
     info_valves_list = list()
@@ -334,4 +338,4 @@ def array_to_info(pc_np_info):
 
             info_connexions_list.append(info_connexion)
 
-    return info_pipes_list, info_valves_list, info_connexions_list, info_inst_pipe_list
+    return info_pipes_list, info_connexions_list, info_valves_list, info_inst_pipe_list
