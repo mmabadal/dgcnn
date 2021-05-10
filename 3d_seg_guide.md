@@ -80,7 +80,7 @@ mirar donde estan instaladas las cosas, quiza hay que hacer python3
 
 # Python2  
 
-pip2 install plyfile
+pip2 install plyfile (numpy==1.11)
 
 pip2 install tensorflow==1.14
 
