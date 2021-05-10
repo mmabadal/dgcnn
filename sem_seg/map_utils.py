@@ -18,13 +18,66 @@ from mpl_toolkits.mplot3d import Axes3D
 
 def get_info_map(info_map, info_world):
 
+    info_pipes_list_map = info_map[0]
+    info_connexions_list_map = info_map[1]
+    info_valves_list_map = info_map[2]
+    pipe_inst_list_map = info_map[3]
 
+    info_pipes_list_world = info_world[0]
+    info_connexions_list_world = info_world[1]
+    info_valves_list_world = info_world[2]
+    pipe_inst_list_world = info_world[3]
+
+
+    # for pipe in world, check if skeleton is near a skeleton in pipe map
+
+        # if it is
+            # anotate all its instances to be merged, world and map
+        # if it is not
+            # add its pipe, connexions (if not already in, to not put it three times if T completely new) and instances to world
+
+    # if len(list_instances_merge)>0
+        # set of instances to be merged
+
+        # delete pipes belonging to these instances 
+        # delete connexions belonging to these pipes
+
+        # merge instances
+        # apply     128-0.1     64-0.05     32-0.025
+
+        # get new pipes and connexions info
+
+        # sort pipe inst belonging to number
+        # sort connexion  near pipe number
+
+    # sort count for insts just additions, just deletions, additions and deletions
+
+    # for valve world check it its near valve map
+        # if it is
+            # merge
+            # sort valve near pipe number
+            # sort count for inst
+        # if it is not
+            # new valve
+            # count = 0
+
+
+
+
+
+    
+    info_map = [info_pipes_list_map, info_connexions_list_map, info_valves_list_map, instances_ref_pipe_list_map]
 
     return info_map
 
 
 
 def clean_map(info_map, count_thr):
+
+    info_pipes_list_map = info_map[0]
+    info_connexions_list_map = info_map[1]
+    info_valves_list_map = info_map[2]
+    pipe_inst_list_map = info_map[3]
 
 
     # for instance i
@@ -44,6 +97,7 @@ def clean_map(info_map, count_thr):
     # if list deleted instances len > 0
         # RECALCULATE NEAR PIPES OF VALVES (old ones and newly gotten)
 
+    info_map = [info_pipes_list_map, info_connexions_list_map, info_valves_list_map, instances_ref_pipe_list_map]
 
     return info_map
 
@@ -85,22 +139,26 @@ if __name__ == "__main__":
 
     for file in listdir(path_in):
 
+        file_name, _ = os.path.splitext(file)
         count += 1
 
         file_path = os.path.join(path_in, file)
         info_array = np.load(file_path)
 
-        info_pipes_list, info_valves_list, info_connexions_list, info_inst_pipe_list = conversion_utils.array_to_info(info_array_world)
-        info_world = [info_pipes_list, info_valves_list, info_connexions_list, info_inst_pipe_list]
+        info_pipes_list, info_connexions_list, info_valves_list, info_inst_pipe_list = conversion_utils.array_to_info(info_array_world)
+        info_world = [info_pipes_list, info_connexions_list, info_valves_list, info_inst_pipe_list]
 
-        
         info_map = map_utils.get_info_map(info_map, info_world)
-        # TODO PASAR A PLY Y GUARDAR PLY CON NOMBRE QUE HA ENTRADO PERO MAP
+
+        path_out_map = os.path.join(path_out, file_name+"_map.ply")
+        conversion_utils.info_to_ply(info_map, path_out_map)
 
         if count == count_target:
             count = 0
             info_map = map_utils.clean_map(info_map, count_thr)
-            # TODO PASAR A PLY Y GUARDAR PLY CON NOMBRE QUE HA ENTRADO PERO MAP CLEAN
+
+            path_out_map_clean = os.path.join(path_out, file_name+"_map_clean.ply")
+            conversion_utils.info_to_ply(info_map, path_out_map_clean)
 
         
 
