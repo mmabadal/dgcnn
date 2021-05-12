@@ -135,7 +135,7 @@ if __name__ == "__main__":
 
     count = 0
     count_target = 5
-    count_thr = 2
+    count_thr = 1
 
     for file in listdir(path_in):
 
@@ -143,7 +143,7 @@ if __name__ == "__main__":
         count += 1
 
         file_path = os.path.join(path_in, file)
-        info_array = np.load(file_path)
+        info_array_world = np.load(file_path)
 
         info_pipes_list, info_connexions_list, info_valves_list, info_inst_pipe_list = conversion_utils.array_to_info(info_array_world)
         info_world = [info_pipes_list, info_connexions_list, info_valves_list, info_inst_pipe_list]

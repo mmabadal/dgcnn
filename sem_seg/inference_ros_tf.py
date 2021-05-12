@@ -384,7 +384,7 @@ class Pointcloud_Seg:
 
         out2 = False
         if out2 == True:
-            name = str(time.time())  # TODO COGER NOMBRE DE HEADER
+            name = str(header.stamp) 
             name = name.replace('.', '')
             #path_out1 = os.path.join("/home/miguel/Desktop/PIPES2/out_ros", name+"_1.ply")
             #conversion_utils.info_to_ply(info1, path_out1)
