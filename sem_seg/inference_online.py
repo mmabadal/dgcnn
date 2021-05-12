@@ -10,6 +10,7 @@ from model import *
 import open3d as o3d
 import indoor3d_util
 import get_instances
+import conversion_utils
 from natsort import natsorted
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -106,24 +107,24 @@ if __name__=='__main__':
         targets_list.append(target_o3d)
 
     # init tensorflow
-    with tf.device('/gpu:'+str(gpu_index)):
+    with tfw.device('/gpu:'+str(gpu_index)):
         pointclouds_pl, labels_pl = placeholder_inputs(batch_size, points_sub)
-        is_training_pl = tf.placeholder(tf.bool, shape=())
+        is_training_pl = tfw.placeholder(tfw.bool, shape=())
 
         # simple model
         pred = get_model(pointclouds_pl, is_training_pl)
         loss = get_loss(pred, labels_pl)
-        pred_softmax = tf.nn.softmax(pred)
+        pred_softmax = tfw.nn.softmax(pred)
  
         # Add ops to save and restore all the variables.
-        saver = tf.train.Saver()
+        saver = tfw.train.Saver()
 
     # Create a session
-    config = tf.ConfigProto()
+    config = tfw.ConfigProto()
     config.gpu_options.allow_growth = True
     config.allow_soft_placement = True
     config.log_device_placement = True
-    sess = tf.Session(config=config)
+    sess = tfw.Session(config=config)
 
     # Restore variables from disk.
     saver.restore(sess, model_path)
@@ -162,19 +163,20 @@ if __name__=='__main__':
                     data_label_full_sub[:, 0:3] -= xyz_min               # move pointcloud to origin
                     xyz_max = np.amax(data_label_full_sub, axis=0)[0:3] # get pointcloud maxs
 
+                    # divide data into blocks of size "block" with an stride "stride", in each block select random "points_sub" points
                     data_sub, label_sub = indoor3d_util.room2blocks_plus_normalized_parsed(data_label_full_sub, xyz_max, points_sub, block_size=block_sub, stride=stride_sub, random_sample=False, sample_num=None, sample_aug=1) # subsample PC for evaluation
 
-                    with tf.Graph().as_default():
+                    with tfw.Graph().as_default():
                         pred_sub = evaluate(data_sub, label_sub, xyz_max, sess, ops)  # evaluate PC
-                    pred_sub = np.unique(pred_sub, axis=0)                            # delete duplicates from room2blocks
-                    pred_sub[:, 0:3] += xyz_min                                       # recover PC's original position
+                    pred_sub = np.unique(pred_sub, axis=0)  # delete duplicates from room2blocks (if points in block < points_sub, it duplicates them)
+                    pred_sub[:, 0:3] += xyz_min             # recover original position
 
-                    if points_sub >= 128:                  # if subsampling of prediciton is wanted
-                        down = 128/points_sub              
+                    # downsample prediction to 128 if its not already on 128
+                    if points_sub >= 128:                                             # //PARAM
+                        down = 128/points_sub                                         # //PARAM
                         n_idx_pred_sub_down = int(pred_sub.shape[0] * down)  
                         idx_pred_sub_down = np.random.choice(pred_sub.shape[0], n_idx_pred_sub_down, replace=False)
-                        pred_sub = pred_sub[idx_pred_sub_down, 0:7]     # downsample prediciton
-
+                        pred_sub = pred_sub[idx_pred_sub_down, 0:7] 
 
                     col_inst = {
                     0: [255, 255, 0],
@@ -202,55 +204,57 @@ if __name__=='__main__':
                     min_p_p = 60               # minimum number of points to consider a blob as a pipe     //PARAM
                     min_p_v = 30 # 40 80 140   # minimum number of points to consider a blob as a valve    //PARAM
 
-                    # get instances ref
-                    pred_sub_pipe = pred_sub[pred_sub[:,6] == [labels["pipe"]]]       # get data label pipe
-                    pred_sub_valve = pred_sub[pred_sub[:,6] == [labels["valve"]]]     # get data label pipe
+                    pred_sub_pipe = pred_sub[pred_sub[:,6] == [labels["pipe"]]]       # get points predicted as pipe
+                    pred_sub_valve = pred_sub[pred_sub[:,6] == [labels["valve"]]]     # get points predicted as valve
 
+                    # get valve instances
                     instances_ref_valve_list, pred_sub_pipe_ref, stolen_list  = get_instances.get_instances(pred_sub_valve, dim_v, rad_v, min_p_v, ref=True, ref_data = pred_sub_pipe, ref_rad = 0.1)
                     #instances_ref_valve_list, pred_sub_pipe_ref, stolen_list  = get_instances.get_instances_o3d(pred_sub_valve, dim_v, rad_v, min_p_v, ref=True, ref_data = pred_sub_pipe, ref_rad = 0.1)
-                    
 
+                    # get valve information
                     info_valves_list = list()
-                    for i, inst in enumerate(instances_ref_valve_list):
-
-                        xyz_central = np.mean(inst, axis=0)[0:3]
-                        inst[:, 0:3] -= xyz_central                # move instance to origin
+                    for i, inst in enumerate(instances_ref_valve_list): # for each valve instance
+                        # transform instance to o3d pointcloud
+                        xyz_central = np.mean(inst, axis=0)[0:3]    # get isntance center
+                        inst[:, 0:3] -= xyz_central                 # move center to origin
                         inst_o3d = o3d.geometry.PointCloud()
                         inst_o3d.points = o3d.utility.Vector3dVector(inst[:,0:3])
                         inst_o3d.colors = o3d.utility.Vector3dVector(inst[:,3:6])
-                        inst_o3d.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=0.01, max_nn=15))
-                        inst_o3d.orient_normals_to_align_with_direction(orientation_reference=([0, 0, 1]))
-                        inst[:, 0:3] += xyz_central                # move instance to original position
+                        inst_o3d.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=0.01, max_nn=15)) # compute normal
+                        inst_o3d.orient_normals_to_align_with_direction(orientation_reference=([0, 0, 1]))                   # align normals
+                        inst[:, 0:3] += xyz_central                                                                          # recover original position
 
-                        info_valve = get_info.get_info(inst_o3d, targets_list, method="matching")
-                        max_info =  max(info_valve)
-                        max_idx = info_valve.index(max_info)
-
+                        info_valve = get_info.get_info(inst_o3d, targets_list, method="matching")        # get valve instance info list([fitness1, rotation1],[fitness2, rotation2], ...)  len = len(targets_list)
+                        max_info =  max(info_valve)                                                      # the max() function compares the first element of each info_list element, which is fitness)
+                        max_idx = info_valve.index(max_info)                                             # idx of best valve match
+                        
                         rad = math.radians(max_info[1])
-                        vector = np.array([math.cos(rad), math.sin(rad), 0])                            # get valve unit vector at Z 0
-                        vector = vector*0.18                                                            # resize vector to valve size //PARAM
-
-                        info_valves_list.append([xyz_central, max_info, vector, max_idx, inst[:,0:3]])  
-
-                    descart_valves_list = [i for i, x in enumerate(info_valves_list) if x[1][0] < 0.35]
-                    for i, idx in enumerate(descart_valves_list):
-                        descarted_points = np.vstack(instances_ref_valve_list[idx])
-                        stolen_idx = list(np.vstack(stolen_list[idx])[:,0].astype(int))
-                        stolen_cls = np.vstack(stolen_list[idx])[:,1].astype(int)
-                        stolen_cls = stolen_cls.reshape(stolen_cls.shape[0],1)
-                        if len(stolen_idx)>0:
-                            stolen_points = descarted_points[stolen_idx, :-2]
-                            stolen_points = np.concatenate((stolen_points,stolen_cls),axis=1)
-                            pred_sub_pipe_ref = np.concatenate((pred_sub_pipe_ref,stolen_points),axis=0)
-
-                    for index in sorted(descart_valves_list, reverse=True):
-                        del info_valves_list[index]
-                        del instances_ref_valve_list[index]
+                        vector = np.array([math.cos(rad), math.sin(rad), 0])                             # get valve unit vector at zero
+                        vector = vector*0.18                                                             # resize vector to valve size //PARAM
+                        info_valves_list.append([xyz_central, vector, max_idx, inst[:,0:3], max_info])   # append valve instance info
 
 
-                    instances_ref_pipe_list, _, _  = get_instances.get_instances(pred_sub_pipe_ref, dim_p, rad_p, min_p_p)
-                    #instances_ref_pipe_list, _, _  = get_instances.get_instances_o3d(pred_sub_pipe_ref, dim, rad_p, min_p_p)
+                    # based on valve fitness, delete it and return stolen points to pipe prediction
+                    descart_valves_list = [i for i, x in enumerate(info_valves_list) if x[4][0] < 0.4]     # if max fitnes < thr  //PARAM
+                    for i in descart_valves_list:
+                        print("Valve descarted")
+                        descarted_points = np.vstack(instances_ref_valve_list[i])                           # notate points to discard
+                        stolen_idx = list(np.vstack(stolen_list[i])[:,0].astype(int))                       # get stolen idx
+                        stolen_cls = np.vstack(stolen_list[i])[:,1].astype(int)                             # get stolen class
+                        stolen_cls = stolen_cls.reshape(stolen_cls.shape[0],1)                              # reshape stolen class
+                        if len(stolen_idx)>0:                                                               # if there were stolen points
+                            stolen_points = descarted_points[stolen_idx, :-2]                               # recover stolen points
+                            stolen_points = np.concatenate((stolen_points,stolen_cls),axis=1)               # concatenate stolen points and stolen class
+                            pred_sub_pipe_ref = np.concatenate((pred_sub_pipe_ref,stolen_points),axis=0)    # add points and class pipe prediction points
                     
+                    for index in sorted(descart_valves_list, reverse=True):                                 # delete discarted valve info                                                                             
+                        del info_valves_list[index]
+                        del instances_ref_valve_list[index]     # for print only  
+
+                    # get pipe instances
+                    instances_ref_pipe_list, _, _  = get_instances.get_instances(pred_sub_pipe_ref, dim_p, rad_p, min_p_p)
+                    #instances_ref_pipe_list, _, _  = get_instances.get_instances_o3d(pred_sub_pipe_ref, dim_p, rad_p, min_p_p)
+
                     info_pipes_list = list()
                     info_connexions_list = list()
                     k_pipe = 0
@@ -264,6 +268,9 @@ if __name__=='__main__':
                         info_pipe = get_info.get_info(inst_o3d, models=0, method="skeleton") # get pipe instance info list( list( list(chain1, start1, end1, elbow_list1, vector_chain_list1), ...), list(connexions_points)) 
                         
                         for j, pipe_info in enumerate(info_pipe[0]):                         # stack pipes info
+                            inst_list = list()
+                            inst_list.append(i)
+                            pipe_info.append(inst_list)
                             info_pipes_list.append(pipe_info)
 
                         for j, connexion_info in enumerate(info_pipe[1]):                    # stack conenexions info
@@ -277,20 +284,23 @@ if __name__=='__main__':
                     info_pipes_list2, info_connexions_list2 = get_info.unify_chains(info_pipes_list_copy, info_connexions_list_copy)
 
                     info_valves_list_copy = copy.deepcopy(info_valves_list)
-                    info_valves_list2 = get_info.refine_valves(info_valves_list_copy, info_pipes_list2)  # TODO VALVULAS QUE ESTAN CONECTADAS A 1 O 2 TUBERIAS COJAN SUS VECTORES, BORRAR VALVES NO CONECTADAS??
+                    info_valves_list2 = get_info.refine_valves(info_valves_list_copy, info_pipes_list2) 
 
-                    info1 = [info_pipes_list, info_connexions_list, info_valves_list]      
-                    info2 = [info_pipes_list2, info_connexions_list2, info_valves_list]       
-                    info3 = [info_pipes_list2, info_connexions_list2, info_valves_list2]       
+                    #info1 = [info_pipes_list, info_connexions_list, info_valves_list, instances_ref_pipe_list]
+                    #info2 = [info_pipes_list2, info_connexions_list2, info_valves_list, instances_ref_pipe_list] 
+                    info3 = [info_pipes_list2, info_connexions_list2, info_valves_list2, instances_ref_pipe_list]
 
-                    path_out1 = os.path.join(dump_path, os.path.basename(filepath)[:-4]+'_info1.ply')
-                    get_info.info_to_ply(info1, path_out1)
-                    path_out2 = os.path.join(dump_path, os.path.basename(filepath)[:-4]+'_info2.ply')
-                    get_info.info_to_ply(info2, path_out2)
+
+                    #path_out1 = os.path.join(dump_path, os.path.basename(filepath)[:-4]+'_info1.ply')
+                    #conversion_utils.info_to_ply(info1, path_out1)
+                    #path_out2 = os.path.join(dump_path, os.path.basename(filepath)[:-4]+'_info2.ply')
+                    #conversion_utils.info_to_ply(info2, path_out2)
                     path_out3 = os.path.join(dump_path, os.path.basename(filepath)[:-4]+'_info3.ply')
-                    get_info.info_to_ply(info3, path_out3)
+                    conversion_utils.info_to_ply(info3, path_out3)
 
-
+                    info3_array = conversion_utils.info_to_array(info3)
+                    path_out3_array = os.path.join(dump_path, os.path.basename(filepath)[:-4]+'_info3_array.npy')
+                    np.save(path_out3_array, info3_array)
 
                     # print info
 
