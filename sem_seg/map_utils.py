@@ -18,23 +18,30 @@ from mpl_toolkits.mplot3d import Axes3D
 
 def get_info_map(info_map, info_world):
 
-    info_pipes_list_map = info_map[0]
-    info_connexions_list_map = info_map[1]
-    info_valves_list_map = info_map[2]
-    pipe_inst_list_map = info_map[3]
+    info_pipes_map_list = info_map[0]
+    info_connexions_map_list = info_map[1]
+    info_valves_map_list = info_map[2]
+    pipe_inst_map_list = info_map[3]
 
-    info_pipes_list_world = info_world[0]
-    info_connexions_list_world = info_world[1]
+    info_pipes_world_list = info_world[0]
+    info_connexions_world_list = info_world[1]
     info_valves_list_world = info_world[2]
     pipe_inst_list_world = info_world[3]
 
+    merge_inst_list = list()
 
-    # for pipe in world, check if skeleton is near a skeleton in pipe map
+    for i, pipe_world in enumerate(info_pipes_world_list):
+        skeleton_world = pipe_world[0]
+        for j, pipe_map in enumerate(info_pipes_map_list):
+            skeleton_map = pipe_map[0]
 
-        # if it is
-            # anotate all its instances to be merged, world and map
-        # if it is not
-            # add its pipe, connexions (if not already in, to not put it three times if T completely new) and instances to world
+            near = check_near(pipe_world, pipe_map)  # TODO WRITE CHECK_NEAR FUNCTION
+
+            if near == True:
+                merge_inst_list = merge_inst_list + pipe_world[3] + pipe_map[3]
+            else:
+                info_pipes_map_list.append
+                # add its pipe, connexions (if not already in, to not put it three times if T completely new) and instances to world
 
     # if len(list_instances_merge)>0
         # set of instances to be merged
@@ -66,7 +73,7 @@ def get_info_map(info_map, info_world):
 
 
     
-    info_map = [info_pipes_list_map, info_connexions_list_map, info_valves_list_map, instances_ref_pipe_list_map]
+    info_map = [info_pipes_map_list, info_connexions_map_list, info_valves_map_list, pipe_inst_map_list]
 
     return info_map
 
@@ -74,10 +81,10 @@ def get_info_map(info_map, info_world):
 
 def clean_map(info_map, count_thr):
 
-    info_pipes_list_map = info_map[0]
-    info_connexions_list_map = info_map[1]
-    info_valves_list_map = info_map[2]
-    pipe_inst_list_map = info_map[3]
+    info_pipes_map_list = info_map[0]
+    info_connexions_map_list = info_map[1]
+    info_valves_map_list = info_map[2]
+    pipe_inst_map_list = info_map[3]
 
 
     # for instance i
@@ -97,7 +104,7 @@ def clean_map(info_map, count_thr):
     # if list deleted instances len > 0
         # RECALCULATE NEAR PIPES OF VALVES (old ones and newly gotten)
 
-    info_map = [info_pipes_list_map, info_connexions_list_map, info_valves_list_map, instances_ref_pipe_list_map]
+    info_map = [info_pipes_map_list, info_connexions_map_list, info_valves_map_list, pipe_inst_map_list]
 
     return info_map
 
@@ -145,8 +152,8 @@ if __name__ == "__main__":
         file_path = os.path.join(path_in, file)
         info_array_world = np.load(file_path)
 
-        info_pipes_list, info_connexions_list, info_valves_list, info_inst_pipe_list = conversion_utils.array_to_info(info_array_world)
-        info_world = [info_pipes_list, info_connexions_list, info_valves_list, info_inst_pipe_list]
+        info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list = conversion_utils.array_to_info(info_array_world)
+        info_world = [info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list]
 
         info_map = map_utils.get_info_map(info_map, info_world)
 
