@@ -463,8 +463,8 @@ def get_info_skeleton(instance):
 
     chains, connexions = get_connectivity(skeleton)     # get skeleton conectivity -> chains and connexions
 
-    print("CHAINS ORIGINALS")
     if print_opt == True:
+        print("CHAINS ORIGINALS")
         for chain in chains:
             print_chain(chain, xyz_max)
 
@@ -476,8 +476,8 @@ def get_info_skeleton(instance):
     for i in sorted(chain_del_list, reverse=True):  # delete chains
         del chains[i]                               
 
-    print("CHAINS SMALL DELETED")
     if print_opt == True:
+        print("CHAINS SMALL DELETED")
         for chain in chains:
             print_chain(chain, xyz_max)
 
@@ -821,7 +821,7 @@ def get_elbows(chain):
 
     look_ahead = 10                                                 # look ahead distance to find changes in direction (elbows) in chain points //PARAM
     elbow_size = 7                                                  # elbow size in chain points   //PARAM
-    angle_elbow = 70                                                # angle thr to consider an elow   //PARAM   
+    angle_elbow = 60                                                # angle thr to consider an elow   //PARAM   
 
     angle_list = list()
     elbow_idx_list = list()
