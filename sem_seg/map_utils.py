@@ -25,29 +25,64 @@ def get_info_map(info_map, info_world):
 
     info_pipes_world_list = info_world[0]
     info_connexions_world_list = info_world[1]
-    info_valves_list_world = info_world[2]
-    pipe_inst_list_world = info_world[3]
+    info_valves_world_list = info_world[2]
+    pipe_inst_world_list = info_world[3]
 
-    merge_inst_list = list()
+
+
+    near2 = list()
 
     for i, pipe_world in enumerate(info_pipes_world_list):
+        merge_inst_world_list = list()
+        merge_inst_map_list = list()
         skeleton_world = pipe_world[0]
+        near2.append(False)
         for j, pipe_map in enumerate(info_pipes_map_list):
             skeleton_map = pipe_map[0]
 
-            near = check_near(pipe_world, pipe_map)  # TODO WRITE CHECK_NEAR FUNCTION
+            near1 = check_near(pipe_world, pipe_map)  # TODO WRITE CHECK_NEAR FUNCTION
+            near2[i] = near2[i]+near1
 
-            if near == True:
-                merge_inst_list = merge_inst_list + pipe_world[3] + pipe_map[3]
-            else:
-                info_pipes_map_list.append
-                # add its pipe, connexions (if not already in, to not put it three times if T completely new) and instances to world
+            if near1 == True:
+                merge_inst_world_list = merge_inst_world_list + pipe_world[3]
+                merge_inst_map_list = merge_inst_map_list + pipe_map[3]         # TODO ESTAS TENDRAN YA UNAS SCORES, SUMARLAS Y SUMARLE LEN DE INST WORLD LIST
 
-    # if len(list_instances_merge)>0
-        # set of instances to be merged
 
-        # delete pipes belonging to these instances 
-        # delete connexions belonging to these pipes
+    for i, pipe_world in enumerate(info_pipes_world_list): # SE HACE DESPUES APRA EVITAR QUE PIPE WORLD SE CHECK NEAR VS ANTERIORES PIPE WORLS ADDED TO info_pipes_map_list
+        if near2[i] == False
+            for i, inst_idx in enumerate(pipe_world[3]):
+                pipe_world[3][i] = inst_idx + len(pipe_inst_world_list)
+            info_pipes_map_list.append(pipe_world) 
+            for c in info_connexions_world_list
+                if i in c[1]:
+                    if c not in info_connexions_map_list:
+                        info_connexions_map_list.append(c)  # TODO actializar near pipes - AL FINAL CALCULAR NUEVOS NEAR DE CONEXIONES Y VALVES
+            for i in pipe_world[3]:
+                pipe_inst_map_list.append(pipe_inst_world_list[i])
+
+
+    if len(merge_inst_world_list)>0:
+
+        merge_inst_world_list = list(set(merge_inst_world_list))
+        merge_inst_map_list = list(set(merge_inst_map_list))
+
+        # delete pipes map belonging to insts map that are going to be merged and recalculated
+        delete_pipe_list = list()
+        for i, pipe_map in info_pipes_map_list
+            delete = any(inst in merge_inst_map_list for inst in pipe_map[3])
+            if delete == True:
+                delete_pipe_list.append(i)
+        for i in sorted(delete_pipe_list, reverse=True): 
+        del info_pipes_map_list[i] 
+
+        # delete connexions map belonging to pipes map that belong to instances map that are going to be recalculated
+        delete_connexion_list = list()
+        for i, connexion_map in info_connexions_map_list:
+            delete = any(pipe in delete_pipe_list for pipe in connexion_map[1])
+            if delete == True:
+                delete_connexion_list.append(i)
+        for i in sorted(delete_connexion_list, reverse=True): 
+        del info_connexions_map_list[i] 
 
         # merge instances
         # apply     128-0.1     64-0.05     32-0.025
