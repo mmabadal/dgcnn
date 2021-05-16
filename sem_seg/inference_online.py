@@ -307,7 +307,7 @@ if __name__=='__main__':
                     print(" ")
                     print("INFO VALVES:")
                     for valve in info_valves_list:
-                        valve.pop(-1)
+                        valve.pop(-2)
                         print(valve)
                     print(" ")
 
