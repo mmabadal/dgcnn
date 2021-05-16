@@ -390,7 +390,7 @@ def get_info_connexions(connexions, chains):
     return connexions_info2, chains
 
 
-def get_info_skeleton(instance):
+def get_info_skeleton(instance, close):
 
     print_opt = False
     print_opt2 = False
@@ -438,7 +438,7 @@ def get_info_skeleton(instance):
         plt.imshow(voxels_matrix_2d)
         plt.show()
 
-    closing_dist = 6                                                                                                           # distance to perform closing //PARAM
+    closing_dist = close                                                                                                           # distance to perform closing //PARAM
     voxels_matrix_2d_proc = scp.ndimage.binary_closing(voxels_matrix_2d, structure=np.ones((closing_dist,closing_dist)))       # closing
     
     if print_opt == True:
@@ -934,9 +934,9 @@ def get_info_matching(instance, models):
     return info_inst
 
 
-def get_info(instance, models, method):
+def get_info(instance, models, method, close = 6):
     if method == "skeleton":
-        info = get_info_skeleton(instance)           # get info skeleton
+        info = get_info_skeleton(instance, close)           # get info skeleton
     elif method == "matching":
         info = get_info_matching(instance, models)   # get info matching
     return info
