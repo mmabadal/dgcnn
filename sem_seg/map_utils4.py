@@ -170,7 +170,6 @@ def get_info_map(info_map, info_world):
     info_connexions_map_list = list()
     k_pipe = 0
 
-
     for i, inst_map in enumerate(pipe_inst_map_list): # for each pipe instance
         
 
@@ -259,25 +258,19 @@ def clean_map(info_map, count_thr):
     info_valves_map_list = info_map[2]
     pipe_inst_map_list = info_map[3]
 
+    valve_del_list = list()
 
-    # for instance i
-        # if count i < count_thr
-            # mark instance i to delete
-    # delete instances
-    # ESTO SE PUEDE HACER POR DENSIDAD???
+    for i, valve_info_map in enumerate(info_valves_map_list):        # for each valve
 
+        if valve_info_map[4] <= count_thr:
+            valve_del_list.append(i)
 
-    # get_info instances pipe
-    # RECALCULATE BELONGING INST OF PIPES (old ones and newly gotten)
-    # RECALCULATE NEAR PIPES OF CONNEXIONS (old ones and newly gotten)
-
-    #for valve
-        #if count < count_thr
-            #delete valve
-    # if list deleted instances len > 0
-        # RECALCULATE NEAR PIPES OF VALVES (old ones and newly gotten)
+    for i in sorted(valve_del_list, reverse=True):  # delete chains
+        del info_valves_map_list[i]  
 
     info_map = [info_pipes_map_list, info_connexions_map_list, info_valves_map_list, pipe_inst_map_list]
+
+    # TODO CAN DELETE PIPES SHORT
 
     return info_map
 
@@ -330,17 +323,21 @@ if __name__ == "__main__":
         info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list = conversion_utils.array_to_info(info_array_world)
         info_world = [info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list]
 
+        a = time.time()
         info_map = get_info_map(info_map, info_world)
+        b = time.time()
+        c = b-a
+        print("time: " + str(c))
 
         path_out_map = os.path.join(path_out, file_name+"_map.ply")
         conversion_utils.info_to_ply(info_map, path_out_map)
 
-        # if count == count_target:
-        #     count = 0
-        #     info_map = clean_map(info_map, count_thr)
+        if count == count_target:
+            count = 0
+            info_map = clean_map(info_map, count_thr)
 
-        #     path_out_map_clean = os.path.join(path_out, file_name+"_map_clean.ply")
-        #     conversion_utils.info_to_ply(info_map, path_out_map_clean)
+            path_out_map_clean = os.path.join(path_out, file_name+"_map_clean.ply")
+            conversion_utils.info_to_ply(info_map, path_out_map_clean)
 
         
 
