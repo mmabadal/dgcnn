@@ -29,7 +29,7 @@ class Pointcloud_Seg:
         self.name = name
         
         # Params inference
-        self.fps = 2.0                # target fps        //PARAM
+        self.fps = 1.0                # target fps        //PARAM
         self.period = 1.0/self.fps    # target period     //PARAM
         self.batch_size = 1         #                   //PARAM
         self.points_sub = 128       #                   //PARAM
@@ -87,7 +87,7 @@ class Pointcloud_Seg:
         self.listener = tf.TransformListener()
 
         # inits info map
-        self.info_map_key = False
+        self.info_map_key = True
         self.info_pipes_list_map = list()
         self.info_connexions_list_map = list()
         self.info_valves_list_map = list()
@@ -180,7 +180,7 @@ class Pointcloud_Seg:
             return
 
         left_frame_id = "turbot/stereo_down/left_optical"
-        world_frame_id = "world_ned" 
+        world_frame_id = "turbot/odom" 
         left2worldned = self.get_transform(world_frame_id, left_frame_id, header.stamp)
 
         pc_np[:, 2] *= -1  # flip Z axis        # //PARAM
@@ -350,46 +350,68 @@ class Pointcloud_Seg:
                                     [1]])
                     xyz_trans_rot = np.matmul(left2worldned, xyz)
                     info_array_world[i,0:3] = [xyz_trans_rot[0], xyz_trans_rot[1], xyz_trans_rot[2]]
-                    
-                out1 = False
-                if out1 == True:         
-                    path_out_world1 = os.path.join("/home/miguel/Desktop/PIPES2/out_ros_world", str(header.stamp)+".npy")
-                    path_out_world2 = os.path.join("/home/miguel/Desktop/PIPES2/out_ros_world", str(header.stamp)+".ply")
-                    np.save(path_out_world1, info_array_world)
-                    info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list = conversion_utils.array_to_info(info_array_world)
-                    info_world = [info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list]
-                    conversion_utils.info_to_ply(info_world, path_out_world2)
 
-                header.frame_id = "world_ned"
+                header.frame_id = world_frame_id
                 pc_info_world = self.array2pc_info(header, info_array_world)
                 self.pub_pc_info_world.publish(pc_info_world)
 
-                if self.info_map_key == True:
-
+                out1 = True
+                if out1 == True:         
+                    path_out_world_info = os.path.join("/home/miguel/Desktop/PIPES2/out_ros_world", str(header.stamp)+"_info.ply")
                     info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list = conversion_utils.array_to_info(info_array_world)
                     info_world = [info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list]
+                    conversion_utils.info_to_ply(info_world, path_out_world_info)
 
-                    self.info_map = map_utils.get_info_map(self.info_map, info_world)
+                    pred_sub_world = pred_sub.copy()
+                    for i in range(pred_sub.shape[0]):
+                        xyz = np.array([[pred_sub[i,0]],
+                                        [pred_sub[i,1]],
+                                        [pred_sub[i,2]],
+                                        [1]])
+                        xyz_trans_rot = np.matmul(left2worldned, xyz)
+                        pred_sub_world[i,0:3] = [xyz_trans_rot[0], xyz_trans_rot[1], xyz_trans_rot[2]]
 
+                    path_out_world_base = os.path.join("/home/miguel/Desktop/PIPES2/out_ros_world", str(header.stamp)+"_base.obj")
+                    path_out_world_pred = os.path.join("/home/miguel/Desktop/PIPES2/out_ros_world", str(header.stamp)+"_pred.obj")
+                    fout_base = open(path_out_world_base, 'w')
+                    fout_pred = open(path_out_world_pred, 'w')
+                    for i in range(pred_sub_world.shape[0]):
+                        fout_base.write('v %f %f %f %d %d %d\n' % (pred_sub_world[i,0], pred_sub_world[i,1], pred_sub_world[i,2], pred_sub_world[i,3], pred_sub_world[i,4], pred_sub_world[i,5]))
+                    for i in range(pred_sub_world.shape[0]):
+                        color = self.label2color[pred_sub_world[i,6]]
+                        fout_pred.write('v %f %f %f %d %d %d\n' % (pred_sub_world[i,0], pred_sub_world[i,1], pred_sub_world[i,2], color[0], color[1], color[2]))
 
-                    if self.count == self.count_target:
-                        self.count = 0
-                        self.info_map = map_utils.clean_map(self.info_map, self.count_thr)
+                if self.info_map_key == True:
+
+                    # info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list = conversion_utils.array_to_info(info_array_world)
+                    # info_world = [info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list]
+
+                    # self.info_map = map_utils.get_info_map(self.info_map, info_world)
+
+                    # if self.count == self.count_target:
+                    #     self.count = 0
+                    #     self.info_map = map_utils.clean_map(self.info_map, self.count_thr)
                     
-                    info_map_array = conversion_utils.info_to_array(info_map)
-                    pc_info_map = self.array2pc_info(header, info_map_array)
-                    self.pub_pc_info_map.publish(pc_info_map)
+                    # info_map_array = conversion_utils.info_to_array(info_map)
+                    # pc_info_map = self.array2pc_info(header, info_map_array)
+                    # self.pub_pc_info_map.publish(pc_info_map)
+
+                    out2 = True
+                    if out2 == True:
+                        z = 1 # SAVE INFO MAP
+                        path_out_world_info_np = os.path.join("/home/miguel/Desktop/PIPES2/out_ros_world", str(header.stamp)+"_info.npy") # save array of info3 to world used
+                        np.save(path_out_world_info_np, info_array_world)
 
                 header.frame_id = "turbot/stereo_down/left_optical"
 
-        out2 = False
-        if out2 == True:
+        out3 = False
+        if out3 == True:
             name = str(header.stamp) 
             name = name.replace('.', '')
             #path_out1 = os.path.join("/home/miguel/Desktop/PIPES2/out_ros", name+"_1.ply")
             #conversion_utils.info_to_ply(info1, path_out1)
-            #path_out2 = os.path.join("/home/miguel/Desktop/PIPES2/out_ros", name+"_2.ply")
-            #conversion_utils.info_to_ply(info2, path_out2)
+            #path_out3 = os.path.join("/home/miguel/Desktop/PIPES2/out_ros", name+"_2.ply")
+            #conversion_utils.info_to_ply(info2, path_out3)
             path_out3 = os.path.join("/home/miguel/Desktop/PIPES2/out_ros", name+"_3.ply")
             conversion_utils.info_to_ply(info3, path_out3)
 
@@ -433,13 +455,13 @@ class Pointcloud_Seg:
 
         # publishers
 
-        i = len(instances_ref_valve_list)
+        n_v = len(instances_ref_valve_list)
 
         if len(instances_ref_valve_list)>0:
             instances_ref_proj_valve = np.vstack(instances_ref_valve_list)
         if len(instances_ref_pipe_list)>0:
             instances_ref_pipe = np.vstack(instances_ref_pipe_list)
-            instances_ref_pipe[:,7] = instances_ref_pipe[:,7]+i
+            instances_ref_pipe[:,7] = instances_ref_pipe[:,7]+n_v
 
         if len(instances_ref_valve_list)>0 and len(instances_ref_pipe_list)>0:
             instances_ref = np.concatenate((instances_ref_proj_valve, instances_ref_pipe), axis=0)
@@ -453,6 +475,24 @@ class Pointcloud_Seg:
         if instances_ref is None: # if instances were not found
             rospy.loginfo('[%s]: No instances found', self.name)	
             return
+
+        if len(info_pipes_list2)>0 or len(info_valves_list2)>0:  # print here because instrances_ref is needed
+            if isinstance(left2worldned,int) == False:
+                if out1 == True:
+                    instances_ref_world = instances_ref.copy()
+                    for i in range(instances_ref.shape[0]):
+                        xyz = np.array([[instances_ref[i,0]],
+                                        [instances_ref[i,1]],
+                                        [instances_ref[i,2]],
+                                        [1]])
+                        xyz_trans_rot = np.matmul(left2worldned, xyz)
+                        instances_ref_world[i,0:3] = [xyz_trans_rot[0], xyz_trans_rot[1], xyz_trans_rot[2]]
+
+                    path_out_world_inst = os.path.join("/home/miguel/Desktop/PIPES2/out_ros_world", str(header.stamp)+"_inst.obj")
+                    fout_pred = open(path_out_world_inst, 'w')
+                    for i in range(instances_ref_world.shape[0]):
+                        color = self.col_inst[instances_ref_world[i,7]]
+                        fout_pred.write('v %f %f %f %d %d %d\n' % (instances_ref_world[i,0], instances_ref_world[i,1], instances_ref_world[i,2], color[0], color[1], color[2]))
 
         for i in range(pred_sub.shape[0]):
             color = self.label2color[pred_sub[i,6]]
