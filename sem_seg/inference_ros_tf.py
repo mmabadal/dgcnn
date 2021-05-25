@@ -39,7 +39,7 @@ class Pointcloud_Seg:
         self.desired_points = int(6000/(128/self.points_sub))  # n of points to wich the received pc will be downsampled    //PARAM
 
         # get valve matching targets
-        self.targets_path = "/home/uib/Desktop/PIPES2/dgcnn/valve_targets"      # //PARAM
+        self.targets_path = "/home/miguel/Desktop/PIPES2/dgcnn/valve_targets"      # //PARAM
         self.targets_list = list()
         for file_name in natsorted(os.listdir(self.targets_path)):
             target_path = os.path.join(self.targets_path, file_name)
@@ -79,8 +79,8 @@ class Pointcloud_Seg:
         self.min_p_p = 60               # minimum number of points to consider a blob as a pipe     //PARAM
         self.min_p_v = 30 # 40 80 140   # minimum number of points to consider a blob as a valve    //PARAM
 
-        self.model_path = "/home/uib/Desktop/PIPES2/dgcnn/sem_seg/RUNS/sparus_xiroi/test/128_11_1/model.ckpt"          # path to model         //PARAM
-        self.path_cls = "/home/uib/Desktop/PIPES2/dgcnn/sem_seg/RUNS/sparus_xiroi/test/128_11_1/cls.txt"               # path to clases info   //PARAM
+        self.model_path = "/home/miguel/Desktop/PIPES2/dgcnn/sem_seg/RUNS/sparus_xiroi/test/128_11_1/model.ckpt"          # path to model         //PARAM
+        self.path_cls = "/home/miguel/Desktop/PIPES2/dgcnn/sem_seg/RUNS/sparus_xiroi/test/128_11_1/cls.txt"               # path to clases info   //PARAM
         self.classes, self.labels, self.label2color = indoor3d_util.get_info_classes(self.path_cls) # get classes info
 
         # listener
@@ -357,7 +357,7 @@ class Pointcloud_Seg:
 
                 out1 = True
                 if out1 == True:         
-                    path_out_world_info = os.path.join("/home/uib/Desktop/PIPES2/out_ros_world", str(header.stamp)+"_info.ply")
+                    path_out_world_info = os.path.join("/home/miguel/Desktop/PIPES2/out_ros_world", str(header.stamp)+"_info.ply")
                     info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list = conversion_utils.array_to_info(info_array_world)
                     info_world = [info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list]
                     conversion_utils.info_to_ply(info_world, path_out_world_info)
@@ -371,8 +371,8 @@ class Pointcloud_Seg:
                         xyz_trans_rot = np.matmul(left2worldned, xyz)
                         pred_sub_world[i,0:3] = [xyz_trans_rot[0], xyz_trans_rot[1], xyz_trans_rot[2]]
 
-                    path_out_world_base = os.path.join("/home/uib/Desktop/PIPES2/out_ros_world", str(header.stamp)+"_base.obj")
-                    path_out_world_pred = os.path.join("/home/uib/Desktop/PIPES2/out_ros_world", str(header.stamp)+"_pred.obj")
+                    path_out_world_base = os.path.join("/home/miguel/Desktop/PIPES2/out_ros_world", str(header.stamp)+"_base.obj")
+                    path_out_world_pred = os.path.join("/home/miguel/Desktop/PIPES2/out_ros_world", str(header.stamp)+"_pred.obj")
                     fout_base = open(path_out_world_base, 'w')
                     fout_pred = open(path_out_world_pred, 'w')
                     for i in range(pred_sub_world.shape[0]):
@@ -399,7 +399,7 @@ class Pointcloud_Seg:
                     out2 = True
                     if out2 == True:
                         z = 1 # SAVE INFO MAP
-                        path_out_world_info_np = os.path.join("/home/uib/Desktop/PIPES2/out_ros_world", str(header.stamp)+"_info.npy") # save array of info3 to world used
+                        path_out_world_info_np = os.path.join("/home/miguel/Desktop/PIPES2/out_ros_world", str(header.stamp)+"_info.npy") # save array of info3 to world used
                         np.save(path_out_world_info_np, info_array_world)
 
                 header.frame_id = "turbot/stereo_down/left_optical"
@@ -408,11 +408,11 @@ class Pointcloud_Seg:
         if out3 == True:
             name = str(header.stamp) 
             name = name.replace('.', '')
-            #path_out1 = os.path.join("/home/uib/Desktop/PIPES2/out_ros", name+"_1.ply")
+            #path_out1 = os.path.join("/home/miguel/Desktop/PIPES2/out_ros", name+"_1.ply")
             #conversion_utils.info_to_ply(info1, path_out1)
-            #path_out3 = os.path.join("/home/uib/Desktop/PIPES2/out_ros", name+"_2.ply")
+            #path_out3 = os.path.join("/home/miguel/Desktop/PIPES2/out_ros", name+"_2.ply")
             #conversion_utils.info_to_ply(info2, path_out3)
-            path_out3 = os.path.join("/home/uib/Desktop/PIPES2/out_ros", name+"_3.ply")
+            path_out3 = os.path.join("/home/miguel/Desktop/PIPES2/out_ros", name+"_3.ply")
             conversion_utils.info_to_ply(info3, path_out3)
 
 
@@ -488,7 +488,7 @@ class Pointcloud_Seg:
                         xyz_trans_rot = np.matmul(left2worldned, xyz)
                         instances_ref_world[i,0:3] = [xyz_trans_rot[0], xyz_trans_rot[1], xyz_trans_rot[2]]
 
-                    path_out_world_inst = os.path.join("/home/uib/Desktop/PIPES2/out_ros_world", str(header.stamp)+"_inst.obj")
+                    path_out_world_inst = os.path.join("/home/miguel/Desktop/PIPES2/out_ros_world", str(header.stamp)+"_inst.obj")
                     fout_pred = open(path_out_world_inst, 'w')
                     for i in range(instances_ref_world.shape[0]):
                         color = self.col_inst[instances_ref_world[i,7]]
