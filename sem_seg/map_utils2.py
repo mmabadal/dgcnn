@@ -287,7 +287,7 @@ def clean_map(info_map, count_thr):
         if valve_info_map[4] <= count_thr:
             valve_del_list.append(i)
 
-    for i in sorted(valve_del_list, reverse=True):  # delete chains
+    for i in sorted(valve_del_list, reverse=True):  # delete valve
         del info_valves_map_list[i]  
 
     # TODO CAN DELETE PIPES SHORT
