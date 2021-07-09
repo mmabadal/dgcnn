@@ -238,8 +238,11 @@ if __name__ == "__main__":
     info_map = [info_pipes_map_list, info_connexions_map_list, info_valves_map_list, info_inst_pipe_map_list]
 
     count = 0
+    count2 = 0
     count_target = 5
     count_thr = 1
+
+    T_time = 0
 
     for file in natsorted(os.listdir(path_in)):
 
@@ -247,6 +250,7 @@ if __name__ == "__main__":
 
         file_name, _ = os.path.splitext(file)
         count += 1
+        count2 += 1
 
         file_path = os.path.join(path_in, file)
         info_array_world = np.load(file_path)
@@ -258,7 +262,14 @@ if __name__ == "__main__":
         info_map = get_info_map(info_map, info_world)
         b = time.time()
         c = b-a
+
+        T_time = T_time + c
+        average_time = T_time/count2
+
+
         print("time: " + str(c))
+        print("average time: " + str(average_time))
+
 
 
         path_out_map = os.path.join(path_out, file_name+"_map.ply")
