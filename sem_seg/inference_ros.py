@@ -346,21 +346,12 @@ class Pointcloud_Seg:
         if out == True:
             name = str(header.stamp)
             name = name.replace('.', '')
-<<<<<<< HEAD
-            path_out1 = os.path.join("/home/sparus/PIPES2/out_ros", name+"_1.ply")
-            get_info.info_to_ply(info1, path_out1)
-            path_out2 = os.path.join("/home/sparus/PIPES2/out_ros", name+"_2.ply")
-            get_info.info_to_ply(info2, path_out2)
-            path_out3 = os.path.join("/home/sparus/PIPES2/out_ros", name+"_3.ply")
-            get_info.info_to_ply(info3, path_out3)
-=======
             #path_out1 = os.path.join("/home/miguel/Desktop/PIPES2/out_ros", name+"_1.ply")
             #conversion_utils.info_to_ply(info1, path_out1)
             #path_out2 = os.path.join("/home/miguel/Desktop/PIPES2/out_ros", name+"_2.ply")
             #conversion_utils.info_to_ply(info2, path_out2)
             path_out3 = os.path.join("/home/miguel/Desktop/PIPES2/out_ros", name+"_3.ply")
             conversion_utils.info_to_ply(info3, path_out3)
->>>>>>> ab92a8a4b58a38de90d12978b4ad21a97cee533b
 
 
         # print info

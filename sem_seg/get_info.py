@@ -463,13 +463,8 @@ def get_info_skeleton(instance, close):
 
     chains, connexions = get_connectivity(skeleton)     # get skeleton conectivity -> chains and connexions
 
-<<<<<<< HEAD
-    print("CHAINS ORIGINALS")
-    if print_opt == True:
-=======
     if print_opt == True:
         print("CHAINS ORIGINALS")
->>>>>>> ab92a8a4b58a38de90d12978b4ad21a97cee533b
         for chain in chains:
             print_chain(chain, xyz_max)
 
@@ -481,13 +476,8 @@ def get_info_skeleton(instance, close):
     for i in sorted(chain_del_list, reverse=True):  # delete chains
         del chains[i]                               
 
-<<<<<<< HEAD
-    print("CHAINS SMALL DELETED")
-    if print_opt == True:
-=======
     if print_opt == True:
         print("CHAINS SMALL DELETED")
->>>>>>> ab92a8a4b58a38de90d12978b4ad21a97cee533b
         for chain in chains:
             print_chain(chain, xyz_max)
 
