@@ -367,13 +367,13 @@ class Pointcloud_Seg:
 
         # publishers
 
-        i = len(instances_ref_valve_list)
+        n_v = len(instances_ref_valve_list)
 
         if len(instances_ref_valve_list)>0:
             instances_ref_proj_valve = np.vstack(instances_ref_valve_list)
         if len(instances_ref_pipe_list)>0:
             instances_ref_pipe = np.vstack(instances_ref_pipe_list)
-            instances_ref_pipe[:,7] = instances_ref_pipe[:,7]+i
+            instances_ref_pipe[:,7] = instances_ref_pipe[:,7]+n_v
 
         if len(instances_ref_valve_list)>0 and len(instances_ref_pipe_list)>0:
             instances_ref = np.concatenate((instances_ref_proj_valve, instances_ref_pipe), axis=0)
