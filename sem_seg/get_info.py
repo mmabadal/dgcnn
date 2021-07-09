@@ -21,129 +21,6 @@ from skimage.morphology import skeletonize
  - python get_info.py --path_projections data/ --path_models valve_targets/ --path_cls 4.txt 
 
 '''
-def info_to_ply(info, path_out):
-
-    info_pipes_list = info[0]
-    info_connexions_list = info[1]
-    info_valves_list = info[2]
-
-    pipe_ply = list()       #  X Y Z R G B A 
-    startend_ply = list()   #  X Y Z R G B A 
-    elbow_ply = list()      #  X Y Z R G B A 
-    vector1_ply = list()    #  X Y Z R G B A 
-    vector2_ply = list()    #  V1 V2
-    connexion_ply = list()  #  X Y Z R G B A 
-    valve_ply = list()      #  X Y Z R G B A 
-
-
-    for i, pipe_info in enumerate(info_pipes_list):
-        pipe_list = list(pipe_info[0])
-        pipe_list.pop(0)
-        pipe_list.pop(-1)
-        pipe_ply = pipe_ply + pipe_list
-        startend_ply.append(pipe_info[0][0])
-        startend_ply.append(pipe_info[0][-1])
-        elbow_ply = elbow_ply + pipe_info[1]
-
-        if len(pipe_info[1]) == 0:
-            point1 = pipe_info[0][0]
-            point2 = pipe_info[0][0]+pipe_info[2][0]
-            vector1_ply.append(point1)
-            vector1_ply.append(point2)
-
-        else:
-            point1 = pipe_info[0][0]
-            point2 = pipe_info[0][0]+pipe_info[2][0]
-            vector1_ply.append(point1)
-            vector1_ply.append(point2)
-            
-            for i, elbow in enumerate(pipe_info[1]):
-                point1 = elbow
-                point2 = elbow + pipe_info[2][i+1]
-                vector1_ply.append(point1)
-                vector1_ply.append(point2)
-
-    
-    for i, connexion_info in enumerate(info_connexions_list):
-        connexion_ply.append(connexion_info[0])
-
-    for i, valve_info in enumerate(info_valves_list):
-        valve_ply.append(valve_info[0])
-
-        point1 = valve_info[0]-(valve_info[2]/2)
-        point2 = valve_info[0]+(valve_info[2]/2)
-        vector1_ply.append(point1)
-        vector1_ply.append(point2)
-
-    pipe_ply_np = np.round(np.array(pipe_ply), 5)
-    pipe_color = np.array([[0, 255, 0],]*pipe_ply_np.shape[0])
-    pipe_ply_np_color = np.hstack((pipe_ply_np, pipe_color))   
-
-    startend_ply_np = np.round(np.array(startend_ply), 5)
-    startend_color = np.array([[0, 150, 0],]*startend_ply_np.shape[0])
-    startend_ply_np_color = np.hstack((startend_ply_np, startend_color))  
-
-    elbow_ply_np = np.round(np.array(elbow_ply), 2)
-    elbow_color = np.array([[255, 0, 0],]*elbow_ply_np.shape[0])
-    elbow_ply_np_color = np.hstack((elbow_ply_np, elbow_color))  
-
-    connexion_ply_np= np.round(np.array(connexion_ply), 2)
-    connexion_color = np.array([[0, 0, 0],]*connexion_ply_np.shape[0])
-    connexion_ply_np_color = np.hstack((connexion_ply_np, connexion_color))  
-
-    valve_ply_np = np.round(np.array(valve_ply), 5)
-    valve_color = np.array([[0, 0, 255],]*valve_ply_np.shape[0])
-    valve_ply_np_color = np.hstack((valve_ply_np, valve_color))  
-
-    vector1_ply_np = np.round(np.array(vector1_ply), 5)
-    vector1_color = np.array([[150, 150, 150],]*vector1_ply_np.shape[0])
-    vector1_ply_np_color = np.hstack((vector1_ply_np, vector1_color))  
-
-    pipe_ply = list(pipe_ply_np_color)     
-    startend_ply = list(startend_ply_np_color) 
-    elbow_ply = list(elbow_ply_np_color)    
-    connexion_ply = list(connexion_ply_np_color)
-    valve_ply = list(valve_ply_np_color)  
-    vector1_ply = list(vector1_ply_np_color)   
-
-    vertex = pipe_ply + startend_ply + elbow_ply + connexion_ply + valve_ply + vector1_ply
-    vertex_np = np.array(vertex)
-
-    disscount = vector1_ply_np.shape[0]-1
-    last_idx = vertex_np.shape[0]-1
-    for i in range(int(vector1_ply_np.shape[0]/2)):
-        vector_idxs = np.array([last_idx-disscount,last_idx-disscount+1])
-        vector2_ply.append(vector_idxs)
-        disscount -=2
-    vector2_ply_np = np.array(vector2_ply)
-
-    f = open(path_out, 'w')
-
-    f.write("ply" + '\n')
-    f.write("format ascii 1.0" + '\n')
-    f.write("comment VCGLIB generated" + '\n')
-    f.write("element vertex " + str(vertex_np.shape[0]) + '\n')
-    f.write("property float x" + '\n')
-    f.write("property float y" + '\n')
-    f.write("property float z" + '\n')
-    f.write("property uchar red" + '\n')
-    f.write("property uchar green" + '\n')
-    f.write("property uchar blue" + '\n')
-    f.write("element face 0" + '\n')
-    f.write("property list uchar int vertex_indices" + '\n')
-    f.write("element edge " + str(vector2_ply_np.shape[0]) + '\n')
-    f.write("property int vertex1" + '\n')
-    f.write("property int vertex2" + '\n')
-    f.write("end_header" + '\n')
-
-    for row in range(vertex_np.shape[0]):
-        line = ' '.join(map(str, vertex_np[row, :-3])) + ' ' + str(int(vertex_np[row, 3]))+ ' ' + str(int(vertex_np[row, 4])) + ' ' + str(int(vertex_np[row, 5])) +'\n'
-        f.write(line)
-    for row in range(vector2_ply_np.shape[0]):
-        line = str(int(vector2_ply_np[row, 0]))+ ' ' + str(int(vector2_ply_np[row, 1])) +'\n'
-        f.write(line)
-    f.close()
-
 
 def get_info_classes(cls_path):
 
@@ -208,7 +85,7 @@ def print_o3d(pc):
 def preprocess_point_cloud(pcd, radius_feature):
     #print(":: Compute FPFH feature with search radius %.3f." % radius_feature)
     #print("--fpfh")
-    pcd_fpfh = o3d.pipelines.registration.compute_fpfh_feature(
+    pcd_fpfh = o3d.registration.compute_fpfh_feature(
         pcd,
         o3d.geometry.KDTreeSearchParamHybrid(radius=radius_feature, max_nn=100))
     return pcd, pcd_fpfh
@@ -218,22 +95,22 @@ def execute_global_registration(source, target, source_fpfh,
                                 target_fpfh, distance_threshold):
     #print(":: RANSAC registration on downsampled point clouds.")
     #print("   we use a liberal distance threshold %.3f." % distance_threshold)
-    result = o3d.pipelines.registration.registration_ransac_based_on_feature_matching(
+    result = o3d.registration.registration_ransac_based_on_feature_matching(
         source, target, source_fpfh, target_fpfh, True,
         distance_threshold,
-        o3d.pipelines.registration.TransformationEstimationPointToPoint(False),
+        o3d.registration.TransformationEstimationPointToPoint(False),
         3, [
-            o3d.pipelines.registration.CorrespondenceCheckerBasedOnEdgeLength(
+            o3d.registration.CorrespondenceCheckerBasedOnEdgeLength(
                 0.9),
-            o3d.pipelines.registration.CorrespondenceCheckerBasedOnDistance(
+            o3d.registration.CorrespondenceCheckerBasedOnDistance(
                 distance_threshold)
-        ], o3d.pipelines.registration.RANSACConvergenceCriteria(100000, 0.999))
+        ], o3d.registration.RANSACConvergenceCriteria(100000, 0.999))
     return result
 
 
 def match(source, target):
     
-    threshold = 0.02            # acceptance thr when comparing //PARAM
+    threshold = 0.015            # acceptance thr when comparing //PARAM
     matchings = list()
 
     steps = 32                  # steps on spin //PARAM
@@ -421,6 +298,7 @@ def get_info_connexions(connexions, chains):
                             new_near_chains_list = list(set(c_info1[1]+c_info2[1]))         # new near chain list as a set of both lists concatenated
                             new_connexions_info.append([c_info1[0], new_near_chains_list])  # append new connexion
 
+    connexion_del_list = sorted(list(set(connexion_del_list)))
     for i in sorted(connexion_del_list, reverse=True):          # delete marked connexions
         del connexions_info[i]
 
@@ -512,7 +390,7 @@ def get_info_connexions(connexions, chains):
     return connexions_info2, chains
 
 
-def get_info_skeleton(instance):
+def get_info_skeleton(instance, close):
 
     print_opt = False
     print_opt2 = False
@@ -526,22 +404,16 @@ def get_info_skeleton(instance):
     if print_opt2 == True:
         print_o3d(voxel_grid1)
 
+    # get voxels
     voxels_list = list()
     instance1_points = np.asarray(instance.points)
     for p in instance1_points:
         voxel = o3d.geometry.VoxelGrid.get_voxel(voxel_grid1, p)
         voxels_list.append(voxel)
+
+    #voxels to numpy
     voxels_np = np.array(voxels_list)
-    voxels_np = np.unique(voxels_np, axis=0)                            # delete duplicates from room2blocks
-
-    #voxels = o3d.geometry.VoxelGrid.get_voxels(voxel_grid1)                                     # get voxels
-    #print("n voxels: " + str(len(voxels)))
-    #print(voxels)
-
-    #voxels_np = np.zeros((len(voxels),3), dtype=int)                                            # voxels to numpy
-    #for i in range(len(voxels)):
-    #    voxels_np[i] = voxels[i].grid_index
-    #print(voxels_np)    
+    voxels_np = np.unique(voxels_np, axis=0) 
 
     voxels_np.T[[0,1,2]] = voxels_np.T[[2,0,1]]                                                 # set cols as X Y Z 
 
@@ -566,7 +438,7 @@ def get_info_skeleton(instance):
         plt.imshow(voxels_matrix_2d)
         plt.show()
 
-    closing_dist = 6                                                                                                           # distance to perform closing //PARAM
+    closing_dist = close                                                                                                           # distance to perform closing //PARAM
     voxels_matrix_2d_proc = scp.ndimage.binary_closing(voxels_matrix_2d, structure=np.ones((closing_dist,closing_dist)))       # closing
     
     if print_opt == True:
@@ -591,8 +463,13 @@ def get_info_skeleton(instance):
 
     chains, connexions = get_connectivity(skeleton)     # get skeleton conectivity -> chains and connexions
 
+<<<<<<< HEAD
     print("CHAINS ORIGINALS")
     if print_opt == True:
+=======
+    if print_opt == True:
+        print("CHAINS ORIGINALS")
+>>>>>>> ab92a8a4b58a38de90d12978b4ad21a97cee533b
         for chain in chains:
             print_chain(chain, xyz_max)
 
@@ -604,8 +481,13 @@ def get_info_skeleton(instance):
     for i in sorted(chain_del_list, reverse=True):  # delete chains
         del chains[i]                               
 
+<<<<<<< HEAD
     print("CHAINS SMALL DELETED")
     if print_opt == True:
+=======
+    if print_opt == True:
+        print("CHAINS SMALL DELETED")
+>>>>>>> ab92a8a4b58a38de90d12978b4ad21a97cee533b
         for chain in chains:
             print_chain(chain, xyz_max)
 
@@ -699,10 +581,10 @@ def get_info_skeleton(instance):
             vector_chain_list.append(vector_chain)
 
         # get % points
-        mid = get_position_idx1(chain, 50)
+        #mid = get_position_idx1(chain, 50)
 
-        info_chain = [chain, elbow_list, vector_chain_list, mid]      # //PARAM return chain or not
-        #info_chain = [elbow_list, vector_chain_list, mid]            # //PARAM return chain or not
+        info_chain = [chain, elbow_list, vector_chain_list]      # //PARAM return chain or not
+        #info_chain = [elbow_list, vector_chain_list]            # //PARAM return chain or not
         info_chains.append(info_chain)
     
     info = [info_chains, connexions_points]
@@ -719,7 +601,7 @@ def refine_valves(valves_info, pipes_info):
         near_pipes_list = list()
         near_type_list = list()
         for j, pipe_info in enumerate(pipes_info):                      # get near pipes
-            for p in valves_info[i][4]:                                 # for each point of the valve
+            for p in valves_info[i][3]:                                 # for each point of the valve
                 d_to_start = get_distance(p, pipe_info[0][0], 3)        # get distance to pipe start
                 d_to_end = get_distance(p, pipe_info[0][-1], 3)         # get distance to pipe end
                 if d_to_start <= 0.1:                                   # if distance < thr             //PARAM
@@ -731,7 +613,7 @@ def refine_valves(valves_info, pipes_info):
                     near_type_list.append(-1)                           # append end is near
                     break  
 
-        valves_info[i].append(near_pipes_list)                          # append near pipes to valve info
+        valves_info[i].insert(3,near_pipes_list)                         # append near pipes to valve info in position 3 [central_point, vector, max_id, near_pipes, inst_data, max_info]
 
         if len(near_pipes_list)==0:                                     # if valve has no near pipes
             delete_valve_list.append(i)                                 # append to delete valve
@@ -740,7 +622,7 @@ def refine_valves(valves_info, pipes_info):
             new_vector = pipes_info[near_pipes_list[0]][2][near_type_list[0]]   # get new valve vector equal to pipe vector
             new_vector = new_vector / np.linalg.norm(new_vector)                # get unit vector
             new_vector = new_vector * valve_size                                # resize vector
-            valves_info[i][2] = new_vector
+            valves_info[i][1] = new_vector
 
         if len(near_pipes_list)==2:                                             # if valve has two near pipes
             vector1 = pipes_info[near_pipes_list[0]][2][near_type_list[0]]      # vector1 depending on start or end near
@@ -750,14 +632,14 @@ def refine_valves(valves_info, pipes_info):
                 new_vector = (vector1+vector2)/2                                # new valve vector as mean of two pipes vectors
                 new_vector = new_vector / np.linalg.norm(new_vector)            
                 new_vector = new_vector * valve_size 
-                valves_info[i][2] = new_vector
+                valves_info[i][1] = new_vector
 
         if len(near_pipes_list)==3:
 
-            if valves_info[i][3] == 0:      # set valve as a 3 way valve, trying to match handle possition
-                valves_info[i][3] = 2       # index of 3 way valve model with handle set to 0
-            if valves_info[i][3] == 1:      # set valve as a 3 way valve, trying to match handle possition
-                valves_info[i][3] = 3       # index of 3 way valve model with handle set to 1
+            if valves_info[i][2] == 0:      # set valve as a 3 way valve, trying to match handle possition
+                valves_info[i][2] = 2       # index of 3 way valve model with handle set to 0
+            if valves_info[i][2] == 1:      # set valve as a 3 way valve, trying to match handle possition
+                valves_info[i][2] = 3       # index of 3 way valve model with handle set to 1
 
             vector1 = pipes_info[near_pipes_list[0]][2][near_type_list[0]]  # vector1 depending on start or end near
             vector2 = pipes_info[near_pipes_list[1]][2][near_type_list[1]]  # vector2 depending on start or end near
@@ -771,20 +653,21 @@ def refine_valves(valves_info, pipes_info):
                 new_vector = (vector1+vector2)/2
                 new_vector = new_vector / np.linalg.norm(new_vector)
                 new_vector = new_vector * valve_size                                                             
-                valves_info[i][2] = new_vector
+                valves_info[i][1] = new_vector
             if (angle13 >= 345 and angle13 <= 360) or (angle13 >= 0 and angle13 <= 15) or (angle13 >= 165 and angle13 <= 195):      # if vectors13 near parallel  //PARAM
                 new_vector = (vector1+vector3)/2
                 new_vector = new_vector / np.linalg.norm(new_vector)
                 new_vector = new_vector * valve_size
-                valves_info[i][2] = new_vector
+                valves_info[i][1] = new_vector
             if (angle23 >= 345 and angle23 <= 360) or (angle23 >= 0 and angle23 <= 15) or (angle23 >= 165 and angle23 <= 195):      # if vectors23 near parallel  //PARAM
                 new_vector = (vector2+vector3)/2
                 new_vector = new_vector / np.linalg.norm(new_vector)
                 new_vector = new_vector * valve_size
-                valves_info[i][2] = new_vector
+                valves_info[i][1] = new_vector
 
     for i in sorted(delete_valve_list, reverse=True):      # delete marked valves       //PARAM
-        del valves_info[i]                                                  
+        #del valves_info[i] 
+        z = 1                                                 
 
     return valves_info
     
@@ -799,15 +682,15 @@ def unify_chains(chains_info, connexions_info):
         new_info_chains = list()    
         unified_list = list()
         seen_list = list()
-        for i, chain1 in enumerate(chains_info2):    # for each chain
+        for i, chain1_info in enumerate(chains_info2):    # for each chain
             if i not in seen_list:                  # if not already cheked
                 seen_list.append(i)                 # mark as checked
-                start1 = chain1[0][0]               # get chain1 start and end points
-                end1 = chain1[0][-1]
-                for j, chain2 in enumerate(chains_info2):    # for each chain
+                start1 = chain1_info[0][0]               # get chain1 start and end points
+                end1 = chain1_info[0][-1]
+                for j, chain2_info in enumerate(chains_info2):    # for each chain
                     if j not in seen_list:                  # if not already checked
-                        start2 = chain2[0][0]           # get chain2 start and end points
-                        end2 = chain2[0][-1]
+                        start2 = chain2_info[0][0]           # get chain2 start and end points
+                        end2 = chain2_info[0][-1]
 
                         # get distances between starts and ends
                         ds1s2 = get_distance(start1, start2, 3) 
@@ -827,7 +710,7 @@ def unify_chains(chains_info, connexions_info):
                                 for connexion_info in connexions_info:            # for all conenexions
                                     connexion = connexion_info[0]
                                     d1 = get_distance(start1, connexion, 3)       # get distance to chain1
-                                    d2 = get_distance(start2, connexion, 3)       # get distance to chain2  
+                                    d2 = get_distance(start2, connexion, 3)       # get distance to chain2 
                                     if d1 < 0.15 or d2 < 0.15:                    # if any distance < thr   # //PARAM
                                         connexion_near = True                     # mark that there is a connexion near
 
@@ -858,19 +741,19 @@ def unify_chains(chains_info, connexions_info):
                             if connexion_near == False:      # if there ar no connexion near the chains
                                 # get corresponding vectors depending on which are the closes points between chains
                                 if closer_idx == 0:
-                                    vector1 = chain1[2][0]
-                                    vector2 = chain2[2][0]
+                                    vector1 = chain1_info[2][0]
+                                    vector2 = chain2_info[2][0]
                                 elif closer_idx ==1:
-                                    vector1 = chain1[2][0]
-                                    vector2 = chain2[2][-1]
+                                    vector1 = chain1_info[2][0]
+                                    vector2 = chain2_info[2][-1]
                                 elif closer_idx ==2:
-                                    vector1 = chain1[2][-1]
-                                    vector2 = chain2[2][0]
+                                    vector1 = chain1_info[2][-1]
+                                    vector2 = chain2_info[2][0]
                                 else:
-                                    vector1 = chain1[2][-1]
-                                    vector2 = chain2[2][-1]
+                                    vector1 = chain1_info[2][-1]
+                                    vector2 = chain2_info[2][-1]
 
-                                angle = angle_between_vectors(vector1, vector2) # get angle berween vectors
+                                angle = angle_between_vectors(vector1, vector2) # get angle between vectors
 
                                 if (angle >= 345 and angle <= 360) or (angle >= 0 and angle <= 15) or (angle >= 165 and angle <= 195):  # if vectors are near parallel   //PARAM
                                     
@@ -879,8 +762,8 @@ def unify_chains(chains_info, connexions_info):
                                     unified_list.append(j)
 
                                     # unify chains depending on which are the closes points between chains
-                                    points1 = chain1[0]
-                                    points2 = chain2[0]
+                                    points1 = chain1_info[0]
+                                    points2 = chain2_info[0]
                                     if closer_idx == 0:
                                         points2 = np.flipud(points2)
                                         new_chain = np.vstack((points2, points1))
@@ -914,10 +797,13 @@ def unify_chains(chains_info, connexions_info):
                                         new_vector_chain_list.append(vector_chain)
 
                                     # get % points
-                                    new_mid = get_position_idx1(new_chain, 50)
+                                    #new_mid = get_position_idx1(new_chain, 50)
+
+                                    new_inst_list = chain1_info[3] + chain2_info[3]
+                                    new_inst_list = list(set(new_inst_list))
                                     
                                     # create new chain info
-                                    new_chain_info = [new_chain, new_elbow_list, new_vector_chain_list, new_mid]
+                                    new_chain_info = [new_chain, new_elbow_list, new_vector_chain_list, new_inst_list]
                                     new_info_chains.append(new_chain_info)
 
         for i in sorted(unified_list, reverse=True):      # delete marked chains
@@ -945,7 +831,7 @@ def get_elbows(chain):
 
     look_ahead = 10                                                 # look ahead distance to find changes in direction (elbows) in chain points //PARAM
     elbow_size = 7                                                  # elbow size in chain points   //PARAM
-    angle_elbow = 70                                                # angle thr to consider an elow   //PARAM   
+    angle_elbow = 60                                                # angle thr to consider an elow   //PARAM   
 
     angle_list = list()
     elbow_idx_list = list()
@@ -1007,7 +893,7 @@ def get_position_idx1(chain, percentage):
 
 def get_position_idx2(chain, percentage):
 
-    # TODO this method will fail if elbows are present, but is more accunate on straight lines, elow consideration could be implemented
+    # TODO this method will fail if elbows are present, but is more accunate on straight lines, elbow consideration could be implemented
 
     chain_vector = chain[-1]-chain[0]                           # find chain vector
 
@@ -1058,9 +944,9 @@ def get_info_matching(instance, models):
     return info_inst
 
 
-def get_info(instance, models, method):
+def get_info(instance, models, method, close = 6):
     if method == "skeleton":
-        info = get_info_skeleton(instance)           # get info skeleton
+        info = get_info_skeleton(instance, close)           # get info skeleton
     elif method == "matching":
         info = get_info_matching(instance, models)   # get info matching
     return info

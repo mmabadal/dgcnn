@@ -65,6 +65,31 @@ data
 
 mirar donde estan instaladas las cosas, quiza hay que hacer python3
 
+# ROS    
+
+- Ubuntu 18
+- No CUDA or CUDNN
+- ROS melodic
+
+- image proc custom
+- perception pcl
+
+- conda
+   * Python 3.6
+   * pip install tensorflow=1.14
+
+# Python2  NECESARIO PARA COGER TRANSFORMADAS ROS
+
+pip2 install plyfile (numpy==1.11)
+
+pip2 install tensorflow==1.14
+
+pip2 install open3d==0.9 pyrsistent==0.16.1
+
+pip2 install scipy
+
+pip2 install scikit-image
+
 
 # ----------------------------------------------------------------------------------------------
 # https://medium.com/repro-repo/install-cuda-and-cudnn-for-tensorflow-gpu-on-ubuntu-79306e4ac04e
