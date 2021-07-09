@@ -78,7 +78,7 @@ mirar donde estan instaladas las cosas, quiza hay que hacer python3
    * Python 3.6
    * pip install tensorflow=1.14
 
-# Python2  
+# Python2  NECESARIO PARA COGER TRANSFORMADAS ROS
 
 pip2 install plyfile (numpy==1.11)
 
