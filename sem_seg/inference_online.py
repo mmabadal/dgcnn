@@ -23,7 +23,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--path_data', help='folder with train test data')
 parser.add_argument('--path_cls', help='path to classes txt.')
 parser.add_argument('--model_path', required=True, help='model checkpoint file path')
-parser.add_argument('--points_sub', type=int, default=256, help='Point number sub [default: 4096]')
+parser.add_argument('--points_sub', type=int, default=128, help='Point number sub [default: 4096]')
 parser.add_argument('--test_name', help='name of the test')
 parser.add_argument('--targets_path', help='path in valve models.')
 
@@ -286,20 +286,20 @@ if __name__=='__main__':
                     info_valves_list_copy = copy.deepcopy(info_valves_list)
                     info_valves_list2 = get_info.refine_valves(info_valves_list_copy, info_pipes_list2) 
 
-                    #info1 = [info_pipes_list, info_connexions_list, info_valves_list, instances_ref_pipe_list]
+                    info1 = [info_pipes_list, info_connexions_list, info_valves_list, instances_ref_pipe_list]
                     #info2 = [info_pipes_list2, info_connexions_list2, info_valves_list, instances_ref_pipe_list] 
                     info3 = [info_pipes_list2, info_connexions_list2, info_valves_list2, instances_ref_pipe_list]
 
 
-                    #path_out1 = os.path.join(dump_path, os.path.basename(filepath)[:-4]+'_info1.ply')
-                    #conversion_utils.info_to_ply(info1, path_out1)
+                    path_out1 = os.path.join(dump_path, os.path.basename(filepath)[:-4]+'_info.ply')
+                    conversion_utils.info_to_ply(info1, path_out1)
                     #path_out2 = os.path.join(dump_path, os.path.basename(filepath)[:-4]+'_info2.ply')
                     #conversion_utils.info_to_ply(info2, path_out2)
-                    path_out3 = os.path.join(dump_path, os.path.basename(filepath)[:-4]+'_info3.ply')
+                    path_out3 = os.path.join(dump_path, os.path.basename(filepath)[:-4]+'_info_ref.ply')
                     conversion_utils.info_to_ply(info3, path_out3)
 
                     info3_array = conversion_utils.info_to_array(info3)
-                    path_out3_array = os.path.join(dump_path, os.path.basename(filepath)[:-4]+'_info3_array.npy')
+                    path_out3_array = os.path.join(dump_path, os.path.basename(filepath)[:-4]+'_info_ref_array.npy')
                     np.save(path_out3_array, info3_array)
 
                     # print info

@@ -14,6 +14,7 @@ from scipy.spatial import distance
 from plyfile import PlyData, PlyElement
 from mpl_toolkits.mplot3d import Axes3D
 from skimage.morphology import skeletonize
+import conversion_utils
 
 
 '''
@@ -120,7 +121,7 @@ def match(source, target):
         trans[:3,:3] = source.get_rotation_matrix_from_xyz((0,0, -(np.pi/(steps/2))*i))                 # add rotation
         reg_p2l = o3d.registration.evaluate_registration(source, target, threshold, trans)    # evaluate registration
         matchings.append(reg_p2l.fitness)
-        #print("- matching: " + str(reg_p2l.fitness))
+        print("- matching: " + str(reg_p2l.fitness))
         #draw_registration_result(source, target, trans)
 
     best_matching = max(matchings)             # get best fitness
@@ -426,6 +427,9 @@ def get_info_skeleton(instance, close):
         z,x,y = voxels_matrix.nonzero()
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
+        ax.set_xlim3d(0, 100)
+        ax.set_ylim3d(0, 100)
+        ax.set_zlim3d(-20, 20)
         ax.scatter(x, y, z, zdir='z', c= 'red')
         fig.suptitle('3D VOXELS', fontsize=12)
         plt.show()
@@ -433,6 +437,8 @@ def get_info_skeleton(instance, close):
     voxels_matrix_2d = np.zeros((xyz_max[1]+1, xyz_max[2]+1), dtype=int)                        # voxels to 2D matrix
     for i, v in enumerate(voxels_np):
         voxels_matrix_2d[v[1],v[2]] = 1
+
+    #voxels_matrix_2d =  np.rot90(voxels_matrix_2d, k=1, axes=(1,0)) # for figure prints only, it breaks chain generation
 
     if print_opt == True:
         plt.imshow(voxels_matrix_2d)
@@ -457,7 +463,7 @@ def get_info_skeleton(instance, close):
 
     if print_opt == True:
         fig = plt.figure()
-        fig.suptitle('SKELETON', fontsize=12)
+        #fig.suptitle('SKELETON', fontsize=12)
         plt.imshow(skeleton)
         plt.show()
 
@@ -928,9 +934,12 @@ def voxel_to_point(voxel, points, corr):
 
 def get_info_matching(instance, models):
     info_inst = list()
+    k = 1
     for model in models:                             # for each model 
+        print("matching con modelo" + str(k))
         best_matching, best_angle = match(instance, model)  # get its best_matching [fitness, degrees] and best model idx
         info_inst.append([best_matching, best_angle])
+        k = k+1
     return info_inst
 
 
@@ -1006,7 +1015,8 @@ if __name__ == "__main__":
 
                 instances_pipe_list.append(inst_o3d)
                 info_pipe = get_info(inst_o3d, models=0, method="skeleton")
-
+            
+            
             info_valves = list()
 
             for i in set(instances_valve[:,7]):
@@ -1042,8 +1052,26 @@ if __name__ == "__main__":
 
                 trans = np.eye(4)
                 trans[:3,:3] = max_model.get_rotation_matrix_from_xyz((0,0, (np.pi/8)*(max_fitness[1]*(16/360))))
-                #draw_registration_result(inst_o3d, max_model, trans)
+                print("-------------------------------------------------")
+                print("max fitness: " + str(max_fitness))
+                print("con model: " + str(max_idx+1))
+                draw_registration_result(inst_o3d, max_model, trans)
+                print("-------------------------------------------------")
+                print("-------------------------------------------------")
+                print("-------------------------------------------------")
 
        
             print("info valves list: "+ str(info_valves_list))
             print(" ")
+
+            
+
+
+            #info_valves_list = list()
+            instances_ref_pipe_list = list()
+
+            split = file_name.split('_')
+
+            info = [info_pipe[0], info_pipe[1], info_valves_list, instances_ref_pipe_list]
+            path_out = os.path.join(path_projections, split[0]+"_info.ply")
+            conversion_utils.info_to_ply(info, path_out)
