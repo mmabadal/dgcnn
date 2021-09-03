@@ -201,7 +201,7 @@ if __name__=='__main__':
                     rad_v = 0.04               # max distance for valve growing                            //PARAM
                     dim_p = 3                  # compute 2D (2) or 3D (3) distance for pipe growing        //PARAM
                     dim_v = 2                  # compute 2D (2) or 3D (3) distance for valve growing       //PARAM
-                    min_p_p = 60               # minimum number of points to consider a blob as a pipe     //PARAM
+                    min_p_p = 50               # minimum number of points to consider a blob as a pipe     //PARAM
                     min_p_v = 30 # 40 80 140   # minimum number of points to consider a blob as a valve    //PARAM
 
                     pred_sub_pipe = pred_sub[pred_sub[:,6] == [labels["pipe"]]]       # get points predicted as pipe
@@ -290,18 +290,35 @@ if __name__=='__main__':
                     #info2 = [info_pipes_list2, info_connexions_list2, info_valves_list, instances_ref_pipe_list] 
                     info3 = [info_pipes_list2, info_connexions_list2, info_valves_list2, instances_ref_pipe_list]
 
+                    empty1 = False
+                    if len(info_pipes_list)==0 and len(info_connexions_list)==0 and len(info_valves_list)==0 and len(instances_ref_pipe_list)==0:
+                        empty1 = True
+                    
+                    empty3 = False
+                    if len(info_pipes_list2)==0 and len(info_connexions_list2)==0 and len(info_valves_list2)==0 and len(instances_ref_pipe_list)==0:
+                        empty3 = True
 
-                    path_out1 = os.path.join(dump_path, os.path.basename(filepath)[:-4]+'_info.ply')
-                    conversion_utils.info_to_ply(info1, path_out1)
+
+                    if empty1==False:
+                        path_out1 = os.path.join(dump_path, os.path.basename(filepath)[:-4]+'_info.ply')
+                        conversion_utils.info_to_ply(info1, path_out1)
+                        
                     #path_out2 = os.path.join(dump_path, os.path.basename(filepath)[:-4]+'_info2.ply')
                     #conversion_utils.info_to_ply(info2, path_out2)
-                    path_out3 = os.path.join(dump_path, os.path.basename(filepath)[:-4]+'_info_ref.ply')
-                    conversion_utils.info_to_ply(info3, path_out3)
 
-                    info3_array = conversion_utils.info_to_array(info3)
-                    path_out3_array = os.path.join(dump_path, os.path.basename(filepath)[:-4]+'_info_ref_array.npy')
-                    np.save(path_out3_array, info3_array)
+                    if empty3==False:
+                        path_out3 = os.path.join(dump_path, os.path.basename(filepath)[:-4]+'_info_ref.ply')
+                        conversion_utils.info_to_ply(info3, path_out3)
 
+                        info3_array = conversion_utils.info_to_array(info3)
+                        path_out3_array = os.path.join(dump_path, os.path.basename(filepath)[:-4]+'_info_ref_array.npy')
+                        np.save(path_out3_array, info3_array)
+
+                        fout_inst = open(os.path.join(dump_path, os.path.basename(filepath)[:-4]+'_info_ref.txt'), 'w')
+                        fout_inst.write('    x         y         z   type  info class inst    \n')
+                        for i in range(info3_array.shape[0]):
+                            if info3_array[i,6]!= 0 and info3_array[i,6]!= 4 and info3_array[i,6]!= 6 and info3_array[i,6]!= 7:
+                                fout_inst.write('%f %f %f  %d     %d     %d     %d\n' % (info3_array[i,0], info3_array[i,1], info3_array[i,2], info3_array[i,6], info3_array[i,7], info3_array[i,8], info3_array[i,9]))
                     # print info
 
                     print(" ")
