@@ -121,7 +121,7 @@ def match(source, target):
         trans[:3,:3] = source.get_rotation_matrix_from_xyz((0,0, -(np.pi/(steps/2))*i))                 # add rotation
         reg_p2l = o3d.registration.evaluate_registration(source, target, threshold, trans)    # evaluate registration
         matchings.append(reg_p2l.fitness)
-        print("- matching: " + str(reg_p2l.fitness))
+        #print("- matching: " + str(reg_p2l.fitness))
         #draw_registration_result(source, target, trans)
 
     best_matching = max(matchings)             # get best fitness
@@ -477,7 +477,7 @@ def get_info_skeleton(instance, close):
     # delete short chains
     chain_del_list = list()
     for i, chain in enumerate(chains):
-        if len(chain) < 10:                         # if chain len < thr //PARAM
+        if len(chain) < 8:                         # if chain len < thr //PARAM
             chain_del_list.append(i)                # mark to be deleted
     for i in sorted(chain_del_list, reverse=True):  # delete chains
         del chains[i]                               
@@ -934,12 +934,9 @@ def voxel_to_point(voxel, points, corr):
 
 def get_info_matching(instance, models):
     info_inst = list()
-    k = 1
     for model in models:                             # for each model 
-        print("matching con modelo" + str(k))
         best_matching, best_angle = match(instance, model)  # get its best_matching [fitness, degrees] and best model idx
         info_inst.append([best_matching, best_angle])
-        k = k+1
     return info_inst
 
 
