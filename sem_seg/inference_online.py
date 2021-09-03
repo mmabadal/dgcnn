@@ -92,6 +92,27 @@ def evaluate(data, label, xyz_max, sess, ops):
 
 if __name__=='__main__':
 
+    n_pc = 0
+
+    now = time.time()
+    tzero = now-now
+
+    T_read = tzero
+    T_blocks = tzero
+    T_inferference = tzero
+
+    T_instaces_valve = tzero
+    T_instaces_pipe = tzero
+
+    T_info_valve = tzero
+    T_info_pipe = tzero
+
+    T_ref_valve = tzero
+    T_ref_pipe = tzero
+
+    T_publish =  tzero
+    T_total = tzero
+
     # get valve matching targets
     targets_list = list()
     for file_name in natsorted(os.listdir(targets_path)):
@@ -146,6 +167,8 @@ if __name__=='__main__':
             if re.search("\.(txt)$", file[1]):          # if its a txt       
                 print("working on: " + str(file[1]))
                 
+                t0 = time.time()
+
                 filepath = os.path.join(root, file[1])
                 data_label_full = np.loadtxt(filepath)  # read from txt (not on xyz origin)
                 #os.remove(filepath)
@@ -163,13 +186,16 @@ if __name__=='__main__':
                     data_label_full_sub[:, 0:3] -= xyz_min               # move pointcloud to origin
                     xyz_max = np.amax(data_label_full_sub, axis=0)[0:3] # get pointcloud maxs
 
+                    t1 = time.time()
                     # divide data into blocks of size "block" with an stride "stride", in each block select random "points_sub" points
                     data_sub, label_sub = indoor3d_util.room2blocks_plus_normalized_parsed(data_label_full_sub, xyz_max, points_sub, block_size=block_sub, stride=stride_sub, random_sample=False, sample_num=None, sample_aug=1) # subsample PC for evaluation
+                    t2 = time.time()
 
                     with tfw.Graph().as_default():
                         pred_sub = evaluate(data_sub, label_sub, xyz_max, sess, ops)  # evaluate PC
                     pred_sub = np.unique(pred_sub, axis=0)  # delete duplicates from room2blocks (if points in block < points_sub, it duplicates them)
                     pred_sub[:, 0:3] += xyz_min             # recover original position
+                    t3 = time.time()
 
                     # downsample prediction to 128 if its not already on 128
                     if points_sub >= 128:                                             # //PARAM
@@ -210,6 +236,7 @@ if __name__=='__main__':
                     # get valve instances
                     instances_ref_valve_list, pred_sub_pipe_ref, stolen_list  = get_instances.get_instances(pred_sub_valve, dim_v, rad_v, min_p_v, ref=True, ref_data = pred_sub_pipe, ref_rad = 0.1)
                     #instances_ref_valve_list, pred_sub_pipe_ref, stolen_list  = get_instances.get_instances_o3d(pred_sub_valve, dim_v, rad_v, min_p_v, ref=True, ref_data = pred_sub_pipe, ref_rad = 0.1)
+                    t4 = time.time()
 
                     # get valve information
                     info_valves_list = list()
@@ -250,10 +277,12 @@ if __name__=='__main__':
                     for index in sorted(descart_valves_list, reverse=True):                                 # delete discarted valve info                                                                             
                         del info_valves_list[index]
                         del instances_ref_valve_list[index]     # for print only  
+                    t5 = time.time()
 
                     # get pipe instances
                     instances_ref_pipe_list, _, _  = get_instances.get_instances(pred_sub_pipe_ref, dim_p, rad_p, min_p_p)
                     #instances_ref_pipe_list, _, _  = get_instances.get_instances_o3d(pred_sub_pipe_ref, dim_p, rad_p, min_p_p)
+                    t6 = time.time()
 
                     info_pipes_list = list()
                     info_connexions_list = list()
@@ -278,13 +307,16 @@ if __name__=='__main__':
                             info_connexions_list.append(connexion_info)
 
                         k_pipe += len(info_pipe[0])                                          # update actual pipe idx
+                    t7 = time.time()
 
                     info_pipes_list_copy = copy.deepcopy(info_pipes_list) 
                     info_connexions_list_copy = copy.deepcopy(info_connexions_list)
                     info_pipes_list2, info_connexions_list2 = get_info.unify_chains(info_pipes_list_copy, info_connexions_list_copy)
+                    t8 = time.time()
 
                     info_valves_list_copy = copy.deepcopy(info_valves_list)
                     info_valves_list2 = get_info.refine_valves(info_valves_list_copy, info_pipes_list2) 
+                    t9 = time.time()
 
                     info1 = [info_pipes_list, info_connexions_list, info_valves_list, instances_ref_pipe_list]
                     #info2 = [info_pipes_list2, info_connexions_list2, info_valves_list, instances_ref_pipe_list] 
@@ -391,6 +423,103 @@ if __name__=='__main__':
                         for i in range(instances_ref.shape[0]):
                             color = col_inst[instances_ref[i,7]]
                             fout_inst_col.write('v %f %f %f %d %d %d %d %d\n' % (instances_ref[i,0], instances_ref[i,1], instances_ref[i,2], color[0], color[1], color[2], instances_ref[i,6], instances_ref[i,7]))
+
+                    t10 = time.time()
+                            
+
+
+                    time_read = t1-t0
+                    time_blocks = t2-t1
+                    time_inferference = t3-t2
+
+                    time_instaces_valve = t4-t3
+                    time_instaces_pipe = t6-t5
+                    time_instaces = time_instaces_valve + time_instaces_pipe
+
+                    time_info_valve = t5-t4
+                    time_info_pipe = t7-t6
+                    time_info = time_info_valve + time_info_pipe
+
+                    time_ref_valve = t9-t8
+                    time_ref_pipe = t8-t7
+                    time_ref = time_ref_valve + time_ref_pipe
+
+                    time_publish = t10-t9
+                    time_total = t10-t0
+                    
+                    # print time info
+                    print('INFO TIMES:')	
+                    print("")
+                    print('Pc processing took seconds. Split into:' + str(time_total))
+                    print('Reading -------- seconds ' + str(time_read) + '  percentaje: ' + str((time_read/time_total)*100))
+                    print('Blocks --------- seconds ' + str(time_blocks) + '  percentaje: ' + str((time_blocks/time_total)*100))
+                    print('Inference ------ seconds ' + str(time_inferference) + '  percentaje: ' + str((time_inferference/time_total)*100))
+                    print('Instances ------ seconds ' + str(time_instaces) + '  percentaje: ' + str((time_instaces/time_total)*100))
+                    print(' - Valve - seconds ' + str(time_instaces_valve) + '  percentaje: ' + str((time_instaces_valve/time_total)*100))
+                    print(' - Pipe -- seconds ' + str(time_instaces_pipe) + '  percentaje: ' + str((time_instaces_pipe/time_total)*100))
+                    print('Info ----------- seconds ' + str(time_info) + '  percentaje: ' + str((time_info/time_total)*100))
+                    print(' - Valve - seconds ' + str(time_info_valve) + '  percentaje: ' + str((time_info_valve/time_total)*100))
+                    print(' - Pipe -- seconds ' + str(time_info_pipe) + '  percentaje: ' + str((time_info_pipe/time_total)*100))
+                    print('Refine --------- seconds ' + str(time_ref) + '  percentaje: ' + str((time_ref/time_total)*100))
+                    print(' - Valve - seconds ' + str(time_ref_valve) + '  percentaje: ' + str((time_ref_valve/time_total)*100))
+                    print(' - Pipe -- seconds ' + str(time_ref_pipe) + '  percentaje: ' + str((time_ref_pipe/time_total)*100))
+                    print('Publish -------- seconds ' + str(time_publish) + '  percentaje: ' + str((time_publish/time_total)*100))
+
+                    print(" ")
+                    print(" ")
+                    print("--------------------------------------------------------------------------------------------------")
+                    print("--------------------------------------------------------------------------------------------------")
+                    print(" ")
+                    print(" ")
+
+
+
+                    T_read = T_read + time_read
+                    T_blocks = T_blocks + time_blocks
+                    T_inferference = T_inferference + time_inferference
+
+                    T_instaces_valve = T_instaces_valve + time_instaces_valve
+                    T_instaces_pipe = T_instaces_pipe + time_instaces_pipe
+                    T_instaces = T_instaces_valve + T_instaces_pipe
+
+                    T_info_valve = T_info_valve + time_info_valve
+                    T_info_pipe = T_info_pipe + time_info_pipe
+                    T_info = T_info_valve + T_info_pipe
+
+                    T_ref_valve = T_ref_valve + time_ref_valve
+                    T_ref_pipe = T_ref_pipe + time_ref_pipe
+                    T_ref = T_ref_valve + T_ref_pipe
+
+                    T_publish =  T_publish + time_publish
+                    T_total = T_total + time_total
+
+                    n_pc = n_pc + 1
+
+
+                    # print time info mean
+                    print('INFO TIMES MEAN:')	
+                    print("")
+                    print('Pc processing took seconds. Split into:' + str((T_total)/n_pc))
+                    print('Reading -------- seconds ' + str((T_read)/n_pc) + '  percentaje: ' + str((T_read/T_total)*100))
+                    print('Blocks --------- seconds ' + str((T_blocks)/n_pc) + '  percentaje: ' + str((T_blocks/T_total)*100))
+                    print('Inference ------ seconds ' + str((T_inferference)/n_pc) + '  percentaje: ' + str((T_inferference/T_total)*100))
+                    print('Instances ------ seconds ' + str((T_instaces)/n_pc) + '  percentaje: ' + str((T_instaces/T_total)*100))
+                    print(' - Valve - seconds ' + str((T_instaces_valve)/n_pc) + '  percentaje: ' + str((T_instaces_valve/T_total)*100))
+                    print(' - Pipe -- seconds ' + str((T_instaces_pipe)/n_pc) + '  percentaje: ' + str((T_instaces_pipe/T_total)*100))
+                    print('Info ----------- seconds ' + str((T_info)/n_pc) + '  percentaje: ' + str((T_info/T_total)*100))
+                    print(' - Valve - seconds ' + str((T_info_valve)/n_pc) + '  percentaje: ' + str((T_info_valve/T_total)*100))
+                    print(' - Pipe -- seconds ' + str((T_info_pipe)/n_pc) + '  percentaje: ' + str((T_info_pipe/T_total)*100))
+                    print('Refine --------- seconds ' + str((T_ref)/n_pc) + '  percentaje: ' + str((T_ref/T_total)*100))
+                    print(' - Valve - seconds ' + str((T_ref_valve)/n_pc) + '  percentaje: ' + str((T_ref_valve/T_total)*100))
+                    print(' - Pipe -- seconds ' + str((T_ref_pipe)/n_pc) + '  percentaje: ' + str((T_ref_pipe/T_total)*100))
+                    print('Publish -------- seconds ' + str((T_publish)/n_pc) + '  percentaje: ' + str((T_publish/T_total)*100))
+
+                    print(" ")
+                    print(" ")
+                    print("--------------------------------------------------------------------------------------------------")
+                    print("--------------------------------------------------------------------------------------------------")
+                    print(" ")
+                    print(" ")
 
                             
                 else:
