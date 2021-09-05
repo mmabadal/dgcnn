@@ -116,19 +116,34 @@ def main():
                     distance = get_distance(pos_gt, pos_iea, 3)
                     valve_central_point_list.append(distance)
 
+                    max_id_gt  = data_gt[3,4]
+                    max_id_iea  = data_iea[3,4]
+                    if max_id_gt == 0 or max_id_gt == 1:
+                        gt_id = 2
+                    if max_id_gt == 2 or max_id_gt == 3 or max_id_gt == 4:
+                        gt_id = 3
+                    if max_id_iea == 0 or max_id_iea == 1:
+                        iea_id = 2
+                    if max_id_iea == 2 or max_id_iea == 3 or max_id_iea == 4:
+                        iea_id = 3
+                    if gt_id == iea_id:
+                        same = True
+                    else:
+                        same = False
+                    valve_type_list.append(same)
+
                     vector_gt = data_gt[2,0:3] - data_gt[1,0:3]                    
                     vector_iea = data_iea[2,0:3] - data_iea[1,0:3]
-
                     angle_diff = angle_between_vectors(vector_gt, vector_iea)
 
-                    if data_iea[3,4] == 0 or data_iea[3,4] == 1:
+                    if gt_id == 2 and iea_id == 2:
                         angle_diff180 = angle_diff + 180
                         angle_diff360 = angle_diff + 360
                         angle_diff180_2 = angle_diff - 180
                         angle_diff360_2 = angle_diff - 360
                         angle_diff = min([abs(angle_diff), abs(angle_diff180), abs(angle_diff360), abs(angle_diff180_2), abs(angle_diff360_2)])
 
-                    if data_iea[3,4] == 2 or data_iea[3,4] == 3 or data_iea[3,4] == 4:
+                    else:
                         angle_diff90 = angle_diff + 90
                         angle_diff180 = angle_diff + 180
                         angle_diff270 = angle_diff + 270
@@ -140,26 +155,6 @@ def main():
                         angle_diff = min([abs(angle_diff), abs(angle_diff90), abs(angle_diff180),abs(angle_diff270), abs(angle_diff360), abs(angle_diff90_2), abs(angle_diff180_2), abs(angle_diff270_2), abs(angle_diff360_2)])
 
                     valve_vector_direction_list.append(angle_diff)
-
-                    max_id_gt  = data_gt[3,4]
-                    max_id_iea  = data_iea[3,4]
-
-                    if max_id_gt == 0 or max_id_gt == 1:
-                        gt = 2
-                    if max_id_gt == 2 or max_id_gt == 3 or max_id_gt == 4:
-                        gt = 3
-
-                    if max_id_iea == 0 or max_id_iea == 1:
-                        iea = 2
-                    if max_id_iea == 2 or max_id_iea == 3 or max_id_iea == 4:
-                        iea = 3
-                    
-                    if gt == iea:
-                        same = True
-                    else:
-                        same = False
-
-                    valve_type_list.append(same)
 
                     data_gt = np.delete(data_gt, [0,1,2,3], 0)
                     data_iea = np.delete(data_iea, [0,1,2,3], 0)
@@ -202,9 +197,6 @@ def main():
     conn_central_point_avg = sum(conn_central_point_list) / len(conn_central_point_list)
     conn_central_point_avg_cm = conn_central_point_avg * 111.11
     print("connection central point: " + str(conn_central_point_avg_cm)) # TODO REVISAR, MUY BAJO... :D
-
-    print("   ")
-    print(valve_vector_direction_list)  # TODO REVISAR VALORES ALTOS
 
 
 if __name__ == "__main__":
