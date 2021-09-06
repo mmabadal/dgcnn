@@ -41,6 +41,9 @@ def main():
     valve_vector_direction_list = list()
     valve_type_list = list()
 
+    gt3_iea2 = 0
+    gt2_iea3 = 0
+
     path_info_gt = os.path.join(path_data, "gt_ply", "info_juntos_replace")
     path_info_iea = os.path.join(path_data, "out2_con_info", "info_juntos_replace")
 
@@ -66,6 +69,21 @@ def main():
             f.write(newdata)
             f.close()
 
+        v_size = 25 # TODO
+        c1 = v_size / 0.171695423555784
+        c2 = v_size / 0.170245588127857
+        c3 = v_size / 0.19430948521624
+        c4 = v_size / 0.200959192586455
+
+        name_base_int = int(name_base[0:5])
+        conversion = c1  
+        if name_base_int > 15753:
+            conversion = c2 
+        if name_base_int > 16037:
+            conversion = c3 
+        if name_base_int > 16069:
+            conversion = c3
+
         data_gt = np.genfromtxt(filepath_gt)
         data_iea = np.genfromtxt(filepath_iea)
 
@@ -78,7 +96,7 @@ def main():
                 print("elbow")
                 pos_gt = data_gt[0,0:3]
                 pos_iea = data_iea[0,0:3]
-                distance = get_distance(pos_gt, pos_iea, 3)
+                distance = get_distance(pos_gt, pos_iea, 3) * conversion
                 elbow_point_list.append(distance)
                 data_gt = np.delete(data_gt, 0, 0)
                 data_iea = np.delete(data_iea, 0, 0)
@@ -113,7 +131,7 @@ def main():
 
                     pos_gt = data_gt[0,0:3]
                     pos_iea = data_iea[0,0:3]
-                    distance = get_distance(pos_gt, pos_iea, 3)
+                    distance = get_distance(pos_gt, pos_iea, 3) * conversion
                     valve_central_point_list.append(distance)
 
                     max_id_gt  = data_gt[3,4]
@@ -128,7 +146,11 @@ def main():
                         iea_id = 3
                     if gt_id == iea_id:
                         same = True
-                    else:
+                    elif gt_id == 2 and iea_id == 3:
+                        gt2_iea3 = gt2_iea3 +1
+                        same = False
+                    elif gt_id == 3 and iea_id == 2:
+                        gt3_iea2 = gt3_iea2 +1
                         same = False
                     valve_type_list.append(same)
 
@@ -160,30 +182,27 @@ def main():
                     data_iea = np.delete(data_iea, [0,1,2,3], 0)
 
                 elif data_gt[0,5] == 2:
-                    print("connection")
                     pos_gt = data_gt[0,0:3]
                     pos_iea = data_iea[0,0:3]
-                    distance = get_distance(pos_gt, pos_iea, 3)
+                    distance = get_distance(pos_gt, pos_iea, 3) * conversion
                     conn_central_point_list.append(distance)
                     data_gt = np.delete(data_gt, 0, 0)
                     data_iea = np.delete(data_iea, 0, 0)
+                    print("connection: " + str(distance* 111.11))
 
     print("   ")
     elbow_point_avg = sum(elbow_point_list) / len(elbow_point_list)
-    elbow_point_avg_cm = elbow_point_avg*111.11
-    print("elbow central point: " + str(elbow_point_avg_cm))
+    print("elbow central point: " + str(elbow_point_avg))
 
     print("   ")
     pipe_vector_direction_avg = sum(pipe_vector_direction_list) / len(pipe_vector_direction_list)
     print("pipe direction angle: " + str(pipe_vector_direction_avg) + "º")
     pipe_vector_size_avg = sum(pipe_vector_size_list) / len(pipe_vector_size_list)
-    pipe_vector_size_avg_cm = pipe_vector_size_avg * 111.11
-    print("pipe module: " + str(pipe_vector_size_avg_cm))
+    print("pipe module: " + str(pipe_vector_size_avg))
 
     print("   ")
     valve_central_point_avg = sum(valve_central_point_list) / len(valve_central_point_list)
-    valve_central_point_avg_cm = valve_central_point_avg * 111.11
-    print("valve central point: " + str(valve_central_point_avg_cm))
+    print("valve central point: " + str(valve_central_point_avg))
     valve_vector_direction_avg = sum(valve_vector_direction_list) / len(valve_vector_direction_list)
     print("valve direction angle: " + str(valve_vector_direction_avg) + "º")
     true_count = sum(valve_type_list)
@@ -191,12 +210,14 @@ def main():
     percentaje = (true_count/len(valve_type_list))*100
     print("same: " + str(true_count))
     print("not same: " + str(false_count))
+    print("gt2_iea3: " + str(gt2_iea3))
+    print("gt3_iea2: " + str(gt3_iea2))
+    
     print("percentaje: " + str(percentaje))
 
     print("   ")
     conn_central_point_avg = sum(conn_central_point_list) / len(conn_central_point_list)
-    conn_central_point_avg_cm = conn_central_point_avg * 111.11
-    print("connection central point: " + str(conn_central_point_avg_cm)) # TODO REVISAR, MUY BAJO... :D
+    print("connection central point: " + str(conn_central_point_avg)) # TODO REVISAR, MUY BAJO... :D
 
 
 if __name__ == "__main__":
