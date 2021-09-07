@@ -68,6 +68,7 @@ def main():
             f = open(filepath_gt,'w')
             f.write(newdata)
             f.close()
+            continue
 
         v_size = 25 # TODO
         c1 = v_size / 0.171695423555784
@@ -118,7 +119,7 @@ def main():
 
                 module_gt = math.sqrt((vector_gt[0]**2)+(vector_gt[1]**2)+(vector_gt[2]**2))
                 module_iea = math.sqrt((vector_iea[0]**2)+(vector_iea[1]**2)+(vector_iea[2]**2))
-                module_diff = abs(module_gt-module_iea)
+                module_diff = abs(module_gt-module_iea) * conversion
                 pipe_vector_size_list.append(module_diff)
 
                 data_gt = np.delete(data_gt, [0,1], 0)
@@ -127,68 +128,75 @@ def main():
             elif data_gt[0,3] == 3:
 
                 if data_gt[0,5] == 1:
-                    print("valve")
 
-                    pos_gt = data_gt[0,0:3]
-                    pos_iea = data_iea[0,0:3]
-                    distance = get_distance(pos_gt, pos_iea, 3) * conversion
-                    valve_central_point_list.append(distance)
+                    if data_gt[3,4] != 9:
+                        print("valve")
 
-                    max_id_gt  = data_gt[3,4]
-                    max_id_iea  = data_iea[3,4]
-                    if max_id_gt == 0 or max_id_gt == 1:
-                        gt_id = 2
-                    if max_id_gt == 2 or max_id_gt == 3 or max_id_gt == 4:
-                        gt_id = 3
-                    if max_id_iea == 0 or max_id_iea == 1:
-                        iea_id = 2
-                    if max_id_iea == 2 or max_id_iea == 3 or max_id_iea == 4:
-                        iea_id = 3
-                    if gt_id == iea_id:
-                        same = True
-                    elif gt_id == 2 and iea_id == 3:
-                        gt2_iea3 = gt2_iea3 +1
-                        same = False
-                    elif gt_id == 3 and iea_id == 2:
-                        gt3_iea2 = gt3_iea2 +1
-                        same = False
-                    valve_type_list.append(same)
+                        pos_gt = data_gt[0,0:3]
+                        pos_iea = data_iea[0,0:3]
+                        distance = get_distance(pos_gt, pos_iea, 3) * conversion
+                        valve_central_point_list.append(distance)
 
-                    vector_gt = data_gt[2,0:3] - data_gt[1,0:3]                    
-                    vector_iea = data_iea[2,0:3] - data_iea[1,0:3]
-                    angle_diff = angle_between_vectors(vector_gt, vector_iea)
+                        max_id_gt  = data_gt[3,4]
+                        max_id_iea  = data_iea[3,4]
 
-                    if gt_id == 2 and iea_id == 2:
-                        angle_diff180 = angle_diff + 180
-                        angle_diff360 = angle_diff + 360
-                        angle_diff180_2 = angle_diff - 180
-                        angle_diff360_2 = angle_diff - 360
-                        angle_diff = min([abs(angle_diff), abs(angle_diff180), abs(angle_diff360), abs(angle_diff180_2), abs(angle_diff360_2)])
+                        if max_id_gt != 8:
 
-                    else:
-                        angle_diff90 = angle_diff + 90
-                        angle_diff180 = angle_diff + 180
-                        angle_diff270 = angle_diff + 270
-                        angle_diff360 = angle_diff + 360
-                        angle_diff90_2 = angle_diff - 90
-                        angle_diff180_2 = angle_diff - 180
-                        angle_diff270_2 = angle_diff - 270
-                        angle_diff360_2 = angle_diff - 360
-                        angle_diff = min([abs(angle_diff), abs(angle_diff90), abs(angle_diff180),abs(angle_diff270), abs(angle_diff360), abs(angle_diff90_2), abs(angle_diff180_2), abs(angle_diff270_2), abs(angle_diff360_2)])
+                            if max_id_gt == 0 or max_id_gt == 1:
+                                gt_id = 2
+                            if max_id_gt == 2 or max_id_gt == 3 or max_id_gt == 4:
+                                gt_id = 3
+                            if max_id_iea == 0 or max_id_iea == 1:
+                                iea_id = 2
+                            if max_id_iea == 2 or max_id_iea == 3 or max_id_iea == 4:
+                                iea_id = 3
 
-                    valve_vector_direction_list.append(angle_diff)
+                            if gt_id == iea_id:
+                                same = True
+                            elif gt_id == 2 and iea_id == 3:
+                                gt2_iea3 = gt2_iea3 +1
+                                same = False
+                            elif gt_id == 3 and iea_id == 2:
+                                gt3_iea2 = gt3_iea2 +1
+                                same = False
+                            
+                            valve_type_list.append(same)
+
+                        vector_gt = data_gt[2,0:3] - data_gt[1,0:3]                    
+                        vector_iea = data_iea[2,0:3] - data_iea[1,0:3]
+                        angle_diff = angle_between_vectors(vector_gt, vector_iea)
+
+                        if gt_id == 2 and iea_id == 2:
+                            angle_diff180 = angle_diff + 180
+                            angle_diff360 = angle_diff + 360
+                            angle_diff180_2 = angle_diff - 180
+                            angle_diff360_2 = angle_diff - 360
+                            angle_diff = min([abs(angle_diff), abs(angle_diff180), abs(angle_diff360), abs(angle_diff180_2), abs(angle_diff360_2)])
+
+                        else:
+                            angle_diff90 = angle_diff + 90
+                            angle_diff180 = angle_diff + 180
+                            angle_diff270 = angle_diff + 270
+                            angle_diff360 = angle_diff + 360
+                            angle_diff90_2 = angle_diff - 90
+                            angle_diff180_2 = angle_diff - 180
+                            angle_diff270_2 = angle_diff - 270
+                            angle_diff360_2 = angle_diff - 360
+                            angle_diff = min([abs(angle_diff), abs(angle_diff90), abs(angle_diff180),abs(angle_diff270), abs(angle_diff360), abs(angle_diff90_2), abs(angle_diff180_2), abs(angle_diff270_2), abs(angle_diff360_2)])
+
+                        valve_vector_direction_list.append(angle_diff)
 
                     data_gt = np.delete(data_gt, [0,1,2,3], 0)
                     data_iea = np.delete(data_iea, [0,1,2,3], 0)
 
                 elif data_gt[0,5] == 2:
+                    print("connection")
                     pos_gt = data_gt[0,0:3]
                     pos_iea = data_iea[0,0:3]
                     distance = get_distance(pos_gt, pos_iea, 3) * conversion
                     conn_central_point_list.append(distance)
                     data_gt = np.delete(data_gt, 0, 0)
                     data_iea = np.delete(data_iea, 0, 0)
-                    print("connection: " + str(distance* 111.11))
 
     print("   ")
     elbow_point_avg = sum(elbow_point_list) / len(elbow_point_list)
