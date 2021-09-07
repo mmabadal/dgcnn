@@ -76,7 +76,7 @@ class Pointcloud_Seg:
         self.rad_v = 0.04               # max distance for valve growing                            //PARAM
         self.dim_p = 3                  # compute 2D (2) or 3D (3) distance for pipe growing        //PARAM
         self.dim_v = 2                  # compute 2D (2) or 3D (3) distance for valve growing       //PARAM
-        self.min_p_p = 60               # minimum number of points to consider a blob as a pipe     //PARAM
+        self.min_p_p = 50               # minimum number of points to consider a blob as a pipe     //PARAM
         self.min_p_v = 30 # 40 80 140   # minimum number of points to consider a blob as a valve    //PARAM
 
         self.model_path = "/home/miguel/Desktop/PIPES2/dgcnn/sem_seg/RUNS/sparus_xiroi/test/128_11_1/model.ckpt"          # path to model         //PARAM

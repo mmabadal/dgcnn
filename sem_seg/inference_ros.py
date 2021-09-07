@@ -263,6 +263,11 @@ class Pointcloud_Seg:
             #trans[:3,:3] = inst_o3d.get_rotation_matrix_from_xyz((0,0, -rad))
             #get_info.draw_registration_result(inst_o3d, self.targets_list[max_idx], trans)
 
+            # print best valve matching
+            #trans = np.eye(4) 
+            #trans[:3,:3] = inst_o3d.get_rotation_matrix_from_xyz((0,0, -rad))
+            #get_info.draw_registration_result(inst_o3d, self.targets_list[max_idx], trans)
+
         # based on valve fitness, delete it and return stolen points to pipe prediction
         descart_valves_list = [i for i, x in enumerate(info_valves_list) if x[4][0] < 0.4]     # if max fitnes < thr  //PARAM
         for i in descart_valves_list:
