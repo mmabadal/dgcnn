@@ -70,7 +70,7 @@ def main():
             f.close()
             continue
 
-        v_size = 25 # TODO
+        v_size = 19.7
         c1 = v_size / 0.171695423555784
         c2 = v_size / 0.170245588127857
         c3 = v_size / 0.19430948521624
@@ -97,7 +97,7 @@ def main():
                 print("elbow")
                 pos_gt = data_gt[0,0:3]
                 pos_iea = data_iea[0,0:3]
-                distance = get_distance(pos_gt, pos_iea, 3) * conversion
+                distance = get_distance(pos_gt, pos_iea, 2) * conversion
                 elbow_point_list.append(distance)
                 data_gt = np.delete(data_gt, 0, 0)
                 data_iea = np.delete(data_iea, 0, 0)
@@ -134,7 +134,7 @@ def main():
 
                         pos_gt = data_gt[0,0:3]
                         pos_iea = data_iea[0,0:3]
-                        distance = get_distance(pos_gt, pos_iea, 3) * conversion
+                        distance = get_distance(pos_gt, pos_iea, 2) * conversion
                         valve_central_point_list.append(distance)
 
                         max_id_gt  = data_gt[3,4]
@@ -193,7 +193,7 @@ def main():
                     print("connection")
                     pos_gt = data_gt[0,0:3]
                     pos_iea = data_iea[0,0:3]
-                    distance = get_distance(pos_gt, pos_iea, 3) * conversion
+                    distance = get_distance(pos_gt, pos_iea, 2) * conversion
                     conn_central_point_list.append(distance)
                     data_gt = np.delete(data_gt, 0, 0)
                     data_iea = np.delete(data_iea, 0, 0)
