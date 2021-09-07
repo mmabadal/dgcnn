@@ -240,8 +240,12 @@ if __name__ == "__main__":
     count = 0
     count_target = 5
     count_thr = 1
+    total_time = 0
+    n_infos = 0
 
     for file in natsorted(os.listdir(path_in)):
+
+        n_infos = n_infos + 1
 
         print("working on: " + file)
 
@@ -258,6 +262,7 @@ if __name__ == "__main__":
         info_map = get_info_map(info_map, info_world)
         b = time.time()
         c = b-a
+        total_time = total_time+c
         print("time: " + str(c))
 
 
@@ -272,12 +277,13 @@ if __name__ == "__main__":
             conversion_utils.info_to_ply(info_map, path_out_map_clean)
 
 
-        print(" ")
+        mean_time = total_time/n_infos
+
         print(" ")
         print("------------------------------")
         print(" ")
-        print(" ")
         
 
+    print("mean_time: " + str(mean_time))
 
 
