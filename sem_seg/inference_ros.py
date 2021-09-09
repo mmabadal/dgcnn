@@ -342,6 +342,8 @@ class Pointcloud_Seg:
             pc_info = self.array2pc_info(header, info_array)
             self.pub_pc_info.publish(pc_info)
 
+        t10 = rospy.Time.now()
+
         out = False
         if out == True:
             name = str(header.stamp)
@@ -432,8 +434,6 @@ class Pointcloud_Seg:
         self.pub_pc_base.publish(pc_base)
         self.pub_pc_seg.publish(pc_seg)
         self.pub_pc_inst.publish(pc_inst)
-
-        t10 = rospy.Time.now()
 
         time_read = t1-t0
         time_blocks = t2-t1

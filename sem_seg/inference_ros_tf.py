@@ -355,6 +355,8 @@ class Pointcloud_Seg:
                 pc_info_world = self.array2pc_info(header, info_array_world)
                 self.pub_pc_info_world.publish(pc_info_world)
 
+                t10 = rospy.Time.now()
+
                 out1 = True
                 if out1 == True:         
                     path_out_world_info = os.path.join("/home/miguel/Desktop/PIPES2/out_ros_world", str(header.stamp)+"_info.ply")
@@ -512,8 +514,6 @@ class Pointcloud_Seg:
         self.pub_pc_base.publish(pc_base)
         self.pub_pc_seg.publish(pc_seg)
         self.pub_pc_inst.publish(pc_inst)
-
-        t10 = rospy.Time.now()
 
         time_read = t1-t0
         time_blocks = t2-t1
