@@ -332,7 +332,6 @@ class Pointcloud_Seg:
         #info1 = [info_pipes_list, info_connexions_list, info_valves_list, instances_ref_pipe_list]
         #info2 = [info_pipes_list2, info_connexions_list2, info_valves_list, instances_ref_pipe_list] 
         info3 = [info_pipes_list2, info_connexions_list2, info_valves_list2, instances_ref_pipe_list]
-
         if len(info_pipes_list2)>0 or len(info_valves_list2)>0:
 
             self.count +=1
@@ -355,9 +354,7 @@ class Pointcloud_Seg:
                 pc_info_world = self.array2pc_info(header, info_array_world)
                 self.pub_pc_info_world.publish(pc_info_world)
 
-                t10 = rospy.Time.now()
-
-                out1 = True
+                out1 = False
                 if out1 == True:         
                     path_out_world_info = os.path.join("/home/miguel/Desktop/PIPES2/out_ros_world", str(header.stamp)+"_info.ply")
                     info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list = conversion_utils.array_to_info(info_array_world)
@@ -398,7 +395,7 @@ class Pointcloud_Seg:
                     # pc_info_map = self.array2pc_info(header, info_map_array)
                     # self.pub_pc_info_map.publish(pc_info_map)
 
-                    out2 = True
+                    out2 = False
                     if out2 == True:
                         z = 1 # SAVE INFO MAP
                         path_out_world_info_np = os.path.join("/home/miguel/Desktop/PIPES2/out_ros_world", str(header.stamp)+"_info.npy") # save array of info3 to world used
@@ -417,7 +414,7 @@ class Pointcloud_Seg:
             path_out3 = os.path.join("/home/miguel/Desktop/PIPES2/out_ros", name+"_3.ply")
             conversion_utils.info_to_ply(info3, path_out3)
 
-
+        t10 = rospy.Time.now()
         # print info
 
         print(" ")
