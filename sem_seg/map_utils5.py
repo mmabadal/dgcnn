@@ -92,13 +92,13 @@ def get_info_map(info_map, info_world):
             new_inst_b = copy.deepcopy(new_skeleton)
 
             for j in range(new_inst_l.shape[0]):
-                new_inst_l[j,0] = new_inst_l[j,0]-0.04
+                new_inst_l[j,0] = new_inst_l[j,0]-0.032
             for j in range(new_inst_r.shape[0]):
-                new_inst_r[j,0] = new_inst_r[j,0]+0.04                    
+                new_inst_r[j,0] = new_inst_r[j,0]+0.032                   
             for j in range(new_inst_t.shape[0]):
-                new_inst_t[j,1] = new_inst_t[j,1]+0.04
+                new_inst_t[j,1] = new_inst_t[j,1]+0.032
             for j in range(new_inst_b.shape[0]):
-                new_inst_b[j,1] = new_inst_b[j,1]-0.04
+                new_inst_b[j,1] = new_inst_b[j,1]-0.032
             # TODO si alguna vez se pierde se pueden meter otros 4 a 0.02, casi no afecta a tiempo
 
             new_inst = np.vstack((new_skeleton, new_inst_l, new_inst_r, new_inst_t, new_inst_b))
@@ -107,10 +107,12 @@ def get_info_map(info_map, info_world):
             new_inst_o3d = o3d.geometry.PointCloud()
             new_inst_o3d.points = o3d.utility.Vector3dVector(new_inst[:,0:3])
 
+            # TODO SE TENDRIA QUE PASAR EL ESQUELETO ANTERIOR A GET INFO POR PARAMETRO PARA PODER HACER LA PROYECCION ANTES DE BUSCAR VECTORES, CODOS ....
             info_pipe_map = get_info.get_info(new_inst_o3d, models=0, method="skeleton", close = 8) # get pipe instance info list( list( list(chain1, start1, end1, elbow_list1, vector_chain_list1), ...), list(connexions_points)) 
             new_pipe = info_pipe_map[0][0]
 
-            # TODO REPROJECT ALL CHAIN POINTS TO NEW_SKELETON POINTS
+            print(new_pipe)
+            # SKELETON ESTA EN NEW_PIPE[0]
 
             new_pipe.append(0)               # TODO holder for belong inst, remove from everywhere??
             new_pipe.append(count)
