@@ -111,7 +111,7 @@ def get_info_map(info_map, info_world):
             info_pipe_map = get_info.get_info(new_inst_o3d, models=0, method="skeleton", close = 8) # get pipe instance info list( list( list(chain1, start1, end1, elbow_list1, vector_chain_list1), ...), list(connexions_points)) 
             new_pipe = info_pipe_map[0][0]
 
-            print(new_pipe)
+            #print(new_pipe)
             # SKELETON ESTA EN NEW_PIPE[0]
 
             new_pipe.append(0)               # TODO holder for belong inst, remove from everywhere??
@@ -158,7 +158,16 @@ def get_info_map(info_map, info_world):
             dist = get_instances.get_distance(info_valve_world[0], info_valve_map[0], 2) 
             if dist < 0.15: # las valvulas tienen una longitud de 0.18
                 info_valves_map_list[j][0] = (info_valves_map_list[j][0] + info_valve_world[0])/2
-                info_valves_map_list[j][4] = info_valves_map_list[j][4]+1 # count +1
+                info_valves_map_list[j][4].append(info_valve_world[2])
+                info_valves_map_list[j][5] = info_valves_map_list[j][5]+1 # count +1
+
+                two = sum(i <= 1 for i in info_valves_map_list[j][4])
+                three = sum(i >= 2 for i in info_valves_map_list[j][4])
+                new_type = 0
+                if two<three:
+                    new_type = 2
+                info_valves_map_list[j][2] = new_type
+
                 merged = True
                 break
         
@@ -208,7 +217,7 @@ def clean_map(info_map, count_thr):
 
     valve_del_list = list()
     for i, info_valve_map in enumerate(info_valves_map_list):        # for each valve
-        if info_valve_map[4] <= count_thr:
+        if info_valve_map[5] <= count_thr:
             valve_del_list.append(i)
     for i in sorted(valve_del_list, reverse=True):  # delete valves
         del info_valves_map_list[i]  
@@ -265,6 +274,10 @@ if __name__ == "__main__":
         info_array_world = np.load(file_path)
 
         info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list = conversion_utils.array_to_info(info_array_world)
+
+        for i in range(len(info_valves_world_list)):
+            info_valves_world_list[i].append([info_valves_world_list[i][2]])
+
         info_world = [info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list]
 
         a = time.time()
