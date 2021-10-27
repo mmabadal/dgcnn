@@ -5,7 +5,7 @@ import time
 import copy
 import math
 import argparse
-import get_info
+import iea
 import numpy as np
 import scipy as scp
 import open3d as o3d
@@ -108,7 +108,7 @@ def get_info_map(info_map, info_world):
             new_inst_o3d.points = o3d.utility.Vector3dVector(new_inst[:,0:3])
 
             # TODO SE TENDRIA QUE PASAR EL ESQUELETO ANTERIOR A GET INFO POR PARAMETRO PARA PODER HACER LA PROYECCION ANTES DE BUSCAR VECTORES, CODOS ....
-            info_pipe_map = get_info.get_info(new_inst_o3d, models=0, method="skeleton", close = 8) # get pipe instance info list( list( list(chain1, start1, end1, elbow_list1, vector_chain_list1), ...), list(connexions_points)) 
+            info_pipe_map = iea.get_info(new_inst_o3d, models=0, method="skeleton", close = 8) # get pipe instance info list( list( list(chain1, start1, end1, elbow_list1, vector_chain_list1), ...), list(connexions_points)) 
             new_pipe = info_pipe_map[0][0]
 
             #print(new_pipe)

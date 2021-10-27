@@ -4,7 +4,7 @@ import sys
 import time
 import copy
 import argparse
-import get_info
+import iea
 import numpy as np
 from model import *
 import open3d as o3d
@@ -117,7 +117,7 @@ if __name__=='__main__':
     targets_list = list()
     for file_name in natsorted(os.listdir(targets_path)):
         target_path = os.path.join(targets_path, file_name)
-        target = get_info.read_ply(target_path, "model")
+        target = iea.read_ply(target_path, "model")
         xyz_central = np.mean(target, axis=0)[0:3]
         target[:, 0:3] -= xyz_central  
         target_o3d = o3d.geometry.PointCloud()
@@ -251,7 +251,7 @@ if __name__=='__main__':
                         inst_o3d.orient_normals_to_align_with_direction(orientation_reference=([0, 0, 1]))                   # align normals
                         inst[:, 0:3] += xyz_central                                                                          # recover original position
 
-                        info_valve = get_info.get_info(inst_o3d, targets_list, method="matching")        # get valve instance info list([fitness1, rotation1],[fitness2, rotation2], ...)  len = len(targets_list)
+                        info_valve = iea.get_info(inst_o3d, targets_list, method="matching")        # get valve instance info list([fitness1, rotation1],[fitness2, rotation2], ...)  len = len(targets_list)
                         max_info =  max(info_valve)                                                      # the max() function compares the first element of each info_list element, which is fitness)
                         max_idx = info_valve.index(max_info)                                             # idx of best valve match
                         
@@ -294,7 +294,7 @@ if __name__=='__main__':
                         inst_o3d.points = o3d.utility.Vector3dVector(inst[:,0:3])
                         inst_o3d.colors = o3d.utility.Vector3dVector(inst[:,3:6]/255)
 
-                        info_pipe = get_info.get_info(inst_o3d, models=0, method="skeleton") # get pipe instance info list( list( list(chain1, start1, end1, elbow_list1, vector_chain_list1), ...), list(connexions_points)) 
+                        info_pipe = iea.get_info(inst_o3d, models=0, method="skeleton") # get pipe instance info list( list( list(chain1, start1, end1, elbow_list1, vector_chain_list1), ...), list(connexions_points)) 
                         
                         for j, pipe_info in enumerate(info_pipe[0]):                         # stack pipes info
                             inst_list = list()
@@ -311,11 +311,11 @@ if __name__=='__main__':
 
                     info_pipes_list_copy = copy.deepcopy(info_pipes_list) 
                     info_connexions_list_copy = copy.deepcopy(info_connexions_list)
-                    info_pipes_list2, info_connexions_list2 = get_info.unify_chains(info_pipes_list_copy, info_connexions_list_copy)
+                    info_pipes_list2, info_connexions_list2 = iea.unify_chains(info_pipes_list_copy, info_connexions_list_copy)
                     t8 = time.time()
 
                     info_valves_list_copy = copy.deepcopy(info_valves_list)
-                    info_valves_list2 = get_info.refine_valves(info_valves_list_copy, info_pipes_list2) 
+                    info_valves_list2 = iea.refine_valves(info_valves_list_copy, info_pipes_list2) 
                     t9 = time.time()
 
                     info1 = [info_pipes_list, info_connexions_list, info_valves_list, instances_ref_pipe_list]

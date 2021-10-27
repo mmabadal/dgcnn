@@ -19,7 +19,7 @@ import conversion_utils
 
 '''
 
- - python get_info.py --path_projections data/ --path_models valve_targets/ --path_cls 4.txt 
+ - python iea.py --path_projections data/ --path_models valve_targets/ --path_cls 4.txt 
 
 '''
 
