@@ -6,8 +6,6 @@ We propose a new neural network module dubbed EdgeConv suitable for CNN-based hi
 ## Overview
 `DGCNN` is the author's re-implementation of Dynamic Graph CNN, which achieves state-of-the-art performance on point-cloud-related high-level tasks including category classification, semantic segmentation and part segmentation.
 
-<img src='./tensorflow/misc/demo_teaser.png' width=800>
-
 Further information please contact [Yue Wang](https://www.csail.mit.edu/person/yue-wang) and [Yongbin Sun](https://autoid.mit.edu/people-2).
 
 ## Author's Implementations

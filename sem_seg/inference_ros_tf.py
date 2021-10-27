@@ -332,7 +332,6 @@ class Pointcloud_Seg:
         #info1 = [info_pipes_list, info_connexions_list, info_valves_list, instances_ref_pipe_list]
         #info2 = [info_pipes_list2, info_connexions_list2, info_valves_list, instances_ref_pipe_list] 
         info3 = [info_pipes_list2, info_connexions_list2, info_valves_list2, instances_ref_pipe_list]
-
         if len(info_pipes_list2)>0 or len(info_valves_list2)>0:
 
             self.count +=1
@@ -417,7 +416,7 @@ class Pointcloud_Seg:
             path_out3 = os.path.join("/home/miguel/Desktop/PIPES2/out_ros", name+"_3.ply")
             conversion_utils.info_to_ply(info3, path_out3)
 
-
+        t10 = rospy.Time.now()
         # print info
 
         print(" ")
@@ -514,7 +513,6 @@ class Pointcloud_Seg:
         self.pub_pc_base.publish(pc_base)
         self.pub_pc_seg.publish(pc_seg)
         self.pub_pc_inst.publish(pc_inst)
-
 
         time_read = t1-t0
         time_blocks = t2-t1
