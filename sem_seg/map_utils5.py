@@ -291,8 +291,6 @@ if __name__ == "__main__":
         print("time: " + str(c))
         print("average time: " + str(average_time))
 
-
-
         path_out_map = os.path.join(path_out, file_name+"_map.ply")
         conversion_utils.info_to_ply(info_map, path_out_map)
 
