@@ -922,6 +922,20 @@ def proj_voxel(voxel, voxels, max_d):
     return voxel_proj
 
 
+
+def proj_points(base_points, new_points, max_d, d_type):
+    for i, new_point in enumertae(new_points):
+        dist_list = list()
+        for j, base_point in enumerate(base_points):
+            dist = get_distance(new_point,base_point,d_type)
+            dist_list.append(dist)
+        min_dist = min(dist_list)                              # get closest value
+        min_dist_idx = dist_list.index(min(dist_list))[0]      # get closest idx
+        if min_dist < max_d:
+            new_points[i] = base_points[min_dist_idx]
+    return new_points
+
+
 def voxel_to_point(voxel, points, corr):
     i_corr = [i for i, c in enumerate(corr) if c[0] == voxel[0] and c[1] == voxel[1]]   # take all index where points fell into the voxels with same X and Y as the evaluated one, not takin into account Z
     corr_point_list = list()

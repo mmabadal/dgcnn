@@ -16,172 +16,184 @@ import matplotlib.pyplot as plt
 from scipy.spatial import distance
 from mpl_toolkits.mplot3d import Axes3D
 
-def check_near(arr1, arr2):
+
+def check_near(arr1, arr2, dist):
 
     near = False
-    start = arr1[0]
-    end = arr1[-1]
-    
-    for i in arr2:
-        d_start = get_instances.get_distance(i, start, 3)
-        d_end = get_instances.get_distance(i, end, 3)
+    start1 = arr1[0]
+    end1 = arr1[-1]    
+    start2 = arr2[0]
+    end2 = arr2[-1]
 
-        if d_start < 0.05 or d_end < 0.05:
+    for i in arr2:
+        d_start = get_instances.get_distance(i, start1, 3)
+        d_end = get_instances.get_distance(i, end1, 3)
+        if d_start < dist or d_end < dist:
+            near = True
+            break
+
+    for i in arr1:
+        d_start = get_instances.get_distance(i, start2, 3)
+        d_end = get_instances.get_distance(i, end2, 3)
+        if d_start < dist or d_end < dist:
             near = True
             break
 
     return near
 
+
 def get_info_map(info_map, info_world):
 
     info_pipes_map_list = info_map[0]
-    info_connexions_map_list = info_map[1]
+    info_connnexions_map_list = info_map[1]
     info_valves_map_list = info_map[2]
     pipe_inst_map_list = info_map[3]
 
     info_pipes_world_list = info_world[0]
-    info_connexions_world_list = info_world[1]
+    info_connnexions_world_list = info_world[1]
     info_valves_world_list = info_world[2]
     pipe_inst_world_list = info_world[3]
 
-
-    merge_inst_map_list = list()
+    merge_list_all = list()
 
     for i, pipe_world in enumerate(info_pipes_world_list):
         merge_list = list()
         for j, pipe_map in enumerate(info_pipes_map_list):
-            near = check_near(pipe_map[0], pipe_world[0])
+            near = check_near(pipe_map[0], pipe_world[0], 0.05)
             if near == True:
-                merge_list = merge_list + pipe_map[3]  
+                merge_list.append(j)
+        merge_list_all.append(merge_list)
 
-        merge_inst_map_list.append(merge_list)              # lista de listas de merges
+    del_list = list()
 
-    print(merge_inst_map_list)
+    for i, merge_list in enumerate(merge_list_all):
 
-    new_insts = list()
+        if len(merge_list) == 0:
+            new_pipe = info_pipes_world_list[i]
+            new_pipe.append(1)                                          # count 1
+            info_pipes_map_list.append(new_pipe)
 
-    for i, merge_list in enumerate(merge_inst_map_list):
+        else:
+            del_list = del_list + merge_list
+            skeleton_list = list()
+            skeleton_list.append(info_pipes_world_list[i][0])
+            count = 0
+
+            for pipe_idx in merge_list:
+                skeleton_list.append(info_pipes_map_list[pipe_idx][0]) 
+                count = count + info_pipes_map_list[pipe_idx][4]
+                
+            new_skeleton = np.vstack(skeleton_list)
+            count = count +1
+
+            new_inst_l = copy.deepcopy(new_skeleton)
+            new_inst_r = copy.deepcopy(new_skeleton)
+            new_inst_t = copy.deepcopy(new_skeleton)
+            new_inst_b = copy.deepcopy(new_skeleton)
+
+            for j in range(new_inst_l.shape[0]):
+                new_inst_l[j,0] = new_inst_l[j,0]-0.032
+            for j in range(new_inst_r.shape[0]):
+                new_inst_r[j,0] = new_inst_r[j,0]+0.032                   
+            for j in range(new_inst_t.shape[0]):
+                new_inst_t[j,1] = new_inst_t[j,1]+0.032
+            for j in range(new_inst_b.shape[0]):
+                new_inst_b[j,1] = new_inst_b[j,1]-0.032
+            # TODO si alguna vez se pierde se pueden meter otros 4 a 0.02, casi no afecta a tiempo
+
+            new_inst = np.vstack((new_skeleton, new_inst_l, new_inst_r, new_inst_t, new_inst_b))
+
+            # transform instance to o3d pointcloud
+            new_inst_o3d = o3d.geometry.PointCloud()
+            new_inst_o3d.points = o3d.utility.Vector3dVector(new_inst[:,0:3])
+
+            info_pipe_map = get_info.get_info(new_inst_o3d, models=0, method="skeleton", close = 8) # get pipe instance info list( list( list(chain1, start1, end1, elbow_list1, vector_chain_list1), ...), list(connexions_points)) 
+            new_pipe = info_pipe_map[0][0]
+
+            old_skeleton = copy.deepcopy(new_skeleton)
+            new_skeleton = new_pipe[0]
+
+            proj_skeleton = get_info.proj_points(new_skeleton, old_skeleton, 0.4, 3)
+            new_pipe[0] = proj_skeleton
+
+            new_pipe.append(0)               # TODO holder for belong inst, remove from everywhere??
+            new_pipe.append(count)
+            info_pipes_map_list.append(new_pipe)
+
+    del_list = list(set(del_list))
+    for j in sorted(del_list, reverse=True):  # delete chains
+        del info_pipes_map_list[j]  
+
+    for i, info_connexion_world in enumerate(info_connnexions_world_list):
+        merged = False
+
+        for j, info_connexion_map in enumerate(info_connnexions_map_list):
+            dist = get_instances.get_distance(info_connexion_world[0], info_connexion_map[0], 2) 
+            if dist < 0.15:  # las valvulas tienen una longitud de 0.18
+                info_connnexions_map_list[j][0] = (info_connnexions_map_list[j][0] + info_connexion_world[0])/2
+                info_connnexions_map_list[j][2] = info_connnexions_map_list[j][2]+1         # count +1
+                merged = True
+                break
+
+        if merged == False:
+            count_c = 1     # count 1
+            info_connexion_world.append(count_c)
+            info_connnexions_map_list.append(info_connexion_world)
+
+    for i, info_connexion_map in enumerate(info_connnexions_map_list):        # for each connexion
+
+        near_pipes_list = list()
+        for j, info_pipe_map in enumerate(info_pipes_map_list):                     # get near pipes
+            c_p = info_connnexions_map_list[i][0]                                   # central point
+            d_to_start = get_instances.get_distance(c_p, info_pipe_map[0][0], 3)    # get distance from valve central point to pipe start
+            d_to_end = get_instances.get_distance(c_p, info_pipe_map[0][-1], 3)     # get distance from valve central point to pipe end
+            if d_to_start <= 0.05 or d_to_end <= 0.05:                              # if distance < thr             //PARAM
+                near_pipes_list.append(j)                                           # append pipe as near
+                break  
+
+        info_connnexions_map_list[i][1] = near_pipes_list                           # replace near pipes to valve info [central_point, near_pipes]
+
+    for i, info_valve_world in enumerate(info_valves_world_list):
+        merged = False
+
+        for j, info_valve_map in enumerate(info_valves_map_list):
+            dist = get_instances.get_distance(info_valve_world[0], info_valve_map[0], 2) 
+            if dist < 0.15: # las valvulas tienen una longitud de 0.18
+                info_valves_map_list[j][0] = (info_valves_map_list[j][0] + info_valve_world[0])/2
+                info_valves_map_list[j][4].append(info_valve_world[2])
+                info_valves_map_list[j][5] = info_valves_map_list[j][5]+1 # count +1
+
+                two = sum(i <= 1 for i in info_valves_map_list[j][4])
+                three = sum(i >= 2 for i in info_valves_map_list[j][4])
+                new_type = 0
+                if two<three:
+                    new_type = 2
+                info_valves_map_list[j][2] = new_type
+
+                merged = True
+                break
         
-        if len(merge_list)>0:
-            merge_list = list(set(merge_list))
+        if merged == False:
+            count_v = 1     # count 1
+            info_valve_world.append(count_v)
+            info_valves_map_list.append(info_valve_world)
 
-            # delete pipes map belonging to insts map that are going to be merged and recalculated
-            delete_pipe_list = list()
-            for j, pipe_map in enumerate(info_pipes_map_list):
-                delete = any(inst in merge_list for inst in pipe_map[3])
-                if delete == True:
-                    delete_pipe_list.append(j)
-            for j in sorted(delete_pipe_list, reverse=True): 
-                del info_pipes_map_list[j] 
+    for i, info_valve_map in enumerate(info_valves_map_list):        # for each valve
 
-            # delete connexions map belonging to pipes map that belong to instances map that are going to be recalculated
-            delete_connexion_list = list()
-            for j, connexion_map in enumerate(info_connexions_map_list):
-                delete = any(pipe in delete_pipe_list for pipe in connexion_map[1])
-                if delete == True:
-                    delete_connexion_list.append(j)
-            for j in sorted(delete_connexion_list, reverse=True): 
-                del info_connexions_map_list[j] 
+        near_pipes_list = list()
+        for j, info_pipe_map in enumerate(info_pipes_map_list):                     # get near pipes
+            c_p = info_valves_map_list[i][0]                                        # central point
+            d_to_start = get_instances.get_distance(c_p, info_pipe_map[0][0], 3)    # get distance from valve central point to pipe start
+            d_to_end = get_instances.get_distance(c_p, info_pipe_map[0][-1], 3)     # get distance from valve central point to pipe end
+            if d_to_start <= 0.25 or d_to_end <= 0.25:                              # if distance < thr             //PARAM
+                near_pipes_list.append(j)                                           # append pipe as near
+                break  
 
-            new_inst = pipe_inst_world_list[i]
-            for j in merge_list:
-                new_inst = np.vstack((new_inst, pipe_inst_map_list[j]))
-                new_insts.append(new_inst)
+        info_valves_map_list[i][3] = near_pipes_list                                # replace near pipes to valve info [central_point, vector, max_id, near_pipes]
 
-                pipe_inst_map_list[j] = new_inst   # TODO para juntar con inst world siguientes, despues se borraran subconjuntos, lo mismo en new_insts
-
-            pipe_inst_map_list.append(new_inst)     # TODO despues se borraran subconjuntos,
-
-    # delete lists that are repeated or a set of another list, due to stacking the concatenated inst into its component inst positions
-    inst_del_list = list()
-    for i, inst1 in enumerate(pipe_inst_map_list):
-        if i not in inst_del_list:
-            for j , inst2 in enumerate(pipe_inst_map_list):
-                if j not in inst_del_list:
-                    if i != j:
-                        inst_test = np.vstack((inst1,inst2))             # stack inst
-                        inst_test_u = np.unique(inst_test, axis=0)        
-                        if inst1.shape[0] == inst_test_u.shape[0]:        # if second inst does not add new links, is same inst or a set
-                            inst_del_list.append(j)                        # mark inst to be deleted
-
-    for i in sorted(inst_del_list, reverse=True):      # delete marked inst
-        del pipe_inst_map_list[i]
-
-    # delete lists that are repeated or a set of another list, due to stacking the concatenated inst into its component inst positions
-    inst_del_list = list()
-    for i, inst1 in enumerate(new_insts):
-        if i not in inst_del_list:
-            for j , inst2 in enumerate(new_insts):
-                if j not in inst_del_list:
-                    if i != j:
-                        inst_test = np.vstack((inst1,inst2))             # stack inst
-                        inst_test_u = np.unique(inst_test, axis=0)        
-                        if inst1.shape[0] == inst_test_u.shape[0]:        # if second inst does not add new links, is same inst or a set
-                            inst_del_list.append(j)                       # mark inst to be deleted
-
-    for i in sorted(inst_del_list, reverse=True):      # delete marked inst
-        del new_insts[i]
-
-
-    new_info_pipes_map_list = list()
-    new_info_connexions_map_list = list()
-    k_pipe = 0
-
-    for i, inst_map in enumerate(new_insts): # for each pipe instance
-        
-        # transform instance to o3d pointcloud
-        inst_map_o3d = o3d.geometry.PointCloud()
-        inst_map_o3d.points = o3d.utility.Vector3dVector(inst_map[:,0:3])
-
-        info_pipe_map = get_info.get_info(inst_map_o3d, models=0, method="skeleton") # get pipe instance info list( list( list(chain1, start1, end1, elbow_list1, vector_chain_list1), ...), list(connexions_points)) 
-        
-        for j, pipe_info in enumerate(info_pipe_map[0]):                         # stack pipes info
-            inst_list = list()
-            inst_list.append(i)
-            pipe_info.append(inst_list)
-            new_info_pipes_map_list.append(pipe_info)
-
-        for j, connexion_info in enumerate(info_pipe_map[1]):                    # stack conenexions info
-            connexion_info[1] = [x+k_pipe for x in connexion_info[1]]
-            new_info_connexions_map_list.append(connexion_info)
-
-        k_pipe += len(info_pipe_map[0])                                          # update actual pipe idx
-
-
-    new_info_pipes_map_list_copy = copy.deepcopy(new_info_pipes_map_list) 
-    new_info_connexions_map_list_copy = copy.deepcopy(new_info_connexions_map_list)
-    new_info_pipes_map_list, new_info_connexions_map_list = get_info.unify_chains(new_info_pipes_map_list_copy, new_info_connexions_map_list_copy)
-
-
-
-    info_pipes_map_list = info_pipes_map_list + new_info_pipes_map_list
-    info_connexions_map_list = info_connexions_map_list + new_info_connexions_map_list
-
-
-    for i, pipe_world in enumerate(info_pipes_world_list): # SE HACE DESPUES APRA EVITAR QUE PIPE WORLD SE CHECK NEAR VS ANTERIORES PIPE WORLS ADDED TO info_pipes_map_list
-
-        if len(merge_inst_map_list[i]) == 0:
-
-
-            for j, info_connexion_world in enumerate(info_connexions_world_list):
-                if i in info_connexion_world[1]:
-                    if info_connexion_world not in info_connexions_map_list:
-                        info_connexions_map_list.append(info_connexion_world)  # TODO actializar near pipes - AL FINAL CALCULAR NUEVOS NEAR DE CONEXIONES Y VALVES
-
-            insts_map = len(pipe_inst_map_list)
-
-            for j in pipe_world[3]:
-                pipe_inst_map_list.append(pipe_inst_world_list[j])
-
-            for j, inst_idx in enumerate(pipe_world[3]):
-                pipe_world[3][j] = inst_idx + insts_map
-            info_pipes_map_list.append(pipe_world) 
-
-    
     info_map = [info_pipes_map_list, info_connexions_map_list, info_valves_map_list, pipe_inst_map_list]
 
     return info_map
-
 
 
 def clean_map(info_map, count_thr):
@@ -189,47 +201,43 @@ def clean_map(info_map, count_thr):
     info_pipes_map_list = info_map[0]
     info_connexions_map_list = info_map[1]
     info_valves_map_list = info_map[2]
-    pipe_inst_map_list = info_map[3]
+    info_inst_pipe_map_list = info_map[3]
 
+    pipe_del_list = list()
+    for i, info_pipe_map in enumerate(info_pipes_map_list):        # for each pipe
+        if info_pipe_map[4] <= count_thr:
+            pipe_del_list.append(i)
+    for i in sorted(pipe_del_list, reverse=True):  # delete pipes
+        del info_pipes_map_list[i]  
 
-    # for instance i
-        # if count i < count_thr
-            # mark instance i to delete
-    # delete instances
-    # ESTO SE PUEDE HACER POR DENSIDAD???
+    connexion_del_list = list()
+    for i, info_connexion_map in enumerate(info_connexions_map_list):        # for each connexion
+        if info_connexion_map[2] <= count_thr:
+            connexion_del_list.append(i)
+    for i in sorted(connexion_del_list, reverse=True):  # delete connexions
+        del info_connexions_map_list[i]  
 
+    valve_del_list = list()
+    for i, info_valve_map in enumerate(info_valves_map_list):        # for each valve
+        if info_valve_map[5] <= count_thr:
+            valve_del_list.append(i)
+    for i in sorted(valve_del_list, reverse=True):  # delete valves
+        del info_valves_map_list[i]  
 
-    # get_info instances pipe
-    # RECALCULATE BELONGING INST OF PIPES (old ones and newly gotten)
-    # RECALCULATE NEAR PIPES OF CONNEXIONS (old ones and newly gotten)
+    # TODO CAN DELETE PIPES SHORT
 
-    #for valve
-        #if count < count_thr
-            #delete valve
-    # if list deleted instances len > 0
-        # RECALCULATE NEAR PIPES OF VALVES (old ones and newly gotten)
-
-    info_map = [info_pipes_map_list, info_connexions_map_list, info_valves_map_list, pipe_inst_map_list]
+    info_map = [info_pipes_map_list, info_connexions_map_list, info_valves_map_list, info_inst_pipe_map_list]
 
     return info_map
 
 
-    ############# OPCION 2 #############
-    # for pipe p
-        # if all belonging instances are on list of instances deleted
-            # mark pipe to delete
-    # delete pipes
-
-    # RECALCULATE BELONGING INST OF PIPES (old ones and newly gotten)
-
-    #for connexion c
-        # delete near pipes that are in pipes deleted
-    # refine connexions?
-    ####################################
-
-
-
 if __name__ == "__main__":
+
+    print(" ")
+    print(" ")
+    print("------------------------------")
+    print(" ")
+    print(" ")
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--path_in', help='path in info.')
@@ -239,42 +247,70 @@ if __name__ == "__main__":
     path_in = parsed_args.path_in
     path_out = parsed_args.path_out
 
-    info_pipes_list_map = list()
-    info_connexions_list_map = list()
-    info_valves_list_map = list()
-    instances_ref_pipe_list_map = list()
-    info_map = [info_pipes_list_map, info_connexions_list_map, info_valves_list_map, instances_ref_pipe_list_map]
+    info_pipes_map_list = list()
+    info_connexions_map_list = list()
+    info_valves_map_list = list()
+    info_inst_pipe_map_list = list()
+    info_map = [info_pipes_map_list, info_connexions_map_list, info_valves_map_list, info_inst_pipe_map_list]
 
     count = 0
+    count2 = 0
     count_target = 5
     count_thr = 1
+    total_time = 0
+    n_infos = 0
+
+    T_time = 0
 
     for file in natsorted(os.listdir(path_in)):
+
+        n_infos = n_infos + 1
 
         print("working on: " + file)
 
         file_name, _ = os.path.splitext(file)
         count += 1
+        count2 += 1
 
         file_path = os.path.join(path_in, file)
         info_array_world = np.load(file_path)
 
         info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list = conversion_utils.array_to_info(info_array_world)
+
+        for i in range(len(info_valves_world_list)):
+            info_valves_world_list[i].append([info_valves_world_list[i][2]])
+
         info_world = [info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list]
 
+        a = time.time()
         info_map = get_info_map(info_map, info_world)
+        b = time.time()
+        c = b-a
+        
+        total_time = total_time+c
+        average_time = T_time/count2
+
+        print("time: " + str(c))
+        print("average time: " + str(average_time))
 
         path_out_map = os.path.join(path_out, file_name+"_map.ply")
         conversion_utils.info_to_ply(info_map, path_out_map)
 
-        # if count == count_target:
-        #     count = 0
-        #     info_map = clean_map(info_map, count_thr)
+        if count == count_target:
+            count = 0
+            info_map = clean_map(info_map, count_thr)
 
-        #     path_out_map_clean = os.path.join(path_out, file_name+"_map_clean.ply")
-        #     conversion_utils.info_to_ply(info_map, path_out_map_clean)
+            path_out_map_clean = os.path.join(path_out, file_name+"_map_clean.ply")
+            conversion_utils.info_to_ply(info_map, path_out_map_clean)
 
+
+        mean_time = total_time/n_infos
+
+        print(" ")
+        print("------------------------------")
+        print(" ")
         
 
+    print("mean_time: " + str(mean_time))
 
 
