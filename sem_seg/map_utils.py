@@ -110,11 +110,13 @@ def get_info_map(info_map, info_world):
             info_pipe_map = get_info.get_info(new_inst_o3d, models=0, method="skeleton", close = 8) # get pipe instance info list( list( list(chain1, start1, end1, elbow_list1, vector_chain_list1), ...), list(connexions_points)) 
             new_pipe = info_pipe_map[0][0]
 
-            old_skeleton = copy.deepcopy(new_skeleton)
-            new_skeleton = new_pipe[0]
+            # proj skeleton - untested
+            old_skeleton = copy.deepcopy(new_skeleton)  # new_skeleton now is old_skeleton, since the new one comes from the info of new_inst
+            new_skeleton = new_pipe[0]                  # new_skeleton now is the one obtained from new_inst
 
-            proj_skeleton = get_info.proj_points(new_skeleton, old_skeleton, 0.4, 3)
-            new_pipe[0] = proj_skeleton
+            proj_skeleton = get_info.proj_points(new_skeleton, old_skeleton, 0.4, 3)    # project skeleton
+            new_pipe[0] = proj_skeleton                               
+            # ------------------------
 
             new_pipe.append(0)               # TODO holder for belong inst, remove from everywhere??
             new_pipe.append(count)
