@@ -47,24 +47,24 @@ def log_string(out_str):
 def evaluate(path_data):
   is_training = False
    
-  with tf.device('/gpu:'+str(GPU_INDEX)):
+  with tfw.device('/gpu:'+str(GPU_INDEX)):
     pointclouds_pl, labels_pl = placeholder_inputs(BATCH_SIZE, NUM_POINT)
-    is_training_pl = tf.placeholder(tf.bool, shape=())
+    is_training_pl = tfw.placeholder(tfw.bool, shape=())
 
     # simple model
     pred = get_model(pointclouds_pl, is_training_pl)
     loss = get_loss(pred, labels_pl)
-    pred_softmax = tf.nn.softmax(pred)
+    pred_softmax = tfw.nn.softmax(pred)
  
     # Add ops to save and restore all the variables.
-    saver = tf.train.Saver()
+    saver = tfw.train.Saver()
   
   # Create a session
-  config = tf.ConfigProto()
+  config = tfw.ConfigProto()
   config.gpu_options.allow_growth = True
   config.allow_soft_placement = True
   config.log_device_placement = True
-  sess = tf.Session(config=config)
+  sess = tfw.Session(config=config)
 
   # Restore variables from disk.
   saver.restore(sess, MODEL_PATH)
@@ -209,6 +209,6 @@ def eval_one_epoch(sess, ops, room_path, out_data_label_filename, out_gt_label_f
 
 
 if __name__=='__main__':
-  with tf.Graph().as_default():
+  with tfw.Graph().as_default():
     evaluate(path_data)
   LOG_FOUT.close()
