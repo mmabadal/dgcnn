@@ -27,11 +27,14 @@ path_cls = parsed_args.path_cls
 if not os.path.exists(path_out):
     os.mkdir(path_out)
 
-for folder in natsorted(os.listdir(path_in)):
+for file in natsorted(os.listdir(path_in)):
 
-    path_annotation = os.path.join(path_in, folder, "annotations")
-    print(path_annotation)
+    elements = file.split('.')
+    out_filename = os.path.join(path_out, elements[0]+'.npy')
 
-    elements = path_annotation.split('/')
-    out_filename = os.path.join(path_out, elements[-2]+'.npy')
-    indoor3d_util.collect_point_label(path_annotation, out_filename, path_cls, 'numpy')
+
+    print(path_in)
+    print(out_filename)
+    print(path_cls)
+    print("aaaaaaaa")
+    indoor3d_util.collect_point_label(path_in, out_filename, path_cls, 'numpy')
