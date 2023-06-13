@@ -48,7 +48,7 @@ class Pointcloud_Seg:
         self.T_total = tzero
 
         # Params inference
-        self.fps = 2.0                # target fps        //PARAM
+        self.fps = 1.0                # target fps        //PARAM
         self.period = 1.0/self.fps    # target period     //PARAM
         self.batch_size = 1         #                   //PARAM
         self.points_sub = 128       #                   //PARAM
@@ -257,11 +257,6 @@ class Pointcloud_Seg:
             vector = np.array([math.cos(rad), math.sin(rad), 0])                             # get valve unit vector at zero
             vector = vector*0.18                                                             # resize vector to valve size //PARAM
             info_valves_list.append([xyz_central, vector, max_idx, inst[:,0:3], max_info])   # append valve instance info
-
-            # print best valve matching
-            #trans = np.eye(4) 
-            #trans[:3,:3] = inst_o3d.get_rotation_matrix_from_xyz((0,0, -rad))
-            #get_info.draw_registration_result(inst_o3d, self.targets_list[max_idx], trans)
 
             # print best valve matching
             #trans = np.eye(4) 

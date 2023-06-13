@@ -7,6 +7,7 @@ import rospy
 import ctypes
 import struct
 import get_info
+import map_utils
 import numpy as np
 from model import *
 import open3d as o3d
@@ -75,7 +76,7 @@ class Pointcloud_Seg:
         self.rad_v = 0.04               # max distance for valve growing                            //PARAM
         self.dim_p = 3                  # compute 2D (2) or 3D (3) distance for pipe growing        //PARAM
         self.dim_v = 2                  # compute 2D (2) or 3D (3) distance for valve growing       //PARAM
-        self.min_p_p = 60               # minimum number of points to consider a blob as a pipe     //PARAM
+        self.min_p_p = 50               # minimum number of points to consider a blob as a pipe     //PARAM
         self.min_p_v = 30 # 40 80 140   # minimum number of points to consider a blob as a valve    //PARAM
 
         self.model_path = "/home/miguel/Desktop/PIPES2/dgcnn/sem_seg/RUNS/sparus_xiroi/test/128_11_1/model.ckpt"          # path to model         //PARAM
@@ -84,6 +85,17 @@ class Pointcloud_Seg:
 
         # listener
         self.listener = tf.TransformListener()
+
+        # inits info map
+        self.info_map_key = True
+        self.info_pipes_list_map = list()
+        self.info_connexions_list_map = list()
+        self.info_valves_list_map = list()
+        self.instances_ref_pipe_list_map = list()
+        self.info_map = [self.info_pipes_list_map, self.info_connexions_list_map, self.info_valves_list_map, self.instances_ref_pipe_list_map]
+        self.count = 0
+        self.count_target = 5
+        self.count_thr = 2
 
         self.init = False
         self.new_pc = False
@@ -98,6 +110,8 @@ class Pointcloud_Seg:
         self.pub_pc_seg = rospy.Publisher("/stereo_down/scaled_x2/points2_seg", PointCloud2, queue_size=4)
         self.pub_pc_inst = rospy.Publisher("/stereo_down/scaled_x2/points2_inst", PointCloud2, queue_size=4)
         self.pub_pc_info = rospy.Publisher("/stereo_down/scaled_x2/points2_info", PointCloud2, queue_size=4)
+        self.pub_pc_info_world = rospy.Publisher("/stereo_down/scaled_x2/points2_info_world", PointCloud2, queue_size=4)
+        self.pub_pc_info_map = rospy.Publisher("/stereo_down/scaled_x2/points2_info_map", PointCloud2, queue_size=4)
 
         # Set segmentation timer
         rospy.Timer(rospy.Duration(self.period), self.run)
@@ -318,8 +332,10 @@ class Pointcloud_Seg:
         #info1 = [info_pipes_list, info_connexions_list, info_valves_list, instances_ref_pipe_list]
         #info2 = [info_pipes_list2, info_connexions_list2, info_valves_list, instances_ref_pipe_list] 
         info3 = [info_pipes_list2, info_connexions_list2, info_valves_list2, instances_ref_pipe_list]
-
         if len(info_pipes_list2)>0 or len(info_valves_list2)>0:
+
+            self.count +=1
+
             info_array = conversion_utils.info_to_array(info3)
             pc_info = self.array2pc_info(header, info_array)
             self.pub_pc_info.publish(pc_info)
