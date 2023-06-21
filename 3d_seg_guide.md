@@ -13,7 +13,7 @@
  conda install scipy
  pip install open3d==0.9
  conda install matplotlib
- conda install plyfile
+ conda install -c conda-forge plyfile
  pip install scikit-image
  conda install -c anaconda protobuf
  
