@@ -17,7 +17,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = os.path.dirname(BASE_DIR)
 sys.path.append(BASE_DIR)
 
-"python inference.py --path_data a/b/c --path_out a/b/c --path_cls meta/class_or.txt --model_path RUNS/test_indoor --points_sub 128 --points_proj 512 --test_name test_name --online 0"
+"python inference.py --path_data a/b/c --path_out a/b/c --path_cls meta/class_or.txt --model_path RUNS/test_indoor --points_sub 128 --test_name test_name --targets_path targets_path --online 0"
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--path_data', help='folder with train test data')
