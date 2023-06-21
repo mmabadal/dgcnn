@@ -56,11 +56,13 @@ data
 
 
 # ROS    
-
 - ROS melodic
-- image proc custom
-- perception pcl
-
+- rosbag_play.launch
+- decimate_x2.launch
+- stereo_proc.launch
+- Tools/launches/pc_voxel.launch
+- pip install pyyaml
+- conda install -c conda-forge rospkg
 
 # Python2  NECESARIO PARA COGER TRANSFORMADAS ROS
 
