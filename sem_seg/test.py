@@ -17,7 +17,6 @@ if __name__=='__main__':
 
     # tq_ned_baselink_f = [float(x) for x in tq_ned_baselink.split()]
     
-    
     tq_ned_baselink_f  = np.array([1614260512.032102823, 0, 74.567500000, 19.919000000, 2.208750000, 0.021034106, -0.075268223, 0.565774172, 0.820848249])
     t_ned_baselink = tq_ned_baselink_f[2:5]
     q_ned_baselink = tq_ned_baselink_f[5:]
@@ -37,30 +36,20 @@ if __name__=='__main__':
     tq_down_left = np.array([-0.06, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0])
     t_down_left = tq_down_left[:3]
     q_down_left = tq_down_left[3:]
-
-
-    t_ned_left = t_ned_baselink + t_baselink_stick + t_stick_downbase + t_downbase_down + t_down_left 
-
+    t_ned_left = t_ned_baselink + t_baselink_stick + t_stick_downbase + t_downbase_down + t_down_left
 
     q_ned_stick = quaternion_multiply(q_ned_baselink, q_baselink_stick)
     q_ned_downbase = quaternion_multiply(q_ned_stick, q_stick_downbase)
     q_ned_down = quaternion_multiply(q_ned_downbase, q_downbase_down)
     q_ned_left = quaternion_multiply(q_ned_down, q_down_left)
     
-
-   
-
-    x = np.array([[1, 2, 3], [4, 5, 6]], np.int32)
-
     T = np.array([[1, 0, 0, t_ned_left[0]], [0, 1, 0, t_ned_left[1]], [0, 0, 1, t_ned_left[2]], [0, 0, 0, 1]], np.float)
     R = Rot.from_quat(q_ned_left)
     Rm = R.as_matrix()
     
-    
     TR = copy.deepcopy(T)
     TR[0:3, 0:3] = Rm
-    
-  
+
     print(T)
     print(Rm)
     print(TR)
