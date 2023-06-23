@@ -1,5 +1,4 @@
 import os
-import tf
 import sys
 import time
 import copy
@@ -82,14 +81,11 @@ class Pointcloud_Seg:
         self.path_cls = "/home/miguel/Desktop/PIPES2/dgcnn/sem_seg/RUNS/sparus_xiroi/test/128_11_1/cls.txt"               # path to clases info   //PARAM
         self.classes, self.labels, self.label2color = indoor3d_util.get_info_classes(self.path_cls) # get classes info
 
-        # listener
-        self.listener = tf.TransformListener()
-
         self.init = False
         self.new_pc = False
 
         # set subscribers
-        pc_sub = message_filters.Subscriber('/stereo_down/scaled_x2/points2_filtered', PointCloud2)     # //PARAM
+        pc_sub = message_filters.Subscriber('/stereo_down/scaled_x2/points2_filtered_odom', PointCloud2, queue_size=4)     # //PARAM
         #pc_sub = message_filters.Subscriber('/stereo_down/scaled_x2/points2', PointCloud2)             # //PARAM
         pc_sub.registerCallback(self.cb_pc)
 
@@ -165,9 +161,7 @@ class Pointcloud_Seg:
             rospy.loginfo('[%s]: Not enough input points', self.name)
             return
 
-        left_frame_id = "turbot/stereo_down/left_optical"
-        world_frame_id = "world_ned" 
-        left2worldned = self.get_transform(world_frame_id, left_frame_id, header.stamp)
+        left2worldned = self.get_transform()
 
         pc_np[:, 2] *= -1  # flip Z axis        # //PARAM
         #pc_np[:, 1] *= -1  # flip Y axis       # //PARAM
@@ -324,7 +318,7 @@ class Pointcloud_Seg:
             pc_info = self.array2pc_info(header, info_array)
             self.pub_pc_info.publish(pc_info)
 
-            if isinstance(left2worldned,int) == False:
+            if isinstance(left2worldned,int) == False:    # TODO se puede quitar este check ahora creo
                 info_array_world = info_array.copy()
                 for i in range(info_array.shape[0]):
                     xyz = np.array([[info_array[i,0]],
@@ -334,7 +328,7 @@ class Pointcloud_Seg:
                     xyz_trans_rot = np.matmul(left2worldned, xyz)
                     info_array_world[i,0:3] = [xyz_trans_rot[0], xyz_trans_rot[1], xyz_trans_rot[2]]
 
-                header.frame_id = world_frame_id
+                header.frame_id = "world_ned"
                 pc_info_world = self.array2pc_info(header, info_array_world)
                 self.pub_pc_info_world.publish(pc_info_world)
 
@@ -462,7 +456,7 @@ class Pointcloud_Seg:
             return
 
         if len(info_pipes_list2)>0 or len(info_valves_list2)>0:  # print here because instrances_ref is needed
-            if isinstance(left2worldned,int) == False:
+            if isinstance(left2worldned,int) == False:      # TODO se puede quitar este check ahora creo
                 if out1 == True:
                     instances_ref_world = instances_ref.copy()
                     for i in range(instances_ref.shape[0]):
@@ -682,17 +676,72 @@ class Pointcloud_Seg:
 
 
     def get_transform(self, parent, child, stamp):
-        try:
-            rospy.logwarn("[%s]: waiting transform from %s to %s", self.name, parent, child)
-            #self.listener.waitForTransform(parent, child, rospy.Time(), rospy.Duration(0.1))
-            (trans, rot) = self.listener.lookupTransform(parent, child, stamp)
-            rospy.loginfo("[%s]: transform for %s found", self.name, child)
-            transform = tf.transformations.concatenate_matrices(tf.transformations.translation_matrix(trans), tf.transformations.quaternion_matrix(rot))
-        except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException, tf.Exception):
-            rospy.logerr('[%s]: define %s transform!', self.name, child)
-            transform = 0
-        return transform
 
+
+        # T =   [1  0  0  xt]
+        #       [0  1  0  yt]
+        #       [0  0  1  zt]
+        #       [0  0  0  1 ]
+
+        # R =   [r1 r2 r3 0]
+        #       [r4 r5 r6 0]
+        #       [r7 r8 r9 0]
+        #       [0  0  0  1]
+
+        # TR =  [r1 r2 r3 xt]
+        #       [r4 r5 r6 yt]
+        #       [r7 r8 r9 zt]
+        #       [0  0  0  1 ]
+
+        from scipy.spatial.transform import Rotation as Rot
+
+        with open("graph.txt", "r") as file:
+            tq_ned_baselink = file.readlines()[-1]
+
+        tq_ned_baselink_f = [float(x) for x in tq_ned_baselink.split()]
+        t_ned_baselink = tq_ned_baselink_f[2:5]
+        q_ned_baselink = tq_ned_baselink_f[5:]
+        
+        tq_baselink_stick = [0.4, 0.0, 0.8, 0.0, 0.0, 0.0, 1.0]
+        t_baselink_stick = tq_baselink_stick[:3]
+        q_baselink_stick = tq_baselink_stick[3:]
+
+        tq_stick_downbase = [0.0, 0.0, 0.0, 0.4999998414659176, 0.49960183664463365, 0.4999998414659176, 0.5003981633553665]  
+        t_stick_downbase = tq_stick_downbase[:3]
+        q_stick_downbase = tq_stick_downbase[3:]
+
+        tq_downbase_down = [0.0, 0.0, 0.0, -0.706825181105366, 0.0, 0.0, 0.7073882691671998]
+        t_downbase_down = tq_downbase_down[:3]
+        q_downbase_down = tq_downbase_down[3:]
+
+        tq_down_left = [-0.06, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+        t_down_left = tq_down_left[:3]
+        q_down_left = tq_down_left[3:]
+
+
+        t_ned_left = t_ned_baselink + t_baselink_stick + t_stick_downbase + t_downbase_down + t_down_left 
+
+        q_ned_stick = self.quaternion_multiply(q_ned_baselink, q_baselink_stick)
+        q_ned_downbase = self.quaternion_multiply(q_ned_stick, q_stick_downbase)
+        q_ned_down = self.quaternion_multiply(q_ned_downbase, q_downbase_down)
+        q_ned_left = self.quaternion_multiply(q_ned_down, q_down_left)
+
+        x = np.array([[1, 2, 3], [4, 5, 6]], np.int32)
+
+        T = np.array([[1, 0, 0, t_ned_left[0]], [0, 1, 0, t_ned_left[1]], [0, 0, 1, t_ned_left[2]], [0, 0, 0, 1]], np.float)
+        R = Rot.from_quat(q_ned_left)
+
+
+        
+        #TR = transform = montatelo para que quede como el TR de arriba
+        
+        return transform
+    
+
+    def quaternion_multiply(self, q0, q1):
+        x0, y0, z0, w0 = q0
+        x1, y1, z1, w1 = q1
+        return np.array([-x1*x0-y1*y0-z1*z0+w1*w0, x1*w0+y1*z0-z1*y0+w1*x0, -x1*z0+y1*w0+z1*x0+w1*y0, x1*y0-y1*x0+z1*w0+w1*z0], dtype=np.float64)
 
 if __name__ == '__main__':
     try:
