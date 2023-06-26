@@ -58,7 +58,7 @@ if __name__=='__main__':
     tr_ned_down = np.matmul(tr_ned_downbase, tr_downbase_down)
     tr_ned_left = np.matmul(tr_ned_down, tr_down_left)
 
-    #print(tr_ned_left)
+    print(tr_ned_left)
     o = np.ones((4, 1))
     o_ned_left = np.matmul(tr_ned_left, o)
     print(o_ned_left)
@@ -68,7 +68,8 @@ if __name__=='__main__':
     print("-------------------")
 
     o = np.ones((4, 1))
-    o_ned_stick = np.matmul(tr_baselink_stick, o)
+    o_ned_baselink = np.matmul(tr_ned_baselink, o)
+    o_ned_stick = np.matmul(tr_baselink_stick, o_ned_baselink)
     o_ned_downbase = np.matmul(tr_stick_downbase, o_ned_stick)
     o_ned_down = np.matmul(tr_downbase_down, o_ned_downbase)
     o_ned_left = np.matmul(tr_down_left, o_ned_down)
