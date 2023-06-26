@@ -84,32 +84,32 @@ if __name__=='__main__':
 
     o = np.ones((4, 1))
 
-    r_ned_baselink = tr_ned_baselink
+    r_ned_baselink = copy.deepcopy(tr_ned_baselink)
     r_ned_baselink[:3,3] = 0
-    t_ned_baselink = tr_ned_baselink
+    t_ned_baselink = copy.deepcopy(tr_ned_baselink)
     t_ned_baselink[:3,:3] = np.eye(3,3)
 
     print(r_ned_baselink)
     print(t_ned_baselink)
 
-    r_baselink_stick = tr_baselink_stick
+    r_baselink_stick = copy.deepcopy(tr_baselink_stick)
     r_baselink_stick[:3,3] = 0
-    t_baselink_stick = tr_baselink_stick
+    t_baselink_stick = copy.deepcopy(tr_baselink_stick)
     t_baselink_stick[:3,:3] = np.eye(3,3)
 
-    r_stick_downbase = tr_stick_downbase
+    r_stick_downbase = copy.deepcopy(tr_stick_downbase)
     r_stick_downbase[:3,3] = 0
-    t_stick_downbase = tr_stick_downbase
+    t_stick_downbase = copy.deepcopy(tr_stick_downbase)
     t_stick_downbase[:3,:3] = np.eye(3,3)
 
-    r_downbase_down  = tr_downbase_down
+    r_downbase_down  = copy.deepcopy(tr_downbase_down)
     r_downbase_down[:3,3] = 0
-    t_downbase_down  = tr_downbase_down
+    t_downbase_down  = copy.deepcopy(tr_downbase_down)
     t_downbase_down[:3,:3] = np.eye(3,3)
 
-    r_down_left = tr_down_left
+    r_down_left = copy.deepcopy(tr_down_left)
     r_down_left[:3,3] = 0
-    t_down_left = tr_down_left
+    t_down_left = copy.deepcopy(tr_down_left)
     t_down_left[:3,:3] = np.eye(3,3)
 
     o_ned_baselink_r = np.matmul(r_ned_baselink, o)
