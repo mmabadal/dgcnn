@@ -64,10 +64,10 @@ if __name__=='__main__':
     print("-------------------")
 
     o = np.ones((4, 1))
-    o_ned_stick = np.matmul(o, tr_baselink_stick)
-    o_ned_downbase = np.matmul(o_ned_stick, tr_stick_downbase)
-    o_ned_down = np.matmul(o_ned_downbase, tr_downbase_down)
-    o_ned_left = np.matmul(o_ned_down, tr_down_left)
+    o_ned_stick = np.matmul(tr_baselink_stick, o)
+    o_ned_downbase = np.matmul(tr_stick_downbase, o_ned_stick)
+    o_ned_down = np.matmul(tr_downbase_down, o_ned_downbase)
+    o_ned_left = np.matmul(tr_down_left, o_ned_down)
     print(o_ned_left)
 
     print("-------------------")
