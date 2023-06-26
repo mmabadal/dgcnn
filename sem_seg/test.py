@@ -89,6 +89,9 @@ if __name__=='__main__':
     t_ned_baselink = tr_ned_baselink
     t_ned_baselink[:3,:3] = np.eye(3,3)
 
+    print(r_ned_baselink)
+    print(t_ned_baselink)
+
     r_baselink_stick = tr_baselink_stick
     r_baselink_stick[:3,3] = 0
     t_baselink_stick = tr_baselink_stick
@@ -110,8 +113,10 @@ if __name__=='__main__':
     t_down_left[:3,:3] = np.eye(3,3)
 
     o_ned_baselink_r = np.matmul(r_ned_baselink, o)
+    print(o_ned_baselink_r)
     o_ned_baselink_t = np.matmul(t_ned_baselink, o_ned_baselink_r)
-    
+    print(o_ned_baselink_t)
+
     o_ned_stick_r = np.matmul(r_baselink_stick, o_ned_baselink_t)
     o_ned_stick_t = np.matmul(t_baselink_stick, o_ned_stick_r)
 
