@@ -58,7 +58,11 @@ if __name__=='__main__':
     tr_ned_down = np.matmul(tr_ned_downbase, tr_downbase_down)
     tr_ned_left = np.matmul(tr_ned_down, tr_down_left)
 
-    print(tr_ned_left)
+    #print(tr_ned_left)
+    o = np.ones((4, 1))
+    o_ned_left = np.matmul(tr_ned_left, o)
+    print(o_ned_left)
+
 
     print("-------------------")
     print("-------------------")
