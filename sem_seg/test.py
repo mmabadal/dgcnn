@@ -60,23 +60,32 @@ if __name__=='__main__':
 
     print(tr_ned_left)
 
+    print("-------------------")
+    print("-------------------")
+
+    o = np.ones((4, 1))
+    o_ned_stick = np.matmul(o, tr_baselink_stick)
+    o_ned_downbase = np.matmul(o_ned_stick, tr_stick_downbase)
+    o_ned_down = np.matmul(o_ned_downbase, tr_downbase_down)
+    o_ned_left = np.matmul(o_ned_down, tr_down_left)
+    print(o_ned_left)
 
     print("-------------------")
     print("-------------------")
 
-    t_ned_left = t_ned_baselink + t_baselink_stick + t_stick_downbase + t_downbase_down + t_down_left
+    # t_ned_left = t_ned_baselink + t_baselink_stick + t_stick_downbase + t_downbase_down + t_down_left
 
-    q_ned_stick = quaternion_multiply(q_ned_baselink, q_baselink_stick)
-    q_ned_downbase = quaternion_multiply(q_ned_stick, q_stick_downbase)
-    q_ned_down = quaternion_multiply(q_ned_downbase, q_downbase_down)
-    q_ned_left = quaternion_multiply(q_ned_down, q_down_left)
+    # q_ned_stick = quaternion_multiply(q_ned_baselink, q_baselink_stick)
+    # q_ned_downbase = quaternion_multiply(q_ned_stick, q_stick_downbase)
+    # q_ned_down = quaternion_multiply(q_ned_downbase, q_downbase_down)
+    # q_ned_left = quaternion_multiply(q_ned_down, q_down_left)
 
-    tr_down_left = get_tr(t_ned_left, q_ned_left)
+    # tr_down_left = get_tr(t_ned_left, q_ned_left)
     
-    print(tr_down_left)
+    # print(tr_down_left)
 
-    print("-------------------")
-    print("-------------------")
+    # print("-------------------")
+    # print("-------------------")
 
 
 
