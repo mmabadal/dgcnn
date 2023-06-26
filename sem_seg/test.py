@@ -53,9 +53,6 @@ if __name__=='__main__':
     tr_downbase_down  = get_tr(t_downbase_down, q_downbase_down)
     tr_down_left = get_tr(t_down_left, q_down_left)
 
-
-    np.matmul(a, b)
-
     tr_ned_stick = np.matmul(tr_ned_baselink, tr_baselink_stick)
     tr_ned_downbase = np.matmul(tr_ned_stick, tr_stick_downbase)
     tr_ned_down = np.matmul(tr_ned_downbase, tr_downbase_down)
