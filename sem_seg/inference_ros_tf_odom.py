@@ -699,11 +699,11 @@ class Pointcloud_Seg:
         t_down_left = tq_down_left[:3]
         q_down_left = tq_down_left[3:]
 
-        tr_ned_baselink = get_tr(t_ned_baselink, q_ned_baselink)
-        tr_baselink_stick = get_tr(t_baselink_stick, q_baselink_stick)
-        tr_stick_downbase = get_tr(t_stick_downbase, q_stick_downbase)
-        tr_downbase_down  = get_tr(t_downbase_down, q_downbase_down)
-        tr_down_left = get_tr(t_down_left, q_down_left)
+        tr_ned_baselink = self.get_tr(t_ned_baselink, q_ned_baselink)
+        tr_baselink_stick = self.get_tr(t_baselink_stick, q_baselink_stick)
+        tr_stick_downbase = self.get_tr(t_stick_downbase, q_stick_downbase)
+        tr_downbase_down  = self.get_tr(t_downbase_down, q_downbase_down)
+        tr_down_left = self.get_tr(t_down_left, q_down_left)
 
         tr_ned_stick = np.matmul(tr_ned_baselink, tr_baselink_stick)
         tr_ned_downbase = np.matmul(tr_ned_stick, tr_stick_downbase)

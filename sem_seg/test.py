@@ -63,68 +63,67 @@ if __name__=='__main__':
 
     print(o_ned_left)
 
-
-    print("-------------------")
-    print("-------------------")
-
-
-    o = np.ones((4, 1))
-    o_ned_baselink = np.matmul(tr_ned_baselink, o)
-    o_ned_stick = np.matmul(tr_baselink_stick, o_ned_baselink)
-    o_ned_downbase = np.matmul(tr_stick_downbase, o_ned_stick)
-    o_ned_down = np.matmul(tr_downbase_down, o_ned_downbase)
-    o_ned_left = np.matmul(tr_down_left, o_ned_down)
-
-    print(o_ned_left)
+    # print("-------------------")
+    # print("-------------------")
 
 
-    print("-------------------")
-    print("-------------------")
+    # o = np.ones((4, 1))
+    # o_ned_baselink = np.matmul(tr_ned_baselink, o)
+    # o_ned_stick = np.matmul(tr_baselink_stick, o_ned_baselink)
+    # o_ned_downbase = np.matmul(tr_stick_downbase, o_ned_stick)
+    # o_ned_down = np.matmul(tr_downbase_down, o_ned_downbase)
+    # o_ned_left = np.matmul(tr_down_left, o_ned_down)
+
+    # print(o_ned_left)
 
 
-    o = np.ones((4, 1))
+    # print("-------------------")
+    # print("-------------------")
 
-    r_ned_baselink = copy.deepcopy(tr_ned_baselink)
-    r_ned_baselink[:3,3] = 0
-    t_ned_baselink = copy.deepcopy(tr_ned_baselink)
-    t_ned_baselink[:3,:3] = np.eye(3,3)
 
-    r_baselink_stick = copy.deepcopy(tr_baselink_stick)
-    r_baselink_stick[:3,3] = 0
-    t_baselink_stick = copy.deepcopy(tr_baselink_stick)
-    t_baselink_stick[:3,:3] = np.eye(3,3)
+    # o = np.ones((4, 1))
 
-    r_stick_downbase = copy.deepcopy(tr_stick_downbase)
-    r_stick_downbase[:3,3] = 0
-    t_stick_downbase = copy.deepcopy(tr_stick_downbase)
-    t_stick_downbase[:3,:3] = np.eye(3,3)
+    # r_ned_baselink = copy.deepcopy(tr_ned_baselink)
+    # r_ned_baselink[:3,3] = 0
+    # t_ned_baselink = copy.deepcopy(tr_ned_baselink)
+    # t_ned_baselink[:3,:3] = np.eye(3,3)
 
-    r_downbase_down  = copy.deepcopy(tr_downbase_down)
-    r_downbase_down[:3,3] = 0
-    t_downbase_down  = copy.deepcopy(tr_downbase_down)
-    t_downbase_down[:3,:3] = np.eye(3,3)
+    # r_baselink_stick = copy.deepcopy(tr_baselink_stick)
+    # r_baselink_stick[:3,3] = 0
+    # t_baselink_stick = copy.deepcopy(tr_baselink_stick)
+    # t_baselink_stick[:3,:3] = np.eye(3,3)
 
-    r_down_left = copy.deepcopy(tr_down_left)
-    r_down_left[:3,3] = 0
-    t_down_left = copy.deepcopy(tr_down_left)
-    t_down_left[:3,:3] = np.eye(3,3)
+    # r_stick_downbase = copy.deepcopy(tr_stick_downbase)
+    # r_stick_downbase[:3,3] = 0
+    # t_stick_downbase = copy.deepcopy(tr_stick_downbase)
+    # t_stick_downbase[:3,:3] = np.eye(3,3)
 
-    o_ned_baselink_r = np.matmul(r_ned_baselink, o)
-    o_ned_baselink_t = np.matmul(t_ned_baselink, o_ned_baselink_r)
+    # r_downbase_down  = copy.deepcopy(tr_downbase_down)
+    # r_downbase_down[:3,3] = 0
+    # t_downbase_down  = copy.deepcopy(tr_downbase_down)
+    # t_downbase_down[:3,:3] = np.eye(3,3)
 
-    o_ned_stick_r = np.matmul(r_baselink_stick, o_ned_baselink_t)
-    o_ned_stick_t = np.matmul(t_baselink_stick, o_ned_stick_r)
+    # r_down_left = copy.deepcopy(tr_down_left)
+    # r_down_left[:3,3] = 0
+    # t_down_left = copy.deepcopy(tr_down_left)
+    # t_down_left[:3,:3] = np.eye(3,3)
 
-    o_ned_downbase_r = np.matmul(r_stick_downbase, o_ned_stick_t)
-    o_ned_downbase_t = np.matmul(t_stick_downbase, o_ned_downbase_r)
+    # o_ned_baselink_r = np.matmul(r_ned_baselink, o)
+    # o_ned_baselink_t = np.matmul(t_ned_baselink, o_ned_baselink_r)
 
-    o_ned_down_r = np.matmul(r_downbase_down, o_ned_downbase_t)
-    o_ned_down_t = np.matmul(t_downbase_down, o_ned_down_r)
+    # o_ned_stick_r = np.matmul(r_baselink_stick, o_ned_baselink_t)
+    # o_ned_stick_t = np.matmul(t_baselink_stick, o_ned_stick_r)
 
-    o_ned_left_r = np.matmul(r_down_left, o_ned_down_t)
-    o_ned_left = np.matmul(t_down_left, o_ned_left_r)
+    # o_ned_downbase_r = np.matmul(r_stick_downbase, o_ned_stick_t)
+    # o_ned_downbase_t = np.matmul(t_stick_downbase, o_ned_downbase_r)
 
-    print(o_ned_left)
+    # o_ned_down_r = np.matmul(r_downbase_down, o_ned_downbase_t)
+    # o_ned_down_t = np.matmul(t_downbase_down, o_ned_down_r)
+
+    # o_ned_left_r = np.matmul(r_down_left, o_ned_down_t)
+    # o_ned_left = np.matmul(t_down_left, o_ned_left_r)
+
+    # print(o_ned_left)
 
 
     print("-------------------")
