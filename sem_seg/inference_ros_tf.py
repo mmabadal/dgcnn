@@ -255,7 +255,7 @@ class Pointcloud_Seg:
         for i in descart_valves_list:
             print("Valve descarted")
             descarted_points = np.vstack(instances_ref_valve_list[i])                           # notate points to discard
-            if len(stolen_list)>0:                                                                  # if there were stolen points
+            if len(stolen_list[i])>0:                                                                  # if there were stolen points
                 stolen_idx = list(np.vstack(stolen_list[i])[:,0].astype(int))                       # get stolen idx
                 stolen_cls = np.vstack(stolen_list[i])[:,1].astype(int)                             # get stolen class
                 stolen_cls = stolen_cls.reshape(stolen_cls.shape[0],1)                              # reshape stolen class
