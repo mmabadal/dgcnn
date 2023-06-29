@@ -6,6 +6,7 @@ import rospy
 import ctypes
 import struct
 import get_info
+import map_utils
 import numpy as np
 from model import *
 import open3d as o3d
@@ -15,9 +16,9 @@ import conversion_utils
 from natsort import natsorted
 from scipy.spatial.transform import Rotation as Rot
 
-from sensor_msgs.msg import PointField
-import message_filters
 import std_msgs.msg
+import message_filters
+from sensor_msgs.msg import PointField
 import sensor_msgs.point_cloud2 as pc2
 from sensor_msgs.msg import PointCloud2
 
@@ -78,16 +79,26 @@ class Pointcloud_Seg:
         self.min_p_p = 60               # minimum number of points to consider a blob as a pipe     //PARAM
         self.min_p_v = 30 # 40 80 140   # minimum number of points to consider a blob as a valve    //PARAM
 
-        self.model_path = "/home/miguel/Desktop/PIPES2/dgcnn/sem_seg/RUNS/sparus_xiroi/test/128_11_1/model.ckpt"          # path to model         //PARAM
-        self.path_cls = "/home/miguel/Desktop/PIPES2/dgcnn/sem_seg/RUNS/sparus_xiroi/test/128_11_1/cls.txt"               # path to clases info   //PARAM
+        self.train_path = "/home/miguel/Desktop/PIPES2/dgcnn/sem_seg/RUNS/sparus_xiroi/test/128_11_1" # path to train
+        self.model_path = os.path.join(self.train_path, "model.ckpt")         # path to model         //PARAM
+        self.path_cls =  os.path.join(self.train_path, "cls.txt")             # path to clases info   //PARAM
         self.classes, self.labels, self.label2color = indoor3d_util.get_info_classes(self.path_cls) # get classes info
+
+        self.iua = False
+        self.out = True
+        self.print = True
+        self.time = True
+        self.path_out = "/home/miguel/Desktop/PIPES2/out_ros_world"
+
+        if not os.path.exists(self.path_out):
+            os.makedirs(self.path_out)
+
 
         self.init = False
         self.new_pc = False
 
         # set subscribers
         pc_sub = message_filters.Subscriber('/stereo_down/scaled_x2/points2_filtered_odom', PointCloud2, queue_size=4)     # //PARAM
-        #pc_sub = message_filters.Subscriber('/stereo_down/scaled_x2/points2', PointCloud2)             # //PARAM
         pc_sub.registerCallback(self.cb_pc)
 
         # Set class image publishers
@@ -332,9 +343,8 @@ class Pointcloud_Seg:
             pc_info_world = self.array2pc_info(header, info_array_world)
             self.pub_pc_info_world.publish(pc_info_world)
 
-            out1 = False
-            if out1 == True:         
-                path_out_world_info = os.path.join("/home/miguel/Desktop/PIPES2/out_ros_world", str(header.stamp)+"_info.ply")
+            if self.out == True:         
+                path_out_world_info = os.path.join(self.path_out, str(header.stamp)+"_info.ply")
                 info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list = conversion_utils.array_to_info(info_array_world)
                 info_world = [info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list]
                 conversion_utils.info_to_ply(info_world, path_out_world_info)
@@ -348,8 +358,8 @@ class Pointcloud_Seg:
                     xyz_trans_rot = np.matmul(left2worldned, xyz)
                     pred_sub_world[i,0:3] = [xyz_trans_rot[0], xyz_trans_rot[1], xyz_trans_rot[2]]
 
-                path_out_world_base = os.path.join("/home/miguel/Desktop/PIPES2/out_ros_world", str(header.stamp)+"_base.obj")
-                path_out_world_pred = os.path.join("/home/miguel/Desktop/PIPES2/out_ros_world", str(header.stamp)+"_pred.obj")
+                path_out_world_base = os.path.join(self.path_out, str(header.stamp)+"_base.obj")
+                path_out_world_pred = os.path.join(self.path_out, str(header.stamp)+"_pred.obj")
                 fout_base = open(path_out_world_base, 'w')
                 fout_pred = open(path_out_world_pred, 'w')
                 for i in range(pred_sub_world.shape[0]):
@@ -358,79 +368,37 @@ class Pointcloud_Seg:
                     color = self.label2color[pred_sub_world[i,6]]
                     fout_pred.write('v %f %f %f %d %d %d\n' % (pred_sub_world[i,0], pred_sub_world[i,1], pred_sub_world[i,2], color[0], color[1], color[2]))
 
-            if self.info_map_key == True:
+            
+            if self.iua == True:   # unify info
 
-                # info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list = conversion_utils.array_to_info(info_array_world)
-                # info_world = [info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list]
+                info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list = conversion_utils.array_to_info(info_array_world)
+                info_world = [info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list]
 
-                # self.info_map = map_utils.get_info_map(self.info_map, info_world)
+                self.info_map = map_utils.get_info_map(self.info_map, info_world)
 
-                # if self.count == self.count_target:
-                #     self.count = 0
-                #     self.info_map = map_utils.clean_map(self.info_map, self.count_thr)
+                if self.count == self.count_target:
+                    self.count = 0
+                    self.info_map = map_utils.clean_map(self.info_map, self.count_thr)
                 
-                # info_map_array = conversion_utils.info_to_array(info_map)
-                # pc_info_map = self.array2pc_info(header, info_map_array)
-                # self.pub_pc_info_map.publish(pc_info_map)
+                info_map_array = conversion_utils.info_to_array(self.info_map)
+                pc_info_map = self.array2pc_info(header, info_map_array)
+                self.pub_pc_info_map.publish(pc_info_map)
 
-                out2 = False
-                if out2 == True:
-                    z = 1 # SAVE INFO MAP
-                    path_out_world_info_np = os.path.join("/home/miguel/Desktop/PIPES2/out_ros_world", str(header.stamp)+"_info.npy") # save array of info3 to world used
-                    np.save(path_out_world_info_np, info_array_world)
+                if self.out == True:
+                    path_out_iua = os.path.join(self.path_out, str(header.stamp)+"_info.npy") # save array of info3 to world used
+                    np.save(path_out_iua, info_array_world)
 
             header.frame_id = "turbot/stereo_down/left_optical"
 
         t10 = rospy.Time.now()
 
-        out3 = False
-        if out3 == True:
+        if self.out == True:
             name = str(header.stamp) 
             name = name.replace('.', '')
-            #path_out1 = os.path.join("/home/miguel/Desktop/PIPES2/out_ros", name+"_1.ply")
-            #conversion_utils.info_to_ply(info1, path_out1)
-            #path_out3 = os.path.join("/home/miguel/Desktop/PIPES2/out_ros", name+"_2.ply")
-            #conversion_utils.info_to_ply(info2, path_out3)
             path_out3 = os.path.join("/home/miguel/Desktop/PIPES2/out_ros", name+"_3.ply")
             conversion_utils.info_to_ply(info3, path_out3)
 
         t10 = rospy.Time.now()
-        # print info
-
-        print(" ")
-        print("INFO VALVES:")
-        for valve in info_valves_list:
-            valve.pop(-2)
-            print(valve)
-        print(" ")
-
-        print("INFO VALVES REF:")
-        for valve in info_valves_list2:
-            valve.pop(-2)
-            print(valve)
-        print(" ")
-
-        print("INFO PIPES:")
-        for pipe1 in info_pipes_list:
-            pipe1.pop(0)
-            print(pipe1)
-        print(" ")
-
-        print("INFO PIPES REF:")
-        for pipe2 in info_pipes_list2:
-            pipe2.pop(0)
-            print(pipe2)
-        print(" ")
-
-        print("INFO CONNEXIONS:")
-        for connexion in info_connexions_list:
-            print(connexion)
-        print(" ")
-
-        print("INFO CONNEXIONS REF:")
-        for connexion in info_connexions_list2:
-            print(connexion)
-        print(" ")
 
         # publishers
 
@@ -456,7 +424,7 @@ class Pointcloud_Seg:
             return
 
         if len(info_pipes_list2)>0 or len(info_valves_list2)>0:  # print here because instrances_ref is needed
-            if out1 == True:
+            if self.out == True:
                 instances_ref_world = instances_ref.copy()
                 for i in range(instances_ref.shape[0]):
                     xyz = np.array([[instances_ref[i,0]],
@@ -466,7 +434,7 @@ class Pointcloud_Seg:
                     xyz_trans_rot = np.matmul(left2worldned, xyz)
                     instances_ref_world[i,0:3] = [xyz_trans_rot[0], xyz_trans_rot[1], xyz_trans_rot[2]]
 
-                path_out_world_inst = os.path.join("/home/miguel/Desktop/PIPES2/out_ros_world", str(header.stamp)+"_inst.obj")
+                path_out_world_inst = os.path.join(self.path_out, str(header.stamp)+"_inst.obj")
                 fout_pred = open(path_out_world_inst, 'w')
                 for i in range(instances_ref_world.shape[0]):
                     color = self.col_inst[instances_ref_world[i,7]]
@@ -491,51 +459,70 @@ class Pointcloud_Seg:
         self.pub_pc_seg.publish(pc_seg)
         self.pub_pc_inst.publish(pc_inst)
 
-        time_read = t1-t0
-        time_blocks = t2-t1
-        time_inferference = t3-t2
 
-        time_instaces_valve = t4-t3
-        time_instaces_pipe = t6-t5
-        time_instaces = time_instaces_valve + time_instaces_pipe
+        if self.print == True: # print info
+            print(" ")
+            print("INFO VALVES:")
+            for valve in info_valves_list:
+                valve.pop(-2)
+                print(valve)
+            print(" ")
+            print("INFO VALVES REF:")
+            for valve in info_valves_list2:
+                valve.pop(-2)
+                print(valve)
+            print(" ")
+            print("INFO PIPES:")
+            for pipe1 in info_pipes_list:
+                pipe1.pop(0)
+                print(pipe1)
+            print(" ")
+            print("INFO PIPES REF:")
+            for pipe2 in info_pipes_list2:
+                pipe2.pop(0)
+                print(pipe2)
+            print(" ")
+            print("INFO CONNEXIONS:")
+            for connexion in info_connexions_list:
+                print(connexion)
+            print(" ")
+            print("INFO CONNEXIONS REF:")
+            for connexion in info_connexions_list2:
+                print(connexion)
+            print(" ")
 
-        time_info_valve = t5-t4
-        time_info_pipe = t7-t6
-        time_info = time_info_valve + time_info_pipe
+        if self.time == True:             # print time
+            time_read = t1-t0
+            time_blocks = t2-t1
+            time_inferference = t3-t2
+            time_instaces_valve = t4-t3
+            time_instaces_pipe = t6-t5
+            time_instaces = time_instaces_valve + time_instaces_pipe
+            time_info_valve = t5-t4
+            time_info_pipe = t7-t6
+            time_info = time_info_valve + time_info_pipe
+            time_ref_valve = t9-t8
+            time_ref_pipe = t8-t7
+            time_ref = time_ref_valve + time_ref_pipe
+            time_publish = t10-t9
+            time_total = t10-t0
 
-        time_ref_valve = t9-t8
-        time_ref_pipe = t8-t7
-        time_ref = time_ref_valve + time_ref_pipe
-
-        time_publish = t10-t9
-        time_total = t10-t0
-
-        # print time info
-        rospy.loginfo('[%s]: INFO TIMES:', self.name)	
-        print("")
-        rospy.loginfo('[%s]: Pc processing took %.2f seconds. Split into:', self.name, time_total.secs + time_total.nsecs*1e-9)
-        rospy.loginfo('[%s]: Reading -------- %.2f seconds (%i%%)', self.name, time_read.secs + time_read.nsecs*1e-9, (time_read/time_total)*100)
-        rospy.loginfo('[%s]: Blocks --------- %.2f seconds (%i%%)', self.name, time_blocks.secs + time_blocks.nsecs*1e-9, (time_blocks/time_total)*100)
-        rospy.loginfo('[%s]: Inference ------ %.2f seconds (%i%%)', self.name, time_inferference.secs + time_inferference.nsecs*1e-9, (time_inferference/time_total)*100)
-        rospy.loginfo('[%s]: Instances ------ %.2f seconds (%i%%)', self.name, time_instaces.secs + time_instaces.nsecs*1e-9, (time_instaces/time_total)*100)
-        rospy.loginfo('[%s]:  - Valve - %.2f seconds (%i%%)', self.name, time_instaces_valve.secs + time_instaces_valve.nsecs*1e-9, (time_instaces_valve/time_total)*100)
-        rospy.loginfo('[%s]:  - Pipe -- %.2f seconds (%i%%)', self.name, time_instaces_pipe.secs + time_instaces_pipe.nsecs*1e-9, (time_instaces_pipe/time_total)*100)
-        rospy.loginfo('[%s]: Info ----------- %.2f seconds (%i%%)', self.name, time_info.secs + time_info.nsecs*1e-9, (time_info/time_total)*100)
-        rospy.loginfo('[%s]:  - Valve - %.2f seconds (%i%%)', self.name, time_info_valve.secs + time_info_valve.nsecs*1e-9, (time_info_valve/time_total)*100)
-        rospy.loginfo('[%s]:  - Pipe -- %.2f seconds (%i%%)', self.name, time_info_pipe.secs + time_info_pipe.nsecs*1e-9, (time_info_pipe/time_total)*100)
-        rospy.loginfo('[%s]: Refine --------- %.2f seconds (%i%%)', self.name, time_ref.secs + time_ref.nsecs*1e-9, (time_ref/time_total)*100)
-        rospy.loginfo('[%s]:  - Valve - %.2f seconds (%i%%)', self.name, time_ref_valve.secs + time_ref_valve.nsecs*1e-9, (time_ref_valve/time_total)*100)
-        rospy.loginfo('[%s]:  - Pipe -- %.2f seconds (%i%%)', self.name, time_ref_pipe.secs + time_ref_pipe.nsecs*1e-9, (time_ref_pipe/time_total)*100)
-        rospy.loginfo('[%s]: Publish -------- %.2f seconds (%i%%)', self.name, time_publish.secs + time_publish.nsecs*1e-9, (time_publish/time_total)*100)
-
-        print(" ")
-        print(" ")
-        print("--------------------------------------------------------------------------------------------------")
-        print(time_ref.nsecs)
-        print(time_publish.nsecs)
-        print("--------------------------------------------------------------------------------------------------")
-        print(" ")
-        print(" ")
+            rospy.loginfo('[%s]: INFO TIMES:', self.name)	
+            print("")
+            rospy.loginfo('[%s]: Pc processing took %.2f seconds. Split into:', self.name, time_total.secs + time_total.nsecs*1e-9)
+            rospy.loginfo('[%s]: Reading -------- %.2f seconds (%i%%)', self.name, time_read.secs + time_read.nsecs*1e-9, (time_read/time_total)*100)
+            rospy.loginfo('[%s]: Blocks --------- %.2f seconds (%i%%)', self.name, time_blocks.secs + time_blocks.nsecs*1e-9, (time_blocks/time_total)*100)
+            rospy.loginfo('[%s]: Inference ------ %.2f seconds (%i%%)', self.name, time_inferference.secs + time_inferference.nsecs*1e-9, (time_inferference/time_total)*100)
+            rospy.loginfo('[%s]: Instances ------ %.2f seconds (%i%%)', self.name, time_instaces.secs + time_instaces.nsecs*1e-9, (time_instaces/time_total)*100)
+            rospy.loginfo('[%s]:  - Valve - %.2f seconds (%i%%)', self.name, time_instaces_valve.secs + time_instaces_valve.nsecs*1e-9, (time_instaces_valve/time_total)*100)
+            rospy.loginfo('[%s]:  - Pipe -- %.2f seconds (%i%%)', self.name, time_instaces_pipe.secs + time_instaces_pipe.nsecs*1e-9, (time_instaces_pipe/time_total)*100)
+            rospy.loginfo('[%s]: Info ----------- %.2f seconds (%i%%)', self.name, time_info.secs + time_info.nsecs*1e-9, (time_info/time_total)*100)
+            rospy.loginfo('[%s]:  - Valve - %.2f seconds (%i%%)', self.name, time_info_valve.secs + time_info_valve.nsecs*1e-9, (time_info_valve/time_total)*100)
+            rospy.loginfo('[%s]:  - Pipe -- %.2f seconds (%i%%)', self.name, time_info_pipe.secs + time_info_pipe.nsecs*1e-9, (time_info_pipe/time_total)*100)
+            rospy.loginfo('[%s]: Refine --------- %.2f seconds (%i%%)', self.name, time_ref.secs + time_ref.nsecs*1e-9, (time_ref/time_total)*100)
+            rospy.loginfo('[%s]:  - Valve - %.2f seconds (%i%%)', self.name, time_ref_valve.secs + time_ref_valve.nsecs*1e-9, (time_ref_valve/time_total)*100)
+            rospy.loginfo('[%s]:  - Pipe -- %.2f seconds (%i%%)', self.name, time_ref_pipe.secs + time_ref_pipe.nsecs*1e-9, (time_ref_pipe/time_total)*100)
+            rospy.loginfo('[%s]: Publish -------- %.2f seconds (%i%%)', self.name, time_publish.secs + time_publish.nsecs*1e-9, (time_publish/time_total)*100)
 
 
     def pc2array(self, ros_pc):
