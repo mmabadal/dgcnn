@@ -365,7 +365,13 @@ class Pointcloud_Seg:
             pc_info_world = self.array2pc_info(header, info_array_world)
             self.pub_pc_info_world.publish(pc_info_world)
 
-            if self.out == True:         
+            if self.out == True:   
+
+                name = str(header.stamp) 
+                name = name.replace('.', '')
+                path_out_info = os.path.join(self.path_out, name + "_info.ply")
+                conversion_utils.info_to_ply(info3, path_out_info)
+              
                 path_out_world_info = os.path.join(self.path_out, str(header.stamp)+"_info_world.ply")
                 info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list = conversion_utils.array_to_info(info_array_world)
                 info_world = [info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list]
@@ -380,6 +386,17 @@ class Pointcloud_Seg:
                     xyz_trans_rot = np.matmul(left2worldned, xyz)
                     pred_sub_world[i,0:3] = [xyz_trans_rot[0], xyz_trans_rot[1], xyz_trans_rot[2]]
 
+                path_out_base = os.path.join(self.path_out, str(header.stamp)+"_base.obj")
+                path_out_pred = os.path.join(self.path_out, str(header.stamp)+"_pred.obj")
+                fout_base = open(path_out_base, 'w')
+                fout_pred = open(path_out_pred, 'w')
+                for i in range(pred_sub.shape[0]):
+                    fout_base.write('v %f %f %f %d %d %d\n' % (pred_sub[i,0], pred_sub[i,1], pred_sub[i,2], pred_sub[i,3], pred_sub[i,4], pred_sub[i,5]))
+                for i in range(pred_sub.shape[0]):
+                    color = self.label2color[pred_sub[i,6]]
+                    fout_pred.write('v %f %f %f %d %d %d\n' % (pred_sub[i,0], pred_sub[i,1], pred_sub[i,2], color[0], color[1], color[2]))
+                
+
                 path_out_world_base = os.path.join(self.path_out, str(header.stamp)+"_base_world.obj")
                 path_out_world_pred = os.path.join(self.path_out, str(header.stamp)+"_pred_world.obj")
                 fout_base = open(path_out_world_base, 'w')
@@ -390,10 +407,7 @@ class Pointcloud_Seg:
                     color = self.label2color[pred_sub_world[i,6]]
                     fout_pred.write('v %f %f %f %d %d %d\n' % (pred_sub_world[i,0], pred_sub_world[i,1], pred_sub_world[i,2], color[0], color[1], color[2]))
                 
-                name = str(header.stamp) 
-                name = name.replace('.', '')
-                path_out_info = os.path.join(self.path_out, name + "_info.ply")
-                conversion_utils.info_to_ply(info3, path_out_info)
+
 
             header.frame_id = "turbot/stereo_down/left_optical"
 
@@ -432,6 +446,12 @@ class Pointcloud_Seg:
                                     [1]])
                     xyz_trans_rot = np.matmul(left2worldned, xyz)
                     instances_ref_world[i,0:3] = [xyz_trans_rot[0], xyz_trans_rot[1], xyz_trans_rot[2]]
+
+                path_out_inst = os.path.join(self.path_out, str(header.stamp)+"_inst.obj")
+                fout_pred = open(path_out_inst, 'w')
+                for i in range(instances_ref.shape[0]):
+                    color = self.col_inst[instances_ref[i,7]]
+                    fout_pred.write('v %f %f %f %d %d %d\n' % (instances_ref[i,0], instances_ref[i,1], instances_ref[i,2], color[0], color[1], color[2]))
 
                 path_out_world_inst = os.path.join(self.path_out, str(header.stamp)+"_inst_world.obj")
                 fout_pred = open(path_out_world_inst, 'w')
