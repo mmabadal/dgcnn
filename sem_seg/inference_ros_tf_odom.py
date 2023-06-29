@@ -28,18 +28,39 @@ class Pointcloud_Seg:
     def __init__(self, name):
         self.name = name
         
+        # T times
+        now = rospy.Time.now()
+        tzero = now-now
+
+        self.n_pc = 0
+        self.T_read = tzero
+        self.T_blocks = tzero
+        self.T_inferference = tzero
+
+        self.T_instaces_valve = tzero
+        self.T_instaces_pipe = tzero
+
+        self.T_info_valve = tzero
+        self.T_info_pipe = tzero
+
+        self.T_ref_valve = tzero
+        self.T_ref_pipe = tzero
+
+        self.T_publish =  tzero
+        self.T_total = tzero
+
         # Params inference
         self.fps = 1.0                # target fps        //PARAM
         self.period = 1.0/self.fps    # target period     //PARAM
-        self.batch_size = 1         #                   //PARAM
-        self.points_sub = 128       #                   //PARAM
-        self.block_sub = 0.1        #                   //PARAM
-        self.stride_sub = 0.1       #                   //PARAM
-        self.gpu_index = 0          #                   //PARAM
+        self.batch_size = 1         #                     //PARAM
+        self.points_sub = 128       #   128               //PARAM
+        self.block_sub = 0.1        #   0.1               //PARAM
+        self.stride_sub = 0.1       #   0.1               //PARAM
+        self.gpu_index = 0          #                     //PARAM
         self.desired_points = int(6000/(128/self.points_sub))  # n of points to wich the received pc will be downsampled    //PARAM
 
         # get valve matching targets
-        self.targets_path = "/home/miguel/Desktop/PIPES2/dgcnn/valve_targets"      # //PARAM
+        self.targets_path = "../valve_targets"      # //PARAM
         self.targets_list = list()
         for file_name in natsorted(os.listdir(self.targets_path)):
             target_path = os.path.join(self.targets_path, file_name)
@@ -79,16 +100,16 @@ class Pointcloud_Seg:
         self.min_p_p = 60               # minimum number of points to consider a blob as a pipe     //PARAM
         self.min_p_v = 30 # 40 80 140   # minimum number of points to consider a blob as a valve    //PARAM
 
-        self.train_path = "/home/miguel/Desktop/PIPES2/dgcnn/sem_seg/RUNS/sparus_xiroi/test/128_11_1" # path to train
+        self.train_path = "RUNS/4_128_11_c9" # path to train
         self.model_path = os.path.join(self.train_path, "model.ckpt")         # path to model         //PARAM
         self.path_cls =  os.path.join(self.train_path, "cls.txt")             # path to clases info   //PARAM
         self.classes, self.labels, self.label2color = indoor3d_util.get_info_classes(self.path_cls) # get classes info
 
-        self.iua = False
         self.out = True
         self.print = True
         self.time = True
-        self.path_out = "/home/miguel/Desktop/PIPES2/out_ros_world"
+        self.path_in = "/home/bomiquel/Documents/SRV/recerca/slam/pipes/slam_and_pipes/"
+        self.path_out = os.path.join(self.path_in, "pipes")
 
         if not os.path.exists(self.path_out):
             os.makedirs(self.path_out)
@@ -98,14 +119,15 @@ class Pointcloud_Seg:
         self.new_pc = False
 
         # set subscribers
-        pc_sub = message_filters.Subscriber('/stereo_down/scaled_x2/points2_filtered_odom', PointCloud2, queue_size=4)     # //PARAM
+        pc_sub = message_filters.Subscriber('/turbot/multi_stereo_slam/points2', PointCloud2)             # //PARAM
         pc_sub.registerCallback(self.cb_pc)
 
         # Set class image publishers
-        self.pub_pc_base = rospy.Publisher("/stereo_down/scaled_x2/points2_base", PointCloud2, queue_size=4)
-        self.pub_pc_seg = rospy.Publisher("/stereo_down/scaled_x2/points2_seg", PointCloud2, queue_size=4)
-        self.pub_pc_inst = rospy.Publisher("/stereo_down/scaled_x2/points2_inst", PointCloud2, queue_size=4)
-        self.pub_pc_info = rospy.Publisher("/stereo_down/scaled_x2/points2_info", PointCloud2, queue_size=4)
+        self.pub_pc_base = rospy.Publisher("/turbot/multi_stereo_slam/points2_base", PointCloud2, queue_size=4)
+        self.pub_pc_seg = rospy.Publisher("/turbot/multi_stereo_slam/points2_seg", PointCloud2, queue_size=4)
+        self.pub_pc_inst = rospy.Publisher("/turbot/multi_stereo_slam/points2_inst", PointCloud2, queue_size=4)
+        self.pub_pc_info = rospy.Publisher("/turbot/multi_stereo_slam/points2_info", PointCloud2, queue_size=4)
+        self.pub_pc_info_world = rospy.Publisher("/turbot/multi_stereo_slam/points2_info_world", PointCloud2, queue_size=4)
 
         # Set segmentation timer
         rospy.Timer(rospy.Duration(self.period), self.run)
@@ -344,7 +366,7 @@ class Pointcloud_Seg:
             self.pub_pc_info_world.publish(pc_info_world)
 
             if self.out == True:         
-                path_out_world_info = os.path.join(self.path_out, str(header.stamp)+"_info.ply")
+                path_out_world_info = os.path.join(self.path_out, str(header.stamp)+"_info_world.ply")
                 info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list = conversion_utils.array_to_info(info_array_world)
                 info_world = [info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list]
                 conversion_utils.info_to_ply(info_world, path_out_world_info)
@@ -358,8 +380,8 @@ class Pointcloud_Seg:
                     xyz_trans_rot = np.matmul(left2worldned, xyz)
                     pred_sub_world[i,0:3] = [xyz_trans_rot[0], xyz_trans_rot[1], xyz_trans_rot[2]]
 
-                path_out_world_base = os.path.join(self.path_out, str(header.stamp)+"_base.obj")
-                path_out_world_pred = os.path.join(self.path_out, str(header.stamp)+"_pred.obj")
+                path_out_world_base = os.path.join(self.path_out, str(header.stamp)+"_base_world.obj")
+                path_out_world_pred = os.path.join(self.path_out, str(header.stamp)+"_pred_world.obj")
                 fout_base = open(path_out_world_base, 'w')
                 fout_pred = open(path_out_world_pred, 'w')
                 for i in range(pred_sub_world.shape[0]):
@@ -367,36 +389,13 @@ class Pointcloud_Seg:
                 for i in range(pred_sub_world.shape[0]):
                     color = self.label2color[pred_sub_world[i,6]]
                     fout_pred.write('v %f %f %f %d %d %d\n' % (pred_sub_world[i,0], pred_sub_world[i,1], pred_sub_world[i,2], color[0], color[1], color[2]))
-
-            
-            if self.iua == True:   # unify info
-
-                info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list = conversion_utils.array_to_info(info_array_world)
-                info_world = [info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list]
-
-                self.info_map = map_utils.get_info_map(self.info_map, info_world)
-
-                if self.count == self.count_target:
-                    self.count = 0
-                    self.info_map = map_utils.clean_map(self.info_map, self.count_thr)
                 
-                info_map_array = conversion_utils.info_to_array(self.info_map)
-                pc_info_map = self.array2pc_info(header, info_map_array)
-                self.pub_pc_info_map.publish(pc_info_map)
-
-                if self.out == True:
-                    path_out_iua = os.path.join(self.path_out, str(header.stamp)+"_info.npy") # save array of info3 to world used
-                    np.save(path_out_iua, info_array_world)
+                name = str(header.stamp) 
+                name = name.replace('.', '')
+                path_out_info = os.path.join(self.path_out, name + "_info.ply")
+                conversion_utils.info_to_ply(info3, path_out_info)
 
             header.frame_id = "turbot/stereo_down/left_optical"
-
-        t10 = rospy.Time.now()
-
-        if self.out == True:
-            name = str(header.stamp) 
-            name = name.replace('.', '')
-            path_out3 = os.path.join("/home/miguel/Desktop/PIPES2/out_ros", name+"_3.ply")
-            conversion_utils.info_to_ply(info3, path_out3)
 
         t10 = rospy.Time.now()
 
@@ -434,7 +433,7 @@ class Pointcloud_Seg:
                     xyz_trans_rot = np.matmul(left2worldned, xyz)
                     instances_ref_world[i,0:3] = [xyz_trans_rot[0], xyz_trans_rot[1], xyz_trans_rot[2]]
 
-                path_out_world_inst = os.path.join(self.path_out, str(header.stamp)+"_inst.obj")
+                path_out_world_inst = os.path.join(self.path_out, str(header.stamp)+"_inst_world.obj")
                 fout_pred = open(path_out_world_inst, 'w')
                 for i in range(instances_ref_world.shape[0]):
                     color = self.col_inst[instances_ref_world[i,7]]
@@ -663,9 +662,9 @@ class Pointcloud_Seg:
 
     def get_transform(self):
 
-        with open("graph.txt", "r") as file:
+        with open(os.path.join(self.path_in, "graph_vertices.txt"), "r") as file:
             tq_ned_baselink = file.readlines()[-1]
-        tq_ned_baselink_f =  np.array([float(x) for x in tq_ned_baselink.split()])
+        tq_ned_baselink_f =  np.array([float(x) for x in tq_ned_baselink.split(",")])
 
         t_ned_baselink = tq_ned_baselink_f[2:5]
         q_ned_baselink = tq_ned_baselink_f[5:]
