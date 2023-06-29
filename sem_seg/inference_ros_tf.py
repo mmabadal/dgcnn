@@ -256,10 +256,10 @@ class Pointcloud_Seg:
         for i in descart_valves_list:
             print("Valve descarted")
             descarted_points = np.vstack(instances_ref_valve_list[i])                           # notate points to discard
-            if len(stolen_list[i])>0:                                                                  # if there were stolen points
-                stolen_idx = list(np.vstack(stolen_list[i])[:,0].astype(int))                       # get stolen idx
-                stolen_cls = np.vstack(stolen_list[i])[:,1].astype(int)                             # get stolen class
-                stolen_cls = stolen_cls.reshape(stolen_cls.shape[0],1)                              # reshape stolen class
+            if len(stolen_list[i])>0:                                                           # if there were stolen points
+                stolen_idx = list(np.vstack(stolen_list[i])[:,0].astype(int))                   # get stolen idx
+                stolen_cls = np.vstack(stolen_list[i])[:,1].astype(int)                         # get stolen class
+                stolen_cls = stolen_cls.reshape(stolen_cls.shape[0],1)                          # reshape stolen class
                 stolen_points = descarted_points[stolen_idx, :-2]                               # recover stolen points
                 stolen_points = np.concatenate((stolen_points,stolen_cls),axis=1)               # concatenate stolen points and stolen class
                 pred_sub_pipe_ref = np.concatenate((pred_sub_pipe_ref,stolen_points),axis=0)    # add points and class pipe prediction points
