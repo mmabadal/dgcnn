@@ -125,7 +125,9 @@ class Pointcloud_Seg:
         pc_sub = message_filters.Subscriber('/turbot/multi_stereo_slam/points2', PointCloud2)               # //PARAM
         odom_sub = message_filters.Subscriber('/turbot/multi_stereo_slam/graph_robot_odometry', Odometry)   # //PARAM
         ts_pc_odom = message_filters.TimeSynchronizer([pc_sub, odom_sub], 10)
-        ts_pc_odom.registerCallback(self.cb_image)
+        #ts_pc_odom = message_filters.ApproximateTimeSynchronizer([pc_sub, odom_sub], queue_size=10, slop=0.1)
+        ts_pc_odom.registerCallback(self.cb_loop)
+        
         #pc_sub.registerCallback(self.cb_pc)
 
         loop_sub = message_filters.Subscriber('/turbot/multi_stereo_slam/loop_closings_num', Int32)               # //PARAM
@@ -146,7 +148,7 @@ class Pointcloud_Seg:
         self.odom = odom
         self.new_pc = True
 
-    def loop_sub(self, loop):
+    def cb_loop(self, loop):
         if loop != self.loop:
             self.loop = loop
             print("UPDATE POSITIONS!!!!!!!!!!!!!")
