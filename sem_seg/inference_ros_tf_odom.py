@@ -122,23 +122,23 @@ class Pointcloud_Seg:
         self.new_pc = False
 
         # set subscribers
-        pc_sub = message_filters.Subscriber('/turbot/multi_stereo_slam/points2', PointCloud2)               # //PARAM
-        odom_sub = message_filters.Subscriber('/turbot/multi_stereo_slam/graph_robot_odometry', Odometry)   # //PARAM
+        pc_sub = message_filters.Subscriber('/turbot/slamon/points2', PointCloud2)               # //PARAM
+        odom_sub = message_filters.Subscriber('/turbot/slamon/graph_robot_odometry', Odometry)   # //PARAM
         ts_pc_odom = message_filters.TimeSynchronizer([pc_sub, odom_sub], 10)
         #ts_pc_odom = message_filters.ApproximateTimeSynchronizer([pc_sub, odom_sub], queue_size=10, slop=0.1)
-        ts_pc_odom.registerCallback(self.cb_loop)
-        
+        ts_pc_odom.registerCallback(self.cb_pc)
+
         #pc_sub.registerCallback(self.cb_pc)
 
-        loop_sub = message_filters.Subscriber('/turbot/multi_stereo_slam/loop_closings_num', Int32)               # //PARAM
-        loop_sub.registerCallback(self.loop_pc)
+        loop_sub = message_filters.Subscriber('/turbot/slamon/loop_closings_num', Int32)               # //PARAM
+        loop_sub.registerCallback(self.cb_loop)
 
         # Set class image publishers
-        self.pub_pc_base = rospy.Publisher("/turbot/multi_stereo_slam/points2_base", PointCloud2, queue_size=4)
-        self.pub_pc_seg = rospy.Publisher("/turbot/multi_stereo_slam/points2_seg", PointCloud2, queue_size=4)
-        self.pub_pc_inst = rospy.Publisher("/turbot/multi_stereo_slam/points2_inst", PointCloud2, queue_size=4)
-        self.pub_pc_info = rospy.Publisher("/turbot/multi_stereo_slam/points2_info", PointCloud2, queue_size=4)
-        self.pub_pc_info_world = rospy.Publisher("/turbot/multi_stereo_slam/points2_info_world", PointCloud2, queue_size=4)
+        self.pub_pc_base = rospy.Publisher("/turbot/slamon/points2_base", PointCloud2, queue_size=4)
+        self.pub_pc_seg = rospy.Publisher("/turbot/slamon/points2_seg", PointCloud2, queue_size=4)
+        self.pub_pc_inst = rospy.Publisher("/turbot/slamon/points2_inst", PointCloud2, queue_size=4)
+        self.pub_pc_info = rospy.Publisher("/turbot/slamon/points2_info", PointCloud2, queue_size=4)
+        self.pub_pc_info_world = rospy.Publisher("/turbot/slamon/points2_info_world", PointCloud2, queue_size=4)
 
         # Set segmentation timer
         rospy.Timer(rospy.Duration(self.period), self.run)
