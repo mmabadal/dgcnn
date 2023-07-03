@@ -150,8 +150,8 @@ class Pointcloud_Seg:
 
     def cb_loop(self, loop):
         print("loop is: " + str(self.loop))
-        if loop != self.loop:
-            self.loop = loop
+        if loop.data != self.loop:
+            self.loop = loop.data
             print("UPDATE POSITIONS!!!!!!!!!!!!!")
             # update ply's
 
