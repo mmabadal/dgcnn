@@ -149,6 +149,7 @@ class Pointcloud_Seg:
         self.new_pc = True
 
     def cb_loop(self, loop):
+        print("loop is: " + str(self.loop))
         if loop != self.loop:
             self.loop = loop
             print("UPDATE POSITIONS!!!!!!!!!!!!!")
@@ -709,9 +710,9 @@ class Pointcloud_Seg:
         # t_ned_baselink = tq_ned_baselink_f[2:5]
         # q_ned_baselink = tq_ned_baselink_f[5:]
 
-        t_ned_baselink = self.odom.pose.pose.position
-        q_ned_baselink = self.odom.pose.pose.orientation
-
+        t_ned_baselink = [self.odom.pose.pose.position.x, self.odom.pose.pose.position.y, self.odom.pose.pose.position.z]
+        q_ned_baselink = [self.odom.pose.pose.orientation.x, self.odom.pose.pose.orientation.y, self.odom.pose.pose.orientation.z, self.odom.pose.pose.orientation.w]
+    
         tq_baselink_stick = np.array([0.4, 0.0, 0.8, 0.0, 0.0, 0.0, 1.0])
         t_baselink_stick = tq_baselink_stick[:3]
         q_baselink_stick = tq_baselink_stick[3:]
