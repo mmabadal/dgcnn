@@ -16,11 +16,13 @@ import conversion_utils
 from natsort import natsorted
 from scipy.spatial.transform import Rotation as Rot
 
-import std_msgs.msg
+from std_msgs.msg import Int32
 import message_filters
 from sensor_msgs.msg import PointField
 import sensor_msgs.point_cloud2 as pc2
 from sensor_msgs.msg import PointCloud2
+from nav_msgs.msg import Odometry
+from geometry_msgs.msg import Point, Pose, Quaternion, Twist, Vector3
 
 
 class Pointcloud_Seg:
@@ -105,6 +107,8 @@ class Pointcloud_Seg:
         self.path_cls =  os.path.join(self.train_path, "cls.txt")             # path to clases info   //PARAM
         self.classes, self.labels, self.label2color = indoor3d_util.get_info_classes(self.path_cls) # get classes info
 
+        self.loop = 0
+
         self.out = True
         self.print = True
         self.time = True
@@ -114,13 +118,18 @@ class Pointcloud_Seg:
         if not os.path.exists(self.path_out):
             os.makedirs(self.path_out)
 
-
         self.init = False
         self.new_pc = False
 
         # set subscribers
-        pc_sub = message_filters.Subscriber('/turbot/multi_stereo_slam/points2', PointCloud2)             # //PARAM
-        pc_sub.registerCallback(self.cb_pc)
+        pc_sub = message_filters.Subscriber('/turbot/multi_stereo_slam/points2', PointCloud2)               # //PARAM
+        odom_sub = message_filters.Subscriber('/turbot/multi_stereo_slam/graph_robot_odometry', Odometry)   # //PARAM
+        ts_pc_odom = message_filters.TimeSynchronizer([pc_sub, odom_sub], 10)
+        ts_pc_odom.registerCallback(self.cb_image)
+        #pc_sub.registerCallback(self.cb_pc)
+
+        loop_sub = message_filters.Subscriber('/turbot/multi_stereo_slam/loop_closings_num', Int32)               # //PARAM
+        loop_sub.registerCallback(self.loop_pc)
 
         # Set class image publishers
         self.pub_pc_base = rospy.Publisher("/turbot/multi_stereo_slam/points2_base", PointCloud2, queue_size=4)
@@ -132,9 +141,17 @@ class Pointcloud_Seg:
         # Set segmentation timer
         rospy.Timer(rospy.Duration(self.period), self.run)
 
-    def cb_pc(self, pc):
+    def cb_pc(self, pc, odom):
         self.pc = pc
+        self.odom = odom
         self.new_pc = True
+
+    def loop_sub(self, loop):
+        if loop != self.loop:
+            self.loop = loop
+            print("UPDATE POSITIONS!!!!!!!!!!!!!")
+            # update ply's
+
 
     def set_model(self):
         with tfw.device('/gpu:'+str(self.gpu_index)):
@@ -196,6 +213,7 @@ class Pointcloud_Seg:
             return
 
         left2worldned = self.get_transform()
+
 
         pc_np[:, 2] *= -1  # flip Z axis        # //PARAM
         #pc_np[:, 1] *= -1  # flip Y axis       # //PARAM
@@ -682,12 +700,15 @@ class Pointcloud_Seg:
 
     def get_transform(self):
 
-        with open(os.path.join(self.path_in, "graph_vertices.txt"), "r") as file:
-            tq_ned_baselink = file.readlines()[-1]
-        tq_ned_baselink_f =  np.array([float(x) for x in tq_ned_baselink.split(",")])
+        # with open(os.path.join(self.path_in, "graph_vertices.txt"), "r") as file:
+        #     tq_ned_baselink = file.readlines()[-1]
+        # tq_ned_baselink_f =  np.array([float(x) for x in tq_ned_baselink.split(",")])
 
-        t_ned_baselink = tq_ned_baselink_f[2:5]
-        q_ned_baselink = tq_ned_baselink_f[5:]
+        # t_ned_baselink = tq_ned_baselink_f[2:5]
+        # q_ned_baselink = tq_ned_baselink_f[5:]
+
+        t_ned_baselink = self.odom.pose.pose.position
+        q_ned_baselink = self.odom.pose.pose.orientation
 
         tq_baselink_stick = np.array([0.4, 0.0, 0.8, 0.0, 0.0, 0.0, 1.0])
         t_baselink_stick = tq_baselink_stick[:3]
