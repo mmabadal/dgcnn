@@ -1,15 +1,11 @@
-
-import copy
+import os
 import numpy as np
 from scipy.spatial.transform import Rotation as Rot
+import copy
+import conversion_utils
 
 
-def quaternion_multiply(q0, q1):
-    x0, y0, z0, w0 = q0
-    x1, y1, z1, w1 = q1
-    return np.array([-x1*x0-y1*y0-z1*z0+w1*w0, x1*w0+y1*z0-z1*y0+w1*x0, -x1*z0+y1*w0+z1*x0+w1*y0, x1*y0-y1*x0+z1*w0+w1*z0], dtype=np.float64)
 
-    
 def get_tr(t, q):
     trans = np.array([[1, 0, 0, t[0]], [0, 1, 0, t[1]], [0, 0, 1, t[2]], [0, 0, 0, 1]], np.float)
     rot = Rot.from_quat(q)
@@ -19,126 +15,78 @@ def get_tr(t, q):
     return(trans_rot)
 
 
+def update_positions(path_pc, path_tq):
+
+    file_tq = open(path_tq, 'r')
+    lines = file_tq.readlines()
+    for line in lines:
+
+        info = [float(x) for x in line.split(',')]
+        t_ned_baselink = info[2:5]
+        q_ned_baselink = info[5:]
+
+        tq_baselink_stick = np.array([0.4, 0.0, 0.8, 0.0, 0.0, 0.0, 1.0])
+        t_baselink_stick = tq_baselink_stick[:3]
+        q_baselink_stick = tq_baselink_stick[3:]
+
+        tq_stick_downbase = np.array([0.0, 0.0, 0.0, 0.4999998414659176, 0.49960183664463365, 0.4999998414659176, 0.5003981633553665])
+        t_stick_downbase = tq_stick_downbase[:3]
+        q_stick_downbase = tq_stick_downbase[3:]
+
+        tq_downbase_down = np.array([0.0, 0.0, 0.0, -0.706825181105366, 0.0, 0.0, 0.7073882691671998])
+        t_downbase_down = tq_downbase_down[:3]
+        q_downbase_down = tq_downbase_down[3:]
+
+        tq_down_left = np.array([-0.06, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0])
+        t_down_left = tq_down_left[:3]
+        q_down_left = tq_down_left[3:]
+
+        tr_ned_baselink = get_tr(t_ned_baselink, q_ned_baselink)
+        tr_baselink_stick = get_tr(t_baselink_stick, q_baselink_stick)
+        tr_stick_downbase = get_tr(t_stick_downbase, q_stick_downbase)
+        tr_downbase_down  = get_tr(t_downbase_down, q_downbase_down)
+        tr_down_left = get_tr(t_down_left, q_down_left)
+
+        tr_ned_stick = np.matmul(tr_ned_baselink, tr_baselink_stick)
+        tr_ned_downbase = np.matmul(tr_ned_stick, tr_stick_downbase)
+        tr_ned_down = np.matmul(tr_ned_downbase, tr_downbase_down)
+        tr_ned_left = np.matmul(tr_ned_down, tr_down_left)
+
+        name = info[0]
+        name = name.replace('.', '')
+        name = list(name)
+        name[-3:] = '000'
+        name = ''.join(name)
+
+        file_pc = os.path.join(path_pc, name + '_info.npy')
+
+        if os.path.exists(file_pc):
+            info_array = np.load(file_pc)
+
+            info_array_world = info_array.copy()
+            for i in range(info_array.shape[0]):
+                xyz = np.array([[info_array[i,0]],
+                                [info_array[i,1]],
+                                [info_array[i,2]],
+                                [1]])
+                xyz_trans_rot = np.matmul(tr_ned_left, xyz)
+                info_array_world[i,0:3] = [xyz_trans_rot[0], xyz_trans_rot[1], xyz_trans_rot[2]]
+
+            path_out = os.path.join(path_pc, name + "_info_world.ply")
+            info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list = conversion_utils.array_to_info(info_array_world)
+            info_world = [info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list]
+            conversion_utils.info_to_ply(info_world, path_out)
+
     
 if __name__=='__main__':
 
-    # with open("graph.txt", "r") as file:
-    #    tq_ned_baselink = file.readlines()[-1]
+    path_pc = "path/pc"
+    path_tq = "path/tq"
 
-    # tq_ned_baselink_f = [float(x) for x in tq_ned_baselink.split()]
-    
-    tq_ned_baselink_f  = np.array([1614260512.032102823, 0, 74.567500000, 19.919000000, 2.208750000, 0.021034106, -0.075268223, 0.565774172, 0.820848249])
-    t_ned_baselink = tq_ned_baselink_f[2:5]
-    q_ned_baselink = tq_ned_baselink_f[5:]
-
-    tq_baselink_stick = np.array([0.4, 0.0, 0.8, 0.0, 0.0, 0.0, 1.0])
-    t_baselink_stick = tq_baselink_stick[:3]
-    q_baselink_stick = tq_baselink_stick[3:]
-
-    tq_stick_downbase = np.array([0.0, 0.0, 0.0, 0.4999998414659176, 0.49960183664463365, 0.4999998414659176, 0.5003981633553665])
-    t_stick_downbase = tq_stick_downbase[:3]
-    q_stick_downbase = tq_stick_downbase[3:]
-
-    tq_downbase_down = np.array([0.0, 0.0, 0.0, -0.706825181105366, 0.0, 0.0, 0.7073882691671998])
-    t_downbase_down = tq_downbase_down[:3]
-    q_downbase_down = tq_downbase_down[3:]
-
-    tq_down_left = np.array([-0.06, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0])
-    t_down_left = tq_down_left[:3]
-    q_down_left = tq_down_left[3:]
-
-    tr_ned_baselink = get_tr(t_ned_baselink, q_ned_baselink)
-    tr_baselink_stick = get_tr(t_baselink_stick, q_baselink_stick)
-    tr_stick_downbase = get_tr(t_stick_downbase, q_stick_downbase)
-    tr_downbase_down  = get_tr(t_downbase_down, q_downbase_down)
-    tr_down_left = get_tr(t_down_left, q_down_left)
-
-    tr_ned_stick = np.matmul(tr_ned_baselink, tr_baselink_stick)
-    tr_ned_downbase = np.matmul(tr_ned_stick, tr_stick_downbase)
-    tr_ned_down = np.matmul(tr_ned_downbase, tr_downbase_down)
-    tr_ned_left = np.matmul(tr_ned_down, tr_down_left)
-
-    o = np.ones((4, 1))
-    o_ned_left = np.matmul(tr_ned_left, o)
-
-    print(o_ned_left)
-
-    # print("-------------------")
-    # print("-------------------")
-
-
-    # o = np.ones((4, 1))
-    # o_ned_baselink = np.matmul(tr_ned_baselink, o)
-    # o_ned_stick = np.matmul(tr_baselink_stick, o_ned_baselink)
-    # o_ned_downbase = np.matmul(tr_stick_downbase, o_ned_stick)
-    # o_ned_down = np.matmul(tr_downbase_down, o_ned_downbase)
-    # o_ned_left = np.matmul(tr_down_left, o_ned_down)
-
-    # print(o_ned_left)
-
-
-    # print("-------------------")
-    # print("-------------------")
-
-
-    # o = np.ones((4, 1))
-
-    # r_ned_baselink = copy.deepcopy(tr_ned_baselink)
-    # r_ned_baselink[:3,3] = 0
-    # t_ned_baselink = copy.deepcopy(tr_ned_baselink)
-    # t_ned_baselink[:3,:3] = np.eye(3,3)
-
-    # r_baselink_stick = copy.deepcopy(tr_baselink_stick)
-    # r_baselink_stick[:3,3] = 0
-    # t_baselink_stick = copy.deepcopy(tr_baselink_stick)
-    # t_baselink_stick[:3,:3] = np.eye(3,3)
-
-    # r_stick_downbase = copy.deepcopy(tr_stick_downbase)
-    # r_stick_downbase[:3,3] = 0
-    # t_stick_downbase = copy.deepcopy(tr_stick_downbase)
-    # t_stick_downbase[:3,:3] = np.eye(3,3)
-
-    # r_downbase_down  = copy.deepcopy(tr_downbase_down)
-    # r_downbase_down[:3,3] = 0
-    # t_downbase_down  = copy.deepcopy(tr_downbase_down)
-    # t_downbase_down[:3,:3] = np.eye(3,3)
-
-    # r_down_left = copy.deepcopy(tr_down_left)
-    # r_down_left[:3,3] = 0
-    # t_down_left = copy.deepcopy(tr_down_left)
-    # t_down_left[:3,:3] = np.eye(3,3)
-
-    # o_ned_baselink_r = np.matmul(r_ned_baselink, o)
-    # o_ned_baselink_t = np.matmul(t_ned_baselink, o_ned_baselink_r)
-
-    # o_ned_stick_r = np.matmul(r_baselink_stick, o_ned_baselink_t)
-    # o_ned_stick_t = np.matmul(t_baselink_stick, o_ned_stick_r)
-
-    # o_ned_downbase_r = np.matmul(r_stick_downbase, o_ned_stick_t)
-    # o_ned_downbase_t = np.matmul(t_stick_downbase, o_ned_downbase_r)
-
-    # o_ned_down_r = np.matmul(r_downbase_down, o_ned_downbase_t)
-    # o_ned_down_t = np.matmul(t_downbase_down, o_ned_down_r)
-
-    # o_ned_left_r = np.matmul(r_down_left, o_ned_down_t)
-    # o_ned_left = np.matmul(t_down_left, o_ned_left_r)
-
-    # print(o_ned_left)
-
-
-    print("-------------------")
-    print("-------------------")
-
-    o = np.ones((4, 1))
-    o_down_left = np.matmul(tr_down_left, o)
-    o_downbase_left = np.matmul(tr_downbase_down, o_down_left)
-    o_stick_left = np.matmul(tr_stick_downbase, o_downbase_left)
-    o_baselink_left = np.matmul(tr_baselink_stick, o_stick_left)
-    o_ned_left = np.matmul(tr_ned_baselink, o_baselink_left)
-    print(o_ned_left)
-
-
-    print("-------------------")
-    print("-------------------")
+    loop_local = 0 
+    loop_sub = 0
+    if loop_sub != loop_local:
+        loop_local = loop_sub
+        update_positions(path_pc, path_tq)
 
     

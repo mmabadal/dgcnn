@@ -114,6 +114,7 @@ class Pointcloud_Seg:
         self.time = True
         self.path_in = "/home/bomiquel/Documents/SRV/recerca/slam/pipes/slam_and_pipes/"
         self.path_out = os.path.join(self.path_in, "pipes")
+        self.path_graph= os.path.join(self.path_in, "graph_vertices.txt")
 
         if not os.path.exists(self.path_out):
             os.makedirs(self.path_out)
@@ -152,8 +153,7 @@ class Pointcloud_Seg:
         print("loop is: " + str(self.loop))
         if loop.data != self.loop:
             self.loop = loop.data
-            print("UPDATE POSITIONS!!!!!!!!!!!!!")
-            # update ply's
+            self.update_positions(path_pc, self.path_graph)
 
 
     def set_model(self):
@@ -388,10 +388,12 @@ class Pointcloud_Seg:
 
             if self.out == True:   
 
-                name = str(header.stamp) 
-                name = name.replace('.', '')
-                path_out_info = os.path.join(self.path_out, name + "_info.ply")
-                conversion_utils.info_to_ply(info3, path_out_info)
+                path_out_info_ply = os.path.join(self.path_out, str(header.stamp) + "_info.ply")
+                path_out_info_npy = os.path.join(self.path_out, str(header.stamp) + "_info.npy")
+
+                np.save(path_out_info_npy, info_array)
+
+                conversion_utils.info_to_ply(info3, path_out_info_ply)
               
                 path_out_world_info = os.path.join(self.path_out, str(header.stamp)+"_info_world.ply")
                 info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list = conversion_utils.array_to_info(info_array_world)
@@ -742,6 +744,69 @@ class Pointcloud_Seg:
 
         return tr_ned_left
     
+
+    def update_positions(self, path_pc, ):
+
+        file_tq = open(self.path_graph, 'r')
+        lines = file_tq.readlines()
+        for line in lines:
+
+            info = [float(x) for x in line.split(',')]
+            t_ned_baselink = info[2:5]
+            q_ned_baselink = info[5:]
+
+            tq_baselink_stick = np.array([0.4, 0.0, 0.8, 0.0, 0.0, 0.0, 1.0])
+            t_baselink_stick = tq_baselink_stick[:3]
+            q_baselink_stick = tq_baselink_stick[3:]
+
+            tq_stick_downbase = np.array([0.0, 0.0, 0.0, 0.4999998414659176, 0.49960183664463365, 0.4999998414659176, 0.5003981633553665])
+            t_stick_downbase = tq_stick_downbase[:3]
+            q_stick_downbase = tq_stick_downbase[3:]
+
+            tq_downbase_down = np.array([0.0, 0.0, 0.0, -0.706825181105366, 0.0, 0.0, 0.7073882691671998])
+            t_downbase_down = tq_downbase_down[:3]
+            q_downbase_down = tq_downbase_down[3:]
+
+            tq_down_left = np.array([-0.06, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0])
+            t_down_left = tq_down_left[:3]
+            q_down_left = tq_down_left[3:]
+
+            tr_ned_baselink = self.get_tr(t_ned_baselink, q_ned_baselink)
+            tr_baselink_stick = self.get_tr(t_baselink_stick, q_baselink_stick)
+            tr_stick_downbase = self.get_tr(t_stick_downbase, q_stick_downbase)
+            tr_downbase_down  = self.get_tr(t_downbase_down, q_downbase_down)
+            tr_down_left = self.get_tr(t_down_left, q_down_left)
+
+            tr_ned_stick = np.matmul(tr_ned_baselink, tr_baselink_stick)
+            tr_ned_downbase = np.matmul(tr_ned_stick, tr_stick_downbase)
+            tr_ned_down = np.matmul(tr_ned_downbase, tr_downbase_down)
+            tr_ned_left = np.matmul(tr_ned_down, tr_down_left)
+
+            name = info[0]
+            name = name.replace('.', '')
+            name = list(name)
+            name[-3:] = '000'
+            name = ''.join(name)
+
+            file_pc = os.path.join(self.path_out, name + '_info.npy')
+
+            if os.path.exists(file_pc):
+                info_array = np.load(file_pc)
+
+                info_array_world = info_array.copy()
+                for i in range(info_array.shape[0]):
+                    xyz = np.array([[info_array[i,0]],
+                                    [info_array[i,1]],
+                                    [info_array[i,2]],
+                                    [1]])
+                    xyz_trans_rot = np.matmul(tr_ned_left, xyz)
+                    info_array_world[i,0:3] = [xyz_trans_rot[0], xyz_trans_rot[1], xyz_trans_rot[2]]
+
+                path_out_world_info = os.path.join(self.path_out, name + "_info_world.ply")
+                info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list = conversion_utils.array_to_info(info_array_world)
+                info_world = [info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list]
+                conversion_utils.info_to_ply(info_world, path_out_world_info)
+
 
     def quaternion_multiply(self, q0, q1):
         x0, y0, z0, w0 = q0
