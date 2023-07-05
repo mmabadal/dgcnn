@@ -112,7 +112,7 @@ class Pointcloud_Seg:
         self.out = True
         self.print = True
         self.time = True
-        self.path_in = "/home/bomiquel/Documents/SRV/recerca/slam/pipes/slam_and_pipes/"
+        self.path_in = "/home/bomiquel/Documents/SRV/recerca/slam/pipes/surveys_slam_and_pies/portals_t0/SLAMON-SIFT/SURF_BRISK/execution_0"
         self.path_out = os.path.join(self.path_in, "pipes")
         self.path_graph= os.path.join(self.path_in, "graph_vertices.txt")
 
@@ -123,23 +123,24 @@ class Pointcloud_Seg:
         self.new_pc = False
 
         # set subscribers
-        pc_sub = message_filters.Subscriber('/turbot/slamon/points2', PointCloud2)               # //PARAM
-        odom_sub = message_filters.Subscriber('/turbot/slamon/graph_robot_odometry', Odometry)   # //PARAM
+        pc_sub = message_filters.Subscriber('/robot_0/slamon/points2', PointCloud2)               # //PARAM
+        odom_sub = message_filters.Subscriber('/robot_0/slamon/graph_robot_odometry', Odometry)   # //PARAM
         #ts_pc_odom = message_filters.TimeSynchronizer([pc_sub, odom_sub], 10)
         ts_pc_odom = message_filters.ApproximateTimeSynchronizer([pc_sub, odom_sub], queue_size=10, slop=0.001)
         ts_pc_odom.registerCallback(self.cb_pc)
 
         #pc_sub.registerCallback(self.cb_pc)
 
-        loop_sub = message_filters.Subscriber('/turbot/slamon/loop_closings_num', Int32)               # //PARAM
+        loop_sub = message_filters.Subscriber('/robot_0/slamon/loop_closings_num', Int32)               # //PARAM
         loop_sub.registerCallback(self.cb_loop)
 
         # Set class image publishers
-        self.pub_pc_base = rospy.Publisher("/turbot/slamon/points2_base", PointCloud2, queue_size=4)
-        self.pub_pc_seg = rospy.Publisher("/turbot/slamon/points2_seg", PointCloud2, queue_size=4)
-        self.pub_pc_inst = rospy.Publisher("/turbot/slamon/points2_inst", PointCloud2, queue_size=4)
-        self.pub_pc_info = rospy.Publisher("/turbot/slamon/points2_info", PointCloud2, queue_size=4)
-        self.pub_pc_info_world = rospy.Publisher("/turbot/slamon/points2_info_world", PointCloud2, queue_size=4)
+        self.pub_pc_base = rospy.Publisher("/robot_0/slamon/points2_base", PointCloud2, queue_size=4)
+        self.pub_pc_seg = rospy.Publisher("/robot_0/slamon/points2_seg", PointCloud2, queue_size=4)
+        self.pub_pc_inst = rospy.Publisher("/robot_0/slamon/points2_inst", PointCloud2, queue_size=4)
+        self.pub_pc_info = rospy.Publisher("/robot_0/slamon/points2_info", PointCloud2, queue_size=4)
+        self.pub_pc_info_world = rospy.Publisher("/robot_0/slamon/points2_info_world", PointCloud2, queue_size=4)
+
 
         # Set segmentation timer
         rospy.Timer(rospy.Duration(self.period), self.run)
@@ -298,7 +299,7 @@ class Pointcloud_Seg:
             vector = vector*0.18                                                             # resize vector to valve size //PARAM
             info_valves_list.append([xyz_central, vector, max_idx, inst[:,0:3], max_info])   # append valve instance info
 
-        info_valves_list.append([np.array([0.2,0.2,0.2]),np.array([0.1,0.1,0]),1,np.array([[1,2,3], [4,5,6]]),0.5]) # BORRAAAAARR, ESTO ES PARA TEST!!!!!!!
+        info_valves_list.append([np.array([0.2,0.2,0.2]),np.array([0.1,0.1,0]),1,np.array([[1,2,3], [4,5,6]]), np.array([0.5])]) # BORRAAAAARR, ESTO ES PARA TEST!!!!!!!
 
             # print best valve matching
             #trans = np.eye(4) 
@@ -438,7 +439,7 @@ class Pointcloud_Seg:
                 
 
 
-            header.frame_id = "turbot/stereo_down/left_optical"
+            header.frame_id = "robot_0/stereo_down/left_optical"
 
         t10 = rospy.Time.now()
 
@@ -790,7 +791,7 @@ class Pointcloud_Seg:
             tr_ned_down = np.matmul(tr_ned_downbase, tr_downbase_down)
             tr_ned_left = np.matmul(tr_ned_down, tr_down_left)
 
-            name = str(info[0])
+            name = line.split(',')[0]
             name = name.replace('.', '')
             name = list(name)
             name[-3:] = '000'
@@ -810,7 +811,7 @@ class Pointcloud_Seg:
                     xyz_trans_rot = np.matmul(tr_ned_left, xyz)
                     info_array_world[i,0:3] = [xyz_trans_rot[0], xyz_trans_rot[1], xyz_trans_rot[2]]
 
-                path_out_world_info = os.path.join(self.path_out, name + "_info_world.ply")
+                path_out_world_info = os.path.join(self.path_out, name + "_info_world_2.ply")
                 info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list = conversion_utils.array_to_info(info_array_world)
                 info_world = [info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list]
                 conversion_utils.info_to_ply(info_world, path_out_world_info)
