@@ -745,7 +745,7 @@ class Pointcloud_Seg:
         return tr_ned_left
     
 
-    def update_positions(self, path_pc, ):
+    def update_positions(self):
 
         file_tq = open(self.path_graph, 'r')
         lines = file_tq.readlines()
