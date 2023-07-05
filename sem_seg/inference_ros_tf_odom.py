@@ -152,11 +152,7 @@ class Pointcloud_Seg:
 
     def cb_loop(self, loop):
         print("loop is: " + str(self.loop))
-        
-        self.loop = self.loop + 1
-        if self.loop == 3:
-
-        #if loop.data != self.loop:
+        if loop.data != self.loop:
             self.loop = loop.data
             self.update_positions()
 
@@ -299,7 +295,7 @@ class Pointcloud_Seg:
             vector = vector*0.18                                                             # resize vector to valve size //PARAM
             info_valves_list.append([xyz_central, vector, max_idx, inst[:,0:3], max_info])   # append valve instance info
 
-        info_valves_list.append([np.array([0.2,0.2,0.2]),np.array([0.1,0.1,0]),1,np.array([[1,2,3], [4,5,6]]), np.array([0.5])]) # BORRAAAAARR, ESTO ES PARA TEST!!!!!!!
+        # info_valves_list.append([np.array([0.2,0.2,0.2]),np.array([0.1,0.1,0]),1,np.array([[1,2,3], [4,5,6]]), np.array([0.5])]) # force valve (test purposes)
 
             # print best valve matching
             #trans = np.eye(4) 
@@ -811,7 +807,7 @@ class Pointcloud_Seg:
                     xyz_trans_rot = np.matmul(tr_ned_left, xyz)
                     info_array_world[i,0:3] = [xyz_trans_rot[0], xyz_trans_rot[1], xyz_trans_rot[2]]
 
-                path_out_world_info = os.path.join(self.path_out, name + "_info_world_2.ply")
+                path_out_world_info = os.path.join(self.path_out, name + "_info_world_2.ply")   # _2 for test purposes
                 info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list = conversion_utils.array_to_info(info_array_world)
                 info_world = [info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list]
                 conversion_utils.info_to_ply(info_world, path_out_world_info)
