@@ -151,7 +151,11 @@ class Pointcloud_Seg:
 
     def cb_loop(self, loop):
         print("loop is: " + str(self.loop))
-        if loop.data != self.loop:
+        
+        self.loop = self.loop + 1
+        if self.loop == 3:
+
+        #if loop.data != self.loop:
             self.loop = loop.data
             self.update_positions()
 
@@ -772,7 +776,7 @@ class Pointcloud_Seg:
 
 
         file_tq = open(self.path_graph, 'r')
-        lines = file_tq.readlines()
+        lines = file_tq.readlines()[1:]
         for line in lines:
 
             info = [float(x) for x in line.split(',')]
@@ -786,7 +790,7 @@ class Pointcloud_Seg:
             tr_ned_down = np.matmul(tr_ned_downbase, tr_downbase_down)
             tr_ned_left = np.matmul(tr_ned_down, tr_down_left)
 
-            name = info[0]
+            name = str(info[0])
             name = name.replace('.', '')
             name = list(name)
             name[-3:] = '000'
@@ -810,6 +814,7 @@ class Pointcloud_Seg:
                 info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list = conversion_utils.array_to_info(info_array_world)
                 info_world = [info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list]
                 conversion_utils.info_to_ply(info_world, path_out_world_info)
+        file_tq.close()
 
 
     def quaternion_multiply(self, q0, q1):
