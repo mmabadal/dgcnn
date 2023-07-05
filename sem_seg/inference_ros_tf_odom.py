@@ -747,6 +747,28 @@ class Pointcloud_Seg:
 
     def update_positions(self):
 
+        tq_baselink_stick = np.array([0.4, 0.0, 0.8, 0.0, 0.0, 0.0, 1.0])
+        t_baselink_stick = tq_baselink_stick[:3]
+        q_baselink_stick = tq_baselink_stick[3:]
+
+        tq_stick_downbase = np.array([0.0, 0.0, 0.0, 0.4999998414659176, 0.49960183664463365, 0.4999998414659176, 0.5003981633553665])
+        t_stick_downbase = tq_stick_downbase[:3]
+        q_stick_downbase = tq_stick_downbase[3:]
+
+        tq_downbase_down = np.array([0.0, 0.0, 0.0, -0.706825181105366, 0.0, 0.0, 0.7073882691671998])
+        t_downbase_down = tq_downbase_down[:3]
+        q_downbase_down = tq_downbase_down[3:]
+
+        tq_down_left = np.array([-0.06, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0])
+        t_down_left = tq_down_left[:3]
+        q_down_left = tq_down_left[3:]
+
+        tr_baselink_stick = self.get_tr(t_baselink_stick, q_baselink_stick)
+        tr_stick_downbase = self.get_tr(t_stick_downbase, q_stick_downbase)
+        tr_downbase_down  = self.get_tr(t_downbase_down, q_downbase_down)
+        tr_down_left = self.get_tr(t_down_left, q_down_left)
+
+
         file_tq = open(self.path_graph, 'r')
         lines = file_tq.readlines()
         for line in lines:
@@ -754,28 +776,8 @@ class Pointcloud_Seg:
             info = [float(x) for x in line.split(',')]
             t_ned_baselink = info[2:5]
             q_ned_baselink = info[5:]
-
-            tq_baselink_stick = np.array([0.4, 0.0, 0.8, 0.0, 0.0, 0.0, 1.0])
-            t_baselink_stick = tq_baselink_stick[:3]
-            q_baselink_stick = tq_baselink_stick[3:]
-
-            tq_stick_downbase = np.array([0.0, 0.0, 0.0, 0.4999998414659176, 0.49960183664463365, 0.4999998414659176, 0.5003981633553665])
-            t_stick_downbase = tq_stick_downbase[:3]
-            q_stick_downbase = tq_stick_downbase[3:]
-
-            tq_downbase_down = np.array([0.0, 0.0, 0.0, -0.706825181105366, 0.0, 0.0, 0.7073882691671998])
-            t_downbase_down = tq_downbase_down[:3]
-            q_downbase_down = tq_downbase_down[3:]
-
-            tq_down_left = np.array([-0.06, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0])
-            t_down_left = tq_down_left[:3]
-            q_down_left = tq_down_left[3:]
-
+            
             tr_ned_baselink = self.get_tr(t_ned_baselink, q_ned_baselink)
-            tr_baselink_stick = self.get_tr(t_baselink_stick, q_baselink_stick)
-            tr_stick_downbase = self.get_tr(t_stick_downbase, q_stick_downbase)
-            tr_downbase_down  = self.get_tr(t_downbase_down, q_downbase_down)
-            tr_down_left = self.get_tr(t_down_left, q_down_left)
 
             tr_ned_stick = np.matmul(tr_ned_baselink, tr_baselink_stick)
             tr_ned_downbase = np.matmul(tr_ned_stick, tr_stick_downbase)
