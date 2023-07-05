@@ -298,7 +298,7 @@ class Pointcloud_Seg:
             vector = vector*0.18                                                             # resize vector to valve size //PARAM
             info_valves_list.append([xyz_central, vector, max_idx, inst[:,0:3], max_info])   # append valve instance info
 
-        info_valves_list.append([np.array([0.2,0.2,0.2]),np.array([0.1,0.1,0]),1,np.array([[1,2,3], [4,5,6]]),0.5]) # BORRAAAAARR, ESTO ES PARA TEST!!!!!!!
+        info_valves_list.append([np.array([0.2,0.2,0.2]),np.array([0.1,0.1,0]),1,np.array([[1,2,3], [4,5,6]]),np.array([0.5])]) # BORRAAAAARR, ESTO ES PARA TEST!!!!!!!
 
             # print best valve matching
             #trans = np.eye(4) 
