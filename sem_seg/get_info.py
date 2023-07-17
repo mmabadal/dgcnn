@@ -661,7 +661,7 @@ def refine_valves(valves_info, pipes_info):
                 new_vector = new_vector * valve_size
                 valves_info[i][1] = new_vector
 
-    for i in sorted(delete_valve_list, reverse=True):      # delete marked valves       //PARAM
+    for i in sorted(delete_valve_list, reverse=True):      # delete valves  with no pipe connexions     //PARAM
         #del valves_info[i] 
         z = 1                                                 
 
