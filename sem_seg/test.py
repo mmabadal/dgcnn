@@ -69,7 +69,7 @@ if __name__=='__main__':
         point6 = point2 - vector_orth/2
 
         points = [point3, point4, point5, point6]
-        points = margin(points, center, margin)
+        points = set_margin(points, center, margin)
         points_list.append(points)
 
         for i, elbow in enumerate(elbow_list):
