@@ -23,6 +23,7 @@ import sensor_msgs.point_cloud2 as pc2
 from sensor_msgs.msg import PointCloud2
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Point, Pose, Quaternion, Twist, Vector3
+from stereo_msgs.msg import DisparityImage
 
 
 class Pointcloud_Seg:
@@ -125,9 +126,11 @@ class Pointcloud_Seg:
         # set subscribers
         pc_sub = message_filters.Subscriber('/turbot/slamon/points2', PointCloud2)                  # //PARAM
         odom_sub = message_filters.Subscriber('/turbot/slamon/graph_robot_odometry', Odometry)      # //PARAM
+        disp_sub = message_filters.Subscriber('/turbot/slamon/keyframe_disparity', DisparityImage)                # //PARAM
+
         # pc_sub = message_filters.Subscriber('/robot_0/slamon/points2', PointCloud2)               # //PARAM
         # odom_sub = message_filters.Subscriber('/robot_0/slamon/graph_robot_odometry', Odometry)   # //PARAM
-        ts_pc_odom = message_filters.ApproximateTimeSynchronizer([pc_sub, odom_sub], queue_size=10, slop=0.001)
+        ts_pc_odom = message_filters.ApproximateTimeSynchronizer([pc_sub, odom_sub, disp_sub], queue_size=10, slop=0.001)
         ts_pc_odom.registerCallback(self.cb_pc)
 
         #pc_sub.registerCallback(self.cb_pc)
@@ -152,9 +155,10 @@ class Pointcloud_Seg:
         # Set segmentation timer
         rospy.Timer(rospy.Duration(self.period), self.run)
 
-    def cb_pc(self, pc, odom):
+    def cb_pc(self, pc, odom, disp):
         self.pc = pc
         self.odom = odom
+        self.disp = disp
         self.new_pc = True
 
     def cb_loop(self, loop):
@@ -445,6 +449,8 @@ class Pointcloud_Seg:
             header.frame_id = "robot_0/stereo_down/left_optical"
 
         t10 = rospy.Time.now()
+
+        # TODO de info3 sacar bbox de info,convertir a imagen con delf.disp y publicarsg custom
 
         # publishers
 
