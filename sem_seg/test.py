@@ -35,7 +35,7 @@ if __name__=='__main__':
     # info_valves_list = info3[2]
 
     info_pipes_list = list()
-    info_pipes_list.append([np.array([[1,2,3], [4,5,6], [4,5,6], [4,5,6], [4,5,6]]),[np.array([[1,2,3], [4,5,6]])], [np.array([[1,2,3], [4,5,6]])]])
+    info_pipes_list.append([np.array([[1,2,3], [4,5,6], [4,5,6], [4,5,6], [4,5,6]]),[np.array([[1,2,3], [4,5,6]])], [np.array([[3,3,3], [4,5,6]])]])
 
     info_valves_list = list()
     info_valves_list.append([np.array([0.2,0.2,0.2]),np.array([[1,2,3]]),1,np.array([[1,2,3], [4,5,6]]), np.array([0.5])])
@@ -50,7 +50,6 @@ if __name__=='__main__':
         elbow_list = pipe_info[1]
         vector_list = pipe_info[2]
 
-        vector = np.array([[0,0]])
         vector = vector_list[0][0:2]
 
         vector_orth = np.array([-vector[1], vector[0]])
@@ -59,6 +58,7 @@ if __name__=='__main__':
 
         point1 = chain[0][0:2]
 
+        print(vector_list)
         print(point1)
         print(vector)
 
@@ -77,7 +77,6 @@ if __name__=='__main__':
 
         for i, elbow in enumerate(elbow_list):
 
-            vector = np.array([[0,0]])
             vector = vector_list[i+1][0:2]
             vector_orth = np.array([-vector[1], vector[0]])
             vector_orth = vector_orth/np.linalg.norm(vector_orth)
@@ -100,7 +99,6 @@ if __name__=='__main__':
     for valve_info in info_valves_list:
 
         center = valve_info[0][0:2]
-        vector = np.array([[0,0]])
         vector = valve_info[1][0:2]
         vector_orth = np.array([-vector[1], vector[0]])
         vector_orth = vector_orth/np.linalg.norm(vector_orth)
