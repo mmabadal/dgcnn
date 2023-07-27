@@ -347,8 +347,8 @@ if __name__=='__main__':
                             conversion_utils.info_to_ply(info3, path_out3)
 
                             info3_array = conversion_utils.info_to_array(info3)
-                            path_out3_array = os.path.join(path_out, os.path.basename(filepath)[:-4]+'_info_ref_array.npy')
-                            np.save(path_out3_array, info3_array)
+                            path_out3_array = os.path.join(path_out, os.path.basename(filepath)[:-4]+'_info_ref_npy.npy')
+                            np.save(path_out3_array, info3)
 
                             fout_inst = open(os.path.join(path_out, os.path.basename(filepath)[:-4]+'_info_ref.txt'), 'w')
                             fout_inst.write('    x         y         z   type  info class inst    \n')
