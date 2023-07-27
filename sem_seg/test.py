@@ -122,6 +122,14 @@ if __name__=='__main__':
 
     print(points_list)
 
+    for points in points_list:
+
+        points = points * 40
+        points.astype(int)
+        points = np.absolute(points)
+
+        print(points)
+
 
 
 
