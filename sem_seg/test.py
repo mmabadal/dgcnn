@@ -124,13 +124,12 @@ if __name__=='__main__':
 
 
 
-
-    for points in points_list:
-        for p in points:
+    for i, points in enumerate(points_list):
+        for j, p in enumerate(points):
             p = p * 40
-            p.astype(int)
+            p = p.astype(int)
             p = np.absolute(p)
-            print(p)
+            points_list[i][j] = p
 
     print("------------")
     print(points_list)
