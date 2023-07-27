@@ -1,6 +1,25 @@
 import os
 import numpy as np
 import copy
+
+def set_margin(points, center, margin):
+
+    for i, point in enumerate(points):
+
+        if point[0] >= center[0]:
+            point[0] += margin
+        else:
+            point[0] -= margin
+
+        if point[1] >= center[1]:
+            point[1] += margin
+        else:
+            point[1] -= margin
+
+        points[i] = point
+
+    return points
+
  
 if __name__=='__main__':
 
@@ -73,7 +92,7 @@ if __name__=='__main__':
             point6 = point2 - vector_orth/2
 
             points = [point3, point4, point5, point6]
-            points = margin(points, center, margin)
+            points = set_margin(points, center, margin)
             points_list.append(points)
 
     for valve_info in info_valves_list:
@@ -95,27 +114,11 @@ if __name__=='__main__':
         point6 = point2 - vector_orth/2
 
         points = [point3, point4, point5, point6]
-        points = margin(points, center, margin)
+        points = set_margin(points, center, margin)
         points_list.append(points)
 
     print(points_list)
 
 
-def margin(points, center, margin):
 
-    for i, point in enumerate(points):
-
-        if point[0] >= center[0]:
-            point[0] += margin
-        else:
-            point[0] -= margin
-
-        if point[1] >= center[1]:
-            point[1] += margin
-        else:
-            point[1] -= margin
-
-        points[i] = point
-
-    return points
 
