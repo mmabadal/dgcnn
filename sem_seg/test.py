@@ -58,6 +58,10 @@ if __name__=='__main__':
         vector_orth = 0.05 * vector_orth
 
         point1 = chain[0][0:2]
+
+        print(point1)
+        print(vector)
+
         point2 = point1 + vector
 
         center = point1 + vector/2
