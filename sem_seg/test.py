@@ -122,13 +122,18 @@ if __name__=='__main__':
 
     print(points_list)
 
+
+
+
     for points in points_list:
+        for p in points:
+            p = p * 40
+            p.astype(int)
+            p = np.absolute(p)
+            print(p)
 
-        points = points * 40
-        points.astype(int)
-        points = np.absolute(points)
-
-        print(points)
+    print("------------")
+    print(points_list)
 
 
 
