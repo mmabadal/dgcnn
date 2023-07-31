@@ -5,6 +5,7 @@ import copy
 import rospy
 import ctypes
 import struct
+import info_proc
 import get_info
 import map_utils
 import numpy as np
@@ -450,7 +451,8 @@ class Pointcloud_Seg:
 
         t10 = rospy.Time.now()
 
-        # TODO de info3 sacar bbox de info,convertir a imagen con delf.disp y publicarsg custom
+        info_bb = info_proc.get_bb(info3, 0.05, self.disp)
+        #todo publish info bb in custom ros msg
 
         # publishers
 

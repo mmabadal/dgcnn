@@ -18,8 +18,9 @@ def set_margin(points, center, margin):
 
     return points
 
+
  
-if __name__=='__main__':
+def get_bb(info, margin, dispatity):
 
     info = np.load("/home/bomiquel/SLAM_ws/src/dgcnn/test_polygon/out/1604421321894689_info_ref.npy", allow_pickle = True)
 
@@ -48,10 +49,6 @@ if __name__=='__main__':
 
         point1 = chain[0][0:2]
 
-        # print(vector_list)
-        # print(point1)
-        # print(vector)
-
         point2 = point1 + vector
 
         center = point1 + vector/2
@@ -65,7 +62,6 @@ if __name__=='__main__':
         points = set_margin(points, center, margin)
         points_list.append(points)
 
-        # print(elbow_list)
 
         for i, elbow in enumerate(elbow_list):
 
@@ -75,8 +71,7 @@ if __name__=='__main__':
             vector_orth = 0.05 * vector_orth
 
             point1 = elbow[0:2]
-            # print(point1)
-            #   
+
             point2 = point1 + vector
 
             center = point1 + vector/2
@@ -110,10 +105,8 @@ if __name__=='__main__':
         points = set_margin(points, center, margin)
         points_list.append(points)
 
-    print(points_list)
-
-
-
+    
+    # TODO project to XY through disp
     for i, points in enumerate(points_list):
         for j, p in enumerate(points):
             p = p * 40
@@ -121,8 +114,8 @@ if __name__=='__main__':
             p = np.absolute(p)
             points_list[i][j] = p
 
-    print("------------")
     print(points_list)
+    return points_list
 
 
 
