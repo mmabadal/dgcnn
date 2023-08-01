@@ -14,6 +14,7 @@ from scipy.spatial import distance
 from plyfile import PlyData, PlyElement
 from mpl_toolkits.mplot3d import Axes3D
 from skimage.morphology import skeletonize
+import conversion_utils
 
 
 '''
@@ -336,7 +337,7 @@ def print_o3d(pc):
 def preprocess_point_cloud(pcd, radius_feature):
     #print(":: Compute FPFH feature with search radius %.3f." % radius_feature)
     #print("--fpfh")
-    pcd_fpfh = o3d.pipelines.registration.compute_fpfh_feature(
+    pcd_fpfh = o3d.registration.compute_fpfh_feature(
         pcd,
         o3d.geometry.KDTreeSearchParamHybrid(radius=radius_feature, max_nn=100))
     return pcd, pcd_fpfh
@@ -346,16 +347,16 @@ def execute_global_registration(source, target, source_fpfh,
                                 target_fpfh, distance_threshold):
     #print(":: RANSAC registration on downsampled point clouds.")
     #print("   we use a liberal distance threshold %.3f." % distance_threshold)
-    result = o3d.pipelines.registration.registration_ransac_based_on_feature_matching(
+    result = o3d.registration.registration_ransac_based_on_feature_matching(
         source, target, source_fpfh, target_fpfh, True,
         distance_threshold,
-        o3d.pipelines.registration.TransformationEstimationPointToPoint(False),
+        o3d.registration.TransformationEstimationPointToPoint(False),
         3, [
-            o3d.pipelines.registration.CorrespondenceCheckerBasedOnEdgeLength(
+            o3d.registration.CorrespondenceCheckerBasedOnEdgeLength(
                 0.9),
-            o3d.pipelines.registration.CorrespondenceCheckerBasedOnDistance(
+            o3d.registration.CorrespondenceCheckerBasedOnDistance(
                 distance_threshold)
-        ], o3d.pipelines.registration.RANSACConvergenceCriteria(100000, 0.999))
+        ], o3d.registration.RANSACConvergenceCriteria(100000, 0.999))
     return result
 
 
@@ -369,7 +370,7 @@ def match(source, target):
     for i in range(steps): 
         trans = np.eye(4)                                                                               # set transformation amtrix
         trans[:3,:3] = source.get_rotation_matrix_from_xyz((0,0, -(np.pi/(steps/2))*i))                 # add rotation
-        reg_p2l = o3d.pipelines.registration.evaluate_registration(source, target, threshold, trans)    # evaluate registration
+        reg_p2l = o3d.registration.evaluate_registration(source, target, threshold, trans)    # evaluate registration
         matchings.append(reg_p2l.fitness)
         #print("- matching: " + str(reg_p2l.fitness))
         #draw_registration_result(source, target, trans)
@@ -549,6 +550,7 @@ def get_info_connexions(connexions, chains):
                             new_near_chains_list = list(set(c_info1[1]+c_info2[1]))         # new near chain list as a set of both lists concatenated
                             new_connexions_info.append([c_info1[0], new_near_chains_list])  # append new connexion
 
+    connexion_del_list = sorted(list(set(connexion_del_list)))
     for i in sorted(connexion_del_list, reverse=True):          # delete marked connexions
         del connexions_info[i]
 
@@ -640,7 +642,7 @@ def get_info_connexions(connexions, chains):
     return connexions_info2, chains
 
 
-def get_info_skeleton(instance):
+def get_info_skeleton(instance, close):
 
     print_opt = False
     print_opt2 = False
@@ -654,11 +656,16 @@ def get_info_skeleton(instance):
     if print_opt2 == True:
         print_o3d(voxel_grid1)
 
-    voxels = o3d.geometry.VoxelGrid.get_voxels(voxel_grid1)                                     # get voxels
+    # get voxels
+    voxels_list = list()
+    instance1_points = np.asarray(instance.points)
+    for p in instance1_points:
+        voxel = o3d.geometry.VoxelGrid.get_voxel(voxel_grid1, p)
+        voxels_list.append(voxel)
 
-    voxels_np = np.zeros((len(voxels),3), dtype=int)                                            # voxels to numpy
-    for i in range(len(voxels)):
-        voxels_np[i] = voxels[i].grid_index
+    #voxels to numpy
+    voxels_np = np.array(voxels_list)
+    voxels_np = np.unique(voxels_np, axis=0) 
 
     voxels_np.T[[0,1,2]] = voxels_np.T[[2,0,1]]                                                 # set cols as X Y Z 
 
@@ -671,6 +678,9 @@ def get_info_skeleton(instance):
         z,x,y = voxels_matrix.nonzero()
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
+        ax.set_xlim3d(0, 100)
+        ax.set_ylim3d(0, 100)
+        ax.set_zlim3d(-20, 20)
         ax.scatter(x, y, z, zdir='z', c= 'red')
         fig.suptitle('3D VOXELS', fontsize=12)
         plt.show()
@@ -679,11 +689,13 @@ def get_info_skeleton(instance):
     for i, v in enumerate(voxels_np):
         voxels_matrix_2d[v[1],v[2]] = 1
 
+    #voxels_matrix_2d =  np.rot90(voxels_matrix_2d, k=1, axes=(1,0)) # for figure prints only, it breaks chain generation
+
     if print_opt == True:
         plt.imshow(voxels_matrix_2d)
         plt.show()
 
-    closing_dist = 6                                                                                                           # distance to perform closing //PARAM
+    closing_dist = close                                                                                                           # distance to perform closing //PARAM
     voxels_matrix_2d_proc = scp.ndimage.binary_closing(voxels_matrix_2d, structure=np.ones((closing_dist,closing_dist)))       # closing
     
     if print_opt == True:
@@ -702,27 +714,27 @@ def get_info_skeleton(instance):
 
     if print_opt == True:
         fig = plt.figure()
-        fig.suptitle('SKELETON', fontsize=12)
+        #fig.suptitle('SKELETON', fontsize=12)
         plt.imshow(skeleton)
         plt.show()
 
     chains, connexions = get_connectivity(skeleton)     # get skeleton conectivity -> chains and connexions
 
-    print("CHAINS ORIGINALS")
     if print_opt == True:
+        print("CHAINS ORIGINALS")
         for chain in chains:
             print_chain(chain, xyz_max)
 
     # delete short chains
     chain_del_list = list()
     for i, chain in enumerate(chains):
-        if len(chain) < 10:                         # if chain len < thr //PARAM
+        if len(chain) < 8:                         # if chain len < thr //PARAM
             chain_del_list.append(i)                # mark to be deleted
     for i in sorted(chain_del_list, reverse=True):  # delete chains
         del chains[i]                               
 
-    print("CHAINS SMALL DELETED")
     if print_opt == True:
+        print("CHAINS SMALL DELETED")
         for chain in chains:
             print_chain(chain, xyz_max)
 
@@ -836,7 +848,7 @@ def refine_valves(valves_info, pipes_info):
         near_pipes_list = list()
         near_type_list = list()
         for j, pipe_info in enumerate(pipes_info):                      # get near pipes
-            for p in valves_info[i][4]:                                 # for each point of the valve
+            for p in valves_info[i][3]:                                 # for each point of the valve
                 d_to_start = get_distance(p, pipe_info[0][0], 3)        # get distance to pipe start
                 d_to_end = get_distance(p, pipe_info[0][-1], 3)         # get distance to pipe end
                 if d_to_start <= 0.1:                                   # if distance < thr             //PARAM
@@ -848,7 +860,7 @@ def refine_valves(valves_info, pipes_info):
                     near_type_list.append(-1)                           # append end is near
                     break  
 
-        valves_info[i].append(near_pipes_list)                          # append near pipes to valve info
+        valves_info[i].insert(3,near_pipes_list)                         # append near pipes to valve info in position 3 [central_point, vector, max_id, near_pipes, inst_data, max_info]
 
         if len(near_pipes_list)==0:                                     # if valve has no near pipes
             delete_valve_list.append(i)                                 # append to delete valve
@@ -857,7 +869,7 @@ def refine_valves(valves_info, pipes_info):
             new_vector = pipes_info[near_pipes_list[0]][2][near_type_list[0]]   # get new valve vector equal to pipe vector
             new_vector = new_vector / np.linalg.norm(new_vector)                # get unit vector
             new_vector = new_vector * valve_size                                # resize vector
-            valves_info[i][2] = new_vector
+            valves_info[i][1] = new_vector
 
         if len(near_pipes_list)==2:                                             # if valve has two near pipes
             vector1 = pipes_info[near_pipes_list[0]][2][near_type_list[0]]      # vector1 depending on start or end near
@@ -867,14 +879,14 @@ def refine_valves(valves_info, pipes_info):
                 new_vector = (vector1+vector2)/2                                # new valve vector as mean of two pipes vectors
                 new_vector = new_vector / np.linalg.norm(new_vector)            
                 new_vector = new_vector * valve_size 
-                valves_info[i][2] = new_vector
+                valves_info[i][1] = new_vector
 
         if len(near_pipes_list)==3:
 
-            if valves_info[i][3] == 0:      # set valve as a 3 way valve, trying to match handle possition
-                valves_info[i][3] = 2       # index of 3 way valve model with handle set to 0
-            if valves_info[i][3] == 1:      # set valve as a 3 way valve, trying to match handle possition
-                valves_info[i][3] = 3       # index of 3 way valve model with handle set to 1
+            if valves_info[i][2] == 0:      # set valve as a 3 way valve, trying to match handle possition
+                valves_info[i][2] = 2       # index of 3 way valve model with handle set to 0
+            if valves_info[i][2] == 1:      # set valve as a 3 way valve, trying to match handle possition
+                valves_info[i][2] = 3       # index of 3 way valve model with handle set to 1
 
             vector1 = pipes_info[near_pipes_list[0]][2][near_type_list[0]]  # vector1 depending on start or end near
             vector2 = pipes_info[near_pipes_list[1]][2][near_type_list[1]]  # vector2 depending on start or end near
@@ -888,19 +900,19 @@ def refine_valves(valves_info, pipes_info):
                 new_vector = (vector1+vector2)/2
                 new_vector = new_vector / np.linalg.norm(new_vector)
                 new_vector = new_vector * valve_size                                                             
-                valves_info[i][2] = new_vector
+                valves_info[i][1] = new_vector
             if (angle13 >= 345 and angle13 <= 360) or (angle13 >= 0 and angle13 <= 15) or (angle13 >= 165 and angle13 <= 195):      # if vectors13 near parallel  //PARAM
                 new_vector = (vector1+vector3)/2
                 new_vector = new_vector / np.linalg.norm(new_vector)
                 new_vector = new_vector * valve_size
-                valves_info[i][2] = new_vector
+                valves_info[i][1] = new_vector
             if (angle23 >= 345 and angle23 <= 360) or (angle23 >= 0 and angle23 <= 15) or (angle23 >= 165 and angle23 <= 195):      # if vectors23 near parallel  //PARAM
                 new_vector = (vector2+vector3)/2
                 new_vector = new_vector / np.linalg.norm(new_vector)
                 new_vector = new_vector * valve_size
-                valves_info[i][2] = new_vector
+                valves_info[i][1] = new_vector
 
-    for i in sorted(delete_valve_list, reverse=True):      # delete marked valves       //PARAM
+    for i in sorted(delete_valve_list, reverse=True):      # delete valves  with no pipe connexions     //PARAM
         #del valves_info[i] 
         z = 1                                                 
 
@@ -1035,7 +1047,7 @@ def unify_chains(chains_info, connexions_info):
                                     #new_mid = get_position_idx1(new_chain, 50)
 
                                     new_inst_list = chain1_info[3] + chain2_info[3]
-                                    new_inst_list = list(set(a))
+                                    new_inst_list = list(set(new_inst_list))
                                     
                                     # create new chain info
                                     new_chain_info = [new_chain, new_elbow_list, new_vector_chain_list, new_inst_list]
@@ -1066,7 +1078,7 @@ def get_elbows(chain):
 
     look_ahead = 10                                                 # look ahead distance to find changes in direction (elbows) in chain points //PARAM
     elbow_size = 7                                                  # elbow size in chain points   //PARAM
-    angle_elbow = 70                                                # angle thr to consider an elow   //PARAM   
+    angle_elbow = 60                                                # angle thr to consider an elow   //PARAM   
 
     angle_list = list()
     elbow_idx_list = list()
@@ -1128,7 +1140,7 @@ def get_position_idx1(chain, percentage):
 
 def get_position_idx2(chain, percentage):
 
-    # TODO this method will fail if elbows are present, but is more accunate on straight lines, elow consideration could be implemented
+    # TODO this method will fail if elbows are present, but is more accunate on straight lines, elbow consideration could be implemented
 
     chain_vector = chain[-1]-chain[0]                           # find chain vector
 
@@ -1161,6 +1173,20 @@ def proj_voxel(voxel, voxels, max_d):
     return voxel_proj
 
 
+
+def proj_points(base_points, new_points, max_d, d_type):
+    for i, new_point in enumerate(new_points):
+        dist_list = list()
+        for j, base_point in enumerate(base_points):
+            dist = get_distance(new_point,base_point,d_type)
+            dist_list.append(dist)
+        min_dist = min(dist_list)                              # get closest value
+        min_dist_idx = dist_list.index(min(dist_list))[0]      # get closest idx
+        if min_dist < max_d:
+            new_points[i] = base_points[min_dist_idx]
+    return new_points
+
+
 def voxel_to_point(voxel, points, corr):
     i_corr = [i for i, c in enumerate(corr) if c[0] == voxel[0] and c[1] == voxel[1]]   # take all index where points fell into the voxels with same X and Y as the evaluated one, not takin into account Z
     corr_point_list = list()
@@ -1179,9 +1205,9 @@ def get_info_matching(instance, models):
     return info_inst
 
 
-def get_info(instance, models, method):
+def get_info(instance, models, method, close = 6):
     if method == "skeleton":
-        info = get_info_skeleton(instance)           # get info skeleton
+        info = get_info_skeleton(instance, close)           # get info skeleton
     elif method == "matching":
         info = get_info_matching(instance, models)   # get info matching
     return info
@@ -1251,7 +1277,8 @@ if __name__ == "__main__":
 
                 instances_pipe_list.append(inst_o3d)
                 info_pipe = get_info(inst_o3d, models=0, method="skeleton")
-
+            
+            
             info_valves = list()
 
             for i in set(instances_valve[:,7]):
@@ -1287,8 +1314,26 @@ if __name__ == "__main__":
 
                 trans = np.eye(4)
                 trans[:3,:3] = max_model.get_rotation_matrix_from_xyz((0,0, (np.pi/8)*(max_fitness[1]*(16/360))))
-                #draw_registration_result(inst_o3d, max_model, trans)
+                print("-------------------------------------------------")
+                print("max fitness: " + str(max_fitness))
+                print("con model: " + str(max_idx+1))
+                draw_registration_result(inst_o3d, max_model, trans)
+                print("-------------------------------------------------")
+                print("-------------------------------------------------")
+                print("-------------------------------------------------")
 
        
             print("info valves list: "+ str(info_valves_list))
             print(" ")
+
+            
+
+
+            #info_valves_list = list()
+            instances_ref_pipe_list = list()
+
+            split = file_name.split('_')
+
+            info = [info_pipe[0], info_pipe[1], info_valves_list, instances_ref_pipe_list]
+            path_out = os.path.join(path_projections, split[0]+"_info.ply")
+            conversion_utils.info_to_ply(info, path_out)
