@@ -135,7 +135,7 @@ def get_bb(info, margin, dispatity):
         info_bb.x4 = points[3][0]
         info_bb.y4 = points[3][1]
         info_bb2 = copy.deepcopy(info_bb)
-        info_bbs.append(info_bb2)
+        info_bbs.bbs.append(info_bb2)
 
     print(points_list)
     return info_bbs
