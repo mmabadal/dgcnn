@@ -25,7 +25,6 @@ from sensor_msgs.msg import PointCloud2
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Point, Pose, Quaternion, Twist, Vector3
 from stereo_msgs.msg import DisparityImage
-from dgcnn.msg import info_bb
 from dgcnn.msg import info_bbs
 
 
@@ -106,12 +105,12 @@ class Pointcloud_Seg:
         self.init = False
         self.new_pc = False
 
-        self.info_bbs = info_bbs()
+        self.infobbs = info_bbs()
 
         # set subscribers
-        pc_sub = message_filters.Subscriber('/turbot/slamon/points2', PointCloud2)                  # //PARAM
+        pc_sub = message_filters.Subscriber('/turbot/slamon/keyframe_points2', PointCloud2)         # //PARAM
         odom_sub = message_filters.Subscriber('/turbot/slamon/graph_robot_odometry', Odometry)      # //PARAM
-        disp_sub = message_filters.Subscriber('/turbot/slamon/keyframe_disparity', DisparityImage)                # //PARAM
+        disp_sub = message_filters.Subscriber('/turbot/slamon/keyframe_disparity', DisparityImage)  # //PARAM
 
         # pc_sub = message_filters.Subscriber('/robot_0/slamon/points2', PointCloud2)               # //PARAM
         # odom_sub = message_filters.Subscriber('/robot_0/slamon/graph_robot_odometry', Odometry)   # //PARAM
@@ -211,7 +210,7 @@ class Pointcloud_Seg:
         if pc_np.shape[0] < 2000:               # return if points < thr   //PARAM
             rospy.loginfo('[%s]: Not enough input points', self.name)
             return
-
+        
         left2worldned = self.get_transform()
 
 
@@ -410,8 +409,8 @@ class Pointcloud_Seg:
 
             header.frame_id = "robot_0/stereo_down/left_optical"
 
-        self.info_bbs = info_proc.get_bb(info3, 0.05, self.disp)
-        self.info_bbs.header = header
+        self.infobbs = info_proc.get_bb(info3, 0.05, self.disp)
+        self.infobbs.header = header
 
         # publishers
 
@@ -455,7 +454,7 @@ class Pointcloud_Seg:
         self.pub_pc_seg.publish(pc_seg)
         self.pub_pc_inst.publish(pc_inst)
 
-        self.pub_info_bbs.publish(self.info_bbs)
+        self.pub_info_bbs.publish(self.infobbs)
 
 
     def pc2array(self, ros_pc):
