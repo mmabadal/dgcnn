@@ -25,6 +25,8 @@ from sensor_msgs.msg import PointCloud2
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Point, Pose, Quaternion, Twist, Vector3
 from stereo_msgs.msg import DisparityImage
+#from dgcnn.msg import info_bb
+#from dgcnn.msg import info_bbs
 
 
 class Pointcloud_Seg:
@@ -124,6 +126,8 @@ class Pointcloud_Seg:
         self.init = False
         self.new_pc = False
 
+        #self.info_bbs = info_bbs()
+
         # set subscribers
         pc_sub = message_filters.Subscriber('/turbot/slamon/points2', PointCloud2)                  # //PARAM
         odom_sub = message_filters.Subscriber('/turbot/slamon/graph_robot_odometry', Odometry)      # //PARAM
@@ -146,6 +150,7 @@ class Pointcloud_Seg:
         self.pub_pc_inst = rospy.Publisher("/turbot/slamon/points2_inst", PointCloud2, queue_size=4)
         self.pub_pc_info = rospy.Publisher("/turbot/slamon/points2_info", PointCloud2, queue_size=4)
         self.pub_pc_info_world = rospy.Publisher("/turbot/slamon/points2_info_world", PointCloud2, queue_size=4)
+        #self.pub_info_bbs = rospy.Publisher('mine_det', info_bbs, queue_size=4)
         # self.pub_pc_base = rospy.Publisher("/robot_0/slamon/points2_base", PointCloud2, queue_size=4)
         # self.pub_pc_seg = rospy.Publisher("/robot_0/slamon/points2_seg", PointCloud2, queue_size=4)
         # self.pub_pc_inst = rospy.Publisher("/robot_0/slamon/points2_inst", PointCloud2, queue_size=4)
@@ -451,7 +456,9 @@ class Pointcloud_Seg:
 
         t10 = rospy.Time.now()
 
-        info_bb = info_proc.get_bb(info3, 0.05, self.disp)
+        #self.info_bbs = info_proc.get_bb(info3, 0.05, self.disp)
+        #self.info_bbs.header = header
+
         #todo publish info bb in custom ros msg
 
         # publishers
@@ -518,6 +525,8 @@ class Pointcloud_Seg:
         self.pub_pc_base.publish(pc_base)
         self.pub_pc_seg.publish(pc_seg)
         self.pub_pc_inst.publish(pc_inst)
+
+        #self.pub_info_bbs.publish(self.info_bbs)
 
 
         if self.print == True: # print info
