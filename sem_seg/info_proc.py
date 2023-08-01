@@ -1,7 +1,9 @@
 import copy
 import numpy as np
-#from dgcnn.msg import info_bb
-#from dgcnn.msg import info_bbs
+from dgcnn.msg import info_bb
+from dgcnn.msg import info_bbs
+from stereo_msgs.msg import DisparityImage
+
 
 
 
@@ -27,9 +29,10 @@ def set_margin(points, center, margin):
  
 def get_bb(info, margin, dispatity):
 
-    #info_bb = info_bb()
-    #info_bbs = info_bbs()
+    info_bb = info_bb()
+    info_bbs = info_bbs()
 
+    # TODO delete this
     info = np.load("/home/bomiquel/SLAM_ws/src/dgcnn/test_polygon/out/1604421321894689_info_ref.npy", allow_pickle = True)
 
     info_pipes_list = info[0]
@@ -122,20 +125,20 @@ def get_bb(info, margin, dispatity):
             p = np.absolute(p)
             points_list[i][j] = p
 
-#    for i, points in enumerate(points_list):
-#        info_bb.x1 = points[0][0]
-#        info_bb.y1 = points[0][1]
-#        info_bb.x2 = points[1][0]
-#        info_bb.y2 = points[1][1]
-#        info_bb.x3 = points[2][0]
-#        info_bb.y3 = points[2][1]
-#        info_bb.x4 = points[3][0]
-#        info_bb.y4 = points[3][1]
-#        info_bb2 = copy.deepcopy(info_bb)
-#        info_bbs.append(info_bb2)
+    for i, points in enumerate(points_list):
+        info_bb.x1 = points[0][0]
+        info_bb.y1 = points[0][1]
+        info_bb.x2 = points[1][0]
+        info_bb.y2 = points[1][1]
+        info_bb.x3 = points[2][0]
+        info_bb.y3 = points[2][1]
+        info_bb.x4 = points[3][0]
+        info_bb.y4 = points[3][1]
+        info_bb2 = copy.deepcopy(info_bb)
+        info_bbs.append(info_bb2)
 
     print(points_list)
-    #return info_bbs
+    return info_bbs
 
 
 

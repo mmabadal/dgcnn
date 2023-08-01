@@ -429,8 +429,6 @@ if __name__=='__main__':
                                 fout_inst_col.write('v %f %f %f %d %d %d %d %d\n' % (instances_ref[i,0], instances_ref[i,1], instances_ref[i,2], color[0], color[1], color[2], instances_ref[i,6], instances_ref[i,7]))
 
                         t10 = time.time()
-                                
-
 
                         time_read = t1-t0
                         time_blocks = t2-t1
