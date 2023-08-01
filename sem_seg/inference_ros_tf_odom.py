@@ -78,7 +78,7 @@ class Pointcloud_Seg:
         13: [0, 255, 100],
         13: [255, 100, 0]
         }
-        
+
         self.rad_p = 0.04               # max distance for pipe growing                             //PARAM
         self.rad_v = 0.04               # max distance for valve growing                            //PARAM
         self.dim_p = 3                  # compute 2D (2) or 3D (3) distance for pipe growing        //PARAM
@@ -130,7 +130,7 @@ class Pointcloud_Seg:
         self.pub_pc_inst = rospy.Publisher("/turbot/slamon/points2_inst", PointCloud2, queue_size=4)
         self.pub_pc_info = rospy.Publisher("/turbot/slamon/points2_info", PointCloud2, queue_size=4)
         self.pub_pc_info_world = rospy.Publisher("/turbot/slamon/points2_info_world", PointCloud2, queue_size=4)
-        self.pub_info_bbs = rospy.Publisher('mine_det', info_bbs, queue_size=4)
+        self.pub_info_bbs = rospy.Publisher('/turbot/slamon/info_bbs', info_bbs, queue_size=4)
         # self.pub_pc_base = rospy.Publisher("/robot_0/slamon/points2_base", PointCloud2, queue_size=4)
         # self.pub_pc_seg = rospy.Publisher("/robot_0/slamon/points2_seg", PointCloud2, queue_size=4)
         # self.pub_pc_inst = rospy.Publisher("/robot_0/slamon/points2_inst", PointCloud2, queue_size=4)
