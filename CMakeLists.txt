@@ -4,6 +4,7 @@ project(dgcnn)
 find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
+  geometry_msgs
   message_generation
 )
 
@@ -11,22 +12,20 @@ add_message_files(
   DIRECTORY 
   msg
   FILES
-  info_bb.msg
   info_bbs.msg
 )
-
 
 generate_messages(
   DEPENDENCIES
   std_msgs
+  geometry_msgs
 )
 
 catkin_package(
-  CATKIN_DEPENDS message_runtime rospy std_msgs
+  CATKIN_DEPENDS rospy std_msgs geometry_msgs message_runtime  
 )
 
 include_directories(
-# include
   ${catkin_INCLUDE_DIRS}
 )
 
