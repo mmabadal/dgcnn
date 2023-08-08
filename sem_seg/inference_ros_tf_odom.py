@@ -23,7 +23,7 @@ from sensor_msgs.msg import PointField
 import sensor_msgs.point_cloud2 as pc2
 from sensor_msgs.msg import PointCloud2
 from nav_msgs.msg import Odometry
-from geometry_msgs.msg import Point, Pose, Quaternion, Twist, Vector3
+from geometry_msgs.msg import Point32, Polygon
 from stereo_msgs.msg import DisparityImage
 from dgcnn.msg import info_bbs
 
