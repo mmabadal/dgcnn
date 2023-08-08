@@ -409,7 +409,7 @@ class Pointcloud_Seg:
 
             header.frame_id = "robot_0/stereo_down/left_optical"
 
-        self.infobbs = info_proc.get_bb(info3, 0.05, self.disp)
+        self.infobbs = info_proc.get_bb(info3, 0.05, pred_sub, self.disp)
         self.infobbs.header = header
 
         # publishers

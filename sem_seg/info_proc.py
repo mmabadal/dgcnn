@@ -19,27 +19,47 @@ def set_margin(points, center, margin):
     return points
 
 
-def points_to_img(points_list, disparity):
+def points_to_img(points_list, pointcloud, disparity):
+
+    pc_xmin, pc_ymin = pointcloud.min(axis=0)
+    pc_xmax, pc_ymax = pointcloud.max(axis=0)
+    pc_xrange = pc_xmax - pc_xmin
+    pc_yrange = pc_ymax - pc_ymin
+
+    disp = disparity.image.data
+    disp_pos = np.where(disp>15)
+    disp_pos_np = np.vstack(disp_pos).T
+    disp_xmin, disp_ymin = disp_pos_np.min(axis=0)
+    disp_xmax, disp_ymax = disp_pos_np.max(axis=0)
+    disp_xrange = disp_xmax - disp_xmin
+    disp_yrange = disp_ymax - disp_ymin
+
     points_list2 = list()
 
-    disp = disparity.image
-    min_d = disparity.min_disparity
-    max_d = disparity.max_disparity
-    window = disparity.valid_window
+    for points in points_list:
 
-    
+        points2 = list()
 
+        for point in points:
 
+            xpc = point[0]
+            ypc = point[1]
 
+            ratio_xpc = (xpc-pc_xmin)/pc_xrange
+            xdisp = disp_xmin + (ratio_xpc*disp_xrange)
+            ratio_ypc = (ypc-pc_ymin)/pc_yrange
+            ydisp = disp_ymin + (ratio_ypc*disp_yrange)
 
+            xydisp = np.array((xdisp,ydisp))
+            points2.append(xydisp)
+        
+        points_list2.append(points2)
 
-    points = [point3, point4, point5, point6]
-    points_list2 = points_list
     return points_list2
 
  
 
-def get_bb(info, margin, disparity):
+def get_bb(info, margin, pointcloud, disparity):
 
     print(disparity)
 
@@ -132,7 +152,7 @@ def get_bb(info, margin, disparity):
         points = set_margin(points, center, margin)
         points_list.append(points)
 
-    points_list = points_to_img(points_list, disparity)
+    points_list = points_to_img(points_list, pointcloud, disparity)
     # TODO project to XY through disp
     for i, points in enumerate(points_list):
         for j, p in enumerate(points):
