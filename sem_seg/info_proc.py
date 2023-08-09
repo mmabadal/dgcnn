@@ -22,18 +22,40 @@ def set_margin(points, center, margin):
 
 def points_to_img(points_list, pointcloud, disparity):
 
+    print("-----------------------------------------")
+    print("-----------------------------------------")
+    print(points_list)
+    print("-----------------------------------------")
+   
     pc_xmin, pc_ymin, *_ = pointcloud.min(axis=0)
     pc_xmax, pc_ymax, *_ = pointcloud.max(axis=0)
     pc_xrange = pc_xmax - pc_xmin
     pc_yrange = pc_ymax - pc_ymin
 
+    print(pc_xmin)
+    print(pc_xmax)
+    print(pc_xrange)
+    print(pc_ymin)
+    print(pc_ymax)
+    print(pc_yrange)
+
+    print("-----------------------------------------")
     disp = ros_numpy.numpify(disparity.image)
     disp_pos = np.where(disp>15)
     disp_pos_np = np.vstack(disp_pos).T
+
     disp_xmin, disp_ymin = disp_pos_np.min(axis=0)
     disp_xmax, disp_ymax = disp_pos_np.max(axis=0)
     disp_xrange = disp_xmax - disp_xmin
     disp_yrange = disp_ymax - disp_ymin
+
+    print(disp_xmin)
+    print(disp_xmax)
+    print(disp_xrange)
+    print(disp_ymin)
+    print(disp_ymax)
+    print(disp_yrange)
+    print("-----------------------------------------")
 
     points_list2 = list()
 
@@ -54,8 +76,18 @@ def points_to_img(points_list, pointcloud, disparity):
 
             xydisp = np.array((xdisp,ydisp))
             points2.append(xydisp)
-        
         points_list2.append(points2)
+        
+    print(xpc)
+    print(ratio_xpc)
+    print(xdisp)
+    
+    print(ypc)
+    print(ratio_ypc)
+    print(ydisp)
+
+    print("-----------------------------------------")
+    print("-----------------------------------------")
 
     return points_list2
 
