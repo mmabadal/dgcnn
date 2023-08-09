@@ -409,7 +409,20 @@ class Pointcloud_Seg:
 
             header.frame_id = "robot_0/stereo_down/left_optical"
 
-            self.infobbs = info_proc.get_bb(info3, 0.05, pred_sub, self.disp)
+
+            file_id = open(self.path_graph, 'r')
+            lines = file_id.readlines()[1:]
+            for line in lines:
+                info = [float(x) for x in line.split(',')]
+                ts = info[0]
+                print(ts)                
+                print(header.stamp)
+                if ts == header.stamp:
+                    id = info[1]
+                    break
+            
+
+            self.infobbs = info_proc.get_bb(info3, 0.05, pred_sub, self.disp, id)
             self.infobbs.header = header
 
         # publishers
