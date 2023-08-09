@@ -131,17 +131,19 @@ def get_bb(info, margin, pointcloud, disparity):
 
         point1 = chain[0][0:2]
 
-        point2 = point1 + vector
+        # point2 = point1 + vector
+
+        point2 = chain[-1][0:2]
 
         center = point1 + vector/2
 
-        point3 = point1 + vector_orth/2
-        point4 = point1 - vector_orth/2
-        point5 = point2 + vector_orth/2
-        point6 = point2 - vector_orth/2
+        point3 = point1 # + vector_orth/2
+        point4 = point1 # - vector_orth/2
+        point5 = point2 # + vector_orth/2
+        point6 = point2 # - vector_orth/2
 
         points = [point3, point4, point5, point6]
-        points = set_margin(points, center, margin)
+        # points = set_margin(points, center, margin)
         points_list.append(points)
 
 
@@ -158,13 +160,13 @@ def get_bb(info, margin, pointcloud, disparity):
 
             center = point1 + vector/2
 
-            point3 = point1 + vector_orth/2
-            point4 = point1 - vector_orth/2
-            point5 = point2 + vector_orth/2
-            point6 = point2 - vector_orth/2
+            point3 = point1 # + vector_orth/2
+            point4 = point1 # - vector_orth/2
+            point5 = point2 # + vector_orth/2
+            point6 = point2 # - vector_orth/2
 
             points = [point3, point4, point5, point6]
-            points = set_margin(points, center, margin)
+            # points = set_margin(points, center, margin)
             points_list.append(points)
 
     for valve_info in info_valves_list:
@@ -178,13 +180,13 @@ def get_bb(info, margin, pointcloud, disparity):
         point1 = center-(vector/2)
         point2 = center+(vector/2)
 
-        point3 = point1 + vector_orth/2
-        point4 = point1 - vector_orth/2
-        point5 = point2 + vector_orth/2
-        point6 = point2 - vector_orth/2
+        point3 = center # point1 + vector_orth/2
+        point4 = center # point1 - vector_orth/2
+        point5 = center # point2 + vector_orth/2
+        point6 = center # point2 - vector_orth/2
 
         points = [point3, point4, point5, point6]
-        points = set_margin(points, center, margin)
+        # points = set_margin(points, center, margin)
         points_list.append(points)
 
     points_list_2 = points_to_img(points_list, pointcloud, disparity)
