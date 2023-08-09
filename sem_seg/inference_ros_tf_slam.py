@@ -413,18 +413,22 @@ class Pointcloud_Seg:
             file_id = open(self.path_graph, 'r')
             lines = file_id.readlines()[1:]
             for line in lines:
-                info = [float(x) for x in line.split(',')]
+                info = [x for x in line.split(',')]
                 ts = info[0]
-                print(ts)                
-                print(header.stamp)
-                if ts == header.stamp:
+                ts = list(ts)
+                ts[-3:] = '000'
+                ts = ''.join(ts)
+                print(ts)  
+                header_aux = str(header.stamp.secs) + '.' + str(header.stamp.nsecs)      
+                print(header_aux)
+                if ts == header_aux:
                     id = info[1]
                     break
             
 
             self.infobbs = info_proc.get_bb(info3, 0.05, pred_sub, self.disp)
             self.infobbs.header = header
-            self.infobbs.frame_id = id
+            self.infobbs.frame_id = int(id)
 
         # publishers
         n_v = len(instances_ref_valve_list)
