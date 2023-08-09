@@ -44,8 +44,8 @@ def points_to_img(points_list, pointcloud, disparity):
     disp_pos = np.where(disp>15)
     disp_pos_np = np.vstack(disp_pos).T
 
-    disp_xmin, disp_ymin = disp_pos_np.min(axis=0)
-    disp_xmax, disp_ymax = disp_pos_np.max(axis=0)
+    disp_ymin, disp_xmin = disp_pos_np.min(axis=0)
+    disp_ymax, disp_xmax = disp_pos_np.max(axis=0)
     disp_xrange = disp_xmax - disp_xmin
     disp_yrange = disp_ymax - disp_ymin
 
@@ -77,7 +77,7 @@ def points_to_img(points_list, pointcloud, disparity):
             xydisp = np.array((xdisp,ydisp))
             points2.append(xydisp)
         points_list2.append(points2)
-        
+
     print(xpc)
     print(ratio_xpc)
     print(xdisp)
