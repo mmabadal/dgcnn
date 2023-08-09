@@ -43,6 +43,8 @@ def points_to_img(points_list, pointcloud, disparity):
     print("-----------------------------------------")
     disp = ros_numpy.numpify(disparity.image)
 
+    disp2 = copy.deepcopy(disp)
+
     img = Image.fromarray(disp)
     img.show()
 
@@ -53,6 +55,16 @@ def points_to_img(points_list, pointcloud, disparity):
     disp_ymax, disp_xmax = disp_pos_np.max(axis=0)
     disp_xrange = disp_xmax - disp_xmin
     disp_yrange = disp_ymax - disp_ymin
+
+    pctopleft = np.array((pc_xmin,pc_ymin))
+    pctopright = np.array((pc_xmax,pc_ymax))
+    pcbotleft = np.array((pc_xmin,pc_ymin))
+    pcbotright = np.array((pc_xmax,pc_ymax))
+
+    points_list[0][0]= pctopleft
+    points_list[0][1]= pctopright
+    points_list[0][2]= pcbotleft
+    points_list[0][3]= pcbotright
 
     print(disp_xmin)
     print(disp_xmax)
@@ -93,6 +105,19 @@ def points_to_img(points_list, pointcloud, disparity):
 
     print("-----------------------------------------")
     print("-----------------------------------------")
+
+    disptopleft = points_list2[0][0]
+    disptopright = points_list2[0][1]
+    dispbotleft = points_list2[0][2]
+    dispbotright = points_list2[0][3]
+
+    disp2[disptopleft[0],disptopleft[1]] = 252
+    disp2[disptopright[0],disptopright[1]] = 253
+    disp2[dispbotleft[0],dispbotleft[1]] = 254
+    disp2[dispbotright[0],dispbotright[1]] = 255
+
+    img2 = Image.fromarray(disp2)
+    img2.show()
 
     return points_list2
 
