@@ -46,9 +46,10 @@ def points_to_img(points_list, pointcloud, disparity):
             ypc = point[1]
 
             ratio_xpc = (xpc-pc_xmin)/pc_xrange
-            xdisp = disp_xmin + (ratio_xpc*disp_xrange)
+            xdisp = int(disp_xmin + (ratio_xpc*disp_xrange))
+            
             ratio_ypc = (ypc-pc_ymin)/pc_yrange
-            ydisp = disp_ymin + (ratio_ypc*disp_yrange)
+            ydisp = int(disp_ymin + (ratio_ypc*disp_yrange))
 
             xydisp = np.array((xdisp,ydisp))
             points2.append(xydisp)
