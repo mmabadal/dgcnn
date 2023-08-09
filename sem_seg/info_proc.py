@@ -1,6 +1,7 @@
 import copy
 import ros_numpy
 import numpy as np
+from PIL import Image
 from dgcnn.msg import info_bbs
 from stereo_msgs.msg import DisparityImage
 from geometry_msgs.msg import Point32, Polygon
@@ -41,6 +42,10 @@ def points_to_img(points_list, pointcloud, disparity):
 
     print("-----------------------------------------")
     disp = ros_numpy.numpify(disparity.image)
+
+    img = Image.fromarray(disp)
+    img.show()
+
     disp_pos = np.where(disp>15)
     disp_pos_np = np.vstack(disp_pos).T
 
