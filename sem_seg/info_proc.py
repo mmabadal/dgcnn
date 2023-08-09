@@ -62,8 +62,6 @@ def points_to_img(points_list, pointcloud, disparity):
 
 def get_bb(info, margin, pointcloud, disparity):
 
-    print(disparity)
-
     infobbs = info_bbs()
     p1 = Point32()
     p2 = Point32()
