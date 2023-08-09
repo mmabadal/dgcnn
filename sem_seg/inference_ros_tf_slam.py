@@ -422,8 +422,9 @@ class Pointcloud_Seg:
                     break
             
 
-            self.infobbs = info_proc.get_bb(info3, 0.05, pred_sub, self.disp, id)
+            self.infobbs = info_proc.get_bb(info3, 0.05, pred_sub, self.disp)
             self.infobbs.header = header
+            self.infobbs.frame_id = id
 
         # publishers
         n_v = len(instances_ref_valve_list)
