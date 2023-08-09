@@ -409,11 +409,10 @@ class Pointcloud_Seg:
 
             header.frame_id = "robot_0/stereo_down/left_optical"
 
-        self.infobbs = info_proc.get_bb(info3, 0.05, pred_sub, self.disp)
-        self.infobbs.header = header
+            self.infobbs = info_proc.get_bb(info3, 0.05, pred_sub, self.disp)
+            self.infobbs.header = header
 
         # publishers
-
         n_v = len(instances_ref_valve_list)
 
         if len(instances_ref_valve_list)>0:
@@ -453,8 +452,9 @@ class Pointcloud_Seg:
         self.pub_pc_base.publish(pc_base)
         self.pub_pc_seg.publish(pc_seg)
         self.pub_pc_inst.publish(pc_inst)
-
-        self.pub_info_bbs.publish(self.infobbs)
+        
+        if len(info_pipes_list2)>0 or len(info_valves_list2)>0:
+            self.pub_info_bbs.publish(self.infobbs)
 
 
     def pc2array(self, ros_pc):
@@ -701,7 +701,7 @@ class Pointcloud_Seg:
     
 
     def get_tr(self, t, q):
-        trans = np.array([[1, 0, 0, t[0]], [0, 1, 0, t[1]], [0, 0, 1, t[2]], [0, 0, 0, 1]], np.float)
+        trans = np.array([[1, 0, 0, t[0]], [0, 1, 0, t[1]], [0, 0, 1, t[2]], [0, 0, 0, 1]], float)
         rot = Rot.from_quat(q)
         rot_mat = rot.as_matrix()
         trans_rot = copy.deepcopy(trans)

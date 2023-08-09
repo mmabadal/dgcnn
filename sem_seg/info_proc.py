@@ -1,4 +1,5 @@
 import copy
+import ros_numpy
 import numpy as np
 from dgcnn.msg import info_bbs
 from stereo_msgs.msg import DisparityImage
@@ -21,12 +22,12 @@ def set_margin(points, center, margin):
 
 def points_to_img(points_list, pointcloud, disparity):
 
-    pc_xmin, pc_ymin = pointcloud.min(axis=0)
-    pc_xmax, pc_ymax = pointcloud.max(axis=0)
+    pc_xmin, pc_ymin, *_ = pointcloud.min(axis=0)
+    pc_xmax, pc_ymax, *_ = pointcloud.max(axis=0)
     pc_xrange = pc_xmax - pc_xmin
     pc_yrange = pc_ymax - pc_ymin
 
-    disp = disparity.image.data
+    disp = ros_numpy.numpify(disparity.image)
     disp_pos = np.where(disp>15)
     disp_pos_np = np.vstack(disp_pos).T
     disp_xmin, disp_ymin = disp_pos_np.min(axis=0)
@@ -70,7 +71,7 @@ def get_bb(info, margin, pointcloud, disparity):
     polygon = Polygon()
 
     # TODO delete this
-    info = np.load("/home/bomiquel/SLAM_ws/src/dgcnn/test_polygon/out/1604421321894689_info_ref.npy", allow_pickle = True)
+    # info = np.load("/home/bomiquel/SLAM_ws/src/dgcnn/test_polygon/out/1604421321894689_info_ref.npy", allow_pickle = True)
 
     info_pipes_list = info[0]
     info_connexions_list = info[1]
@@ -80,6 +81,9 @@ def get_bb(info, margin, pointcloud, disparity):
     points_list = list()
 
     margin = 0.05
+
+    print(f"LEN INFO PIPES LIST: {len(info_pipes_list)}")
+    print(f"LEN INFO VALVES LIST: {len(info_valves_list)}")
 
     for pipe_info in info_pipes_list:
 
@@ -151,16 +155,10 @@ def get_bb(info, margin, pointcloud, disparity):
         points = set_margin(points, center, margin)
         points_list.append(points)
 
-    points_list = points_to_img(points_list, pointcloud, disparity)
-    # TODO project to XY through disp
-    for i, points in enumerate(points_list):
-        for j, p in enumerate(points):
-            p = p * 40
-            p = p.astype(int)
-            p = np.absolute(p)
-            points_list[i][j] = p
+    points_list_2 = points_to_img(points_list, pointcloud, disparity)
+    print(f"LEN POINTS LIST 2: {len(points_list_2)}")
 
-    for i, points in enumerate(points_list):
+    for i, points in enumerate(points_list_2):
 
         p1.x = points[0][0]
         p1.y = points[0][1]
@@ -182,9 +180,7 @@ def get_bb(info, margin, pointcloud, disparity):
 
         polygon2 = copy.deepcopy(polygon)
         infobbs.bbs.append(polygon2)
+        
+        polygon.points.clear()
 
     return infobbs
-
-
-
-
