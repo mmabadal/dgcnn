@@ -416,17 +416,20 @@ class Pointcloud_Seg:
                 info = [x for x in line.split(',')]
                 ts = info[0]
                 ts = list(ts)
-                ts[-3:] = '000'
+                ts[-4:] = '0000'
                 ts = ''.join(ts)
                 print(ts)  
-                header_aux = str(header.stamp.secs) + '.' + str(header.stamp.nsecs)      
+                header_aux = str(header.stamp.secs) + '.' + str(header.stamp.nsecs) 
+                header_aux = list(header_aux)   
+                header_aux[-4:] = '0000'
+                header_aux = ''.join(header_aux)
                 print(header_aux)
                 if ts == header_aux:
                     id = info[1]
                     break
             
 
-            self.infobbs = info_proc.get_bb(info3, 0.05, pred_sub, self.disp)
+            self.infobbs = info_proc.get_bb(info3, 0.05, pred_sub, self.disp, id)
             self.infobbs.header = header
             self.infobbs.frame_id = int(id)
 

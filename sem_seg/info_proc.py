@@ -21,7 +21,7 @@ def set_margin(points, center, margin):
     return points
 
 
-def points_to_img(points_list, pointcloud, disparity):
+def points_to_img(points_list, pointcloud, disparity, id):
 
     print("-----------------------------------------")
     print("-----------------------------------------")
@@ -45,9 +45,6 @@ def points_to_img(points_list, pointcloud, disparity):
 
     disp2 = copy.deepcopy(disp)
 
-    img = Image.fromarray(disp)
-    img.show()
-
     disp_pos = np.where(disp>15)
     disp_pos_np = np.vstack(disp_pos).T
 
@@ -57,8 +54,8 @@ def points_to_img(points_list, pointcloud, disparity):
     disp_yrange = disp_ymax - disp_ymin
 
     pctopleft = np.array((pc_xmin,pc_ymin))
-    pctopright = np.array((pc_xmax,pc_ymax))
-    pcbotleft = np.array((pc_xmin,pc_ymin))
+    pctopright = np.array((pc_xmax,pc_ymin))
+    pcbotleft = np.array((pc_xmin,pc_ymax))
     pcbotright = np.array((pc_xmax,pc_ymax))
 
     points_list[0][0]= pctopleft
@@ -111,19 +108,20 @@ def points_to_img(points_list, pointcloud, disparity):
     dispbotleft = points_list2[0][2]
     dispbotright = points_list2[0][3]
 
-    disp2[disptopleft[0],disptopleft[1]] = 252
-    disp2[disptopright[0],disptopright[1]] = 253
-    disp2[dispbotleft[0],dispbotleft[1]] = 254
-    disp2[dispbotright[0],dispbotright[1]] = 255
+    disp2[disptopleft[1],disptopleft[0]] = 252
+    disp2[disptopright[1],disptopright[0]] = 253
+    disp2[dispbotleft[1],dispbotleft[0]] = 254
+    disp2[dispbotright[1],dispbotright[0]] = 255
 
     img2 = Image.fromarray(disp2)
-    img2.show()
+    img2 = img2.convert("L")
+    img2.save("/home/bomiquel/Desktop/" + str(id) + ".png")
 
     return points_list2
 
  
 
-def get_bb(info, margin, pointcloud, disparity):
+def get_bb(info, margin, pointcloud, disparity, id):
 
     infobbs = info_bbs()
     p1 = Point32()
@@ -219,7 +217,7 @@ def get_bb(info, margin, pointcloud, disparity):
         # points = set_margin(points, center, margin)
         points_list.append(points)
 
-    points_list_2 = points_to_img(points_list, pointcloud, disparity)
+    points_list_2 = points_to_img(points_list, pointcloud, disparity, id)
     print(f"LEN POINTS LIST 2: {len(points_list_2)}")
 
     for i, points in enumerate(points_list_2):
