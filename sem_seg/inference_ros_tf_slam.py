@@ -409,21 +409,23 @@ class Pointcloud_Seg:
 
             header.frame_id = "robot_0/stereo_down/left_optical"
 
-
+            # TODO: restar tiempos y check de que no haya pasado más de 0,1 segundos
             file_id = open(self.path_graph, 'r')
             lines = file_id.readlines()[1:]
+            print(f"Raw pc header: {header}")
             for line in lines:
                 info = [x for x in line.split(',')]
                 ts = info[0]
+                print(f"Raw txt header: {ts}") 
                 ts = list(ts)
                 ts[-4:] = '0000'
                 ts = ''.join(ts)
-                print(ts)  
+                print(f"Modified txt header: {ts}")  
                 header_aux = str(header.stamp.secs) + '.' + str(header.stamp.nsecs) 
                 header_aux = list(header_aux)   
                 header_aux[-4:] = '0000'
                 header_aux = ''.join(header_aux)
-                print(header_aux)
+                print(f"Modified pc header: {header_aux}")
                 if ts == header_aux:
                     id = info[1]
                     break
@@ -688,6 +690,7 @@ class Pointcloud_Seg:
             tr_ned_down = np.matmul(tr_ned_downbase, tr_downbase_down)
             tr_ned_left = np.matmul(tr_ned_down, tr_down_left)
 
+            # TODO: restar tiempos y check de que no haya pasado más de 0,1 segundos
             name = line.split(',')[0]
             name = name.replace('.', '')
             name = list(name)
