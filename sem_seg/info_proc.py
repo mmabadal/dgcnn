@@ -22,25 +22,12 @@ def set_margin(points, center, margin):
 
 
 def points_to_img(points_list, pointcloud, disparity, id):
-
-    print("-----------------------------------------")
-    print("-----------------------------------------")
-    print(points_list)
-    print("-----------------------------------------")
    
     pc_xmin, pc_ymin, *_ = pointcloud.min(axis=0)
     pc_xmax, pc_ymax, *_ = pointcloud.max(axis=0)
     pc_xrange = pc_xmax - pc_xmin
     pc_yrange = pc_ymax - pc_ymin
 
-    print(pc_xmin)
-    print(pc_xmax)
-    print(pc_xrange)
-    print(pc_ymin)
-    print(pc_ymax)
-    print(pc_yrange)
-
-    print("-----------------------------------------")
     disp = ros_numpy.numpify(disparity.image)
 
     disp2 = copy.deepcopy(disp)
@@ -52,24 +39,6 @@ def points_to_img(points_list, pointcloud, disparity, id):
     disp_ymax, disp_xmax = disp_pos_np.max(axis=0)
     disp_xrange = disp_xmax - disp_xmin
     disp_yrange = disp_ymax - disp_ymin
-
-    pctopleft = np.array((pc_xmin,pc_ymin))
-    pctopright = np.array((pc_xmax,pc_ymin))
-    pcbotleft = np.array((pc_xmin,pc_ymax))
-    pcbotright = np.array((pc_xmax,pc_ymax))
-
-    points_list[0][0]= pctopleft
-    points_list[0][1]= pctopright
-    points_list[0][2]= pcbotleft
-    points_list[0][3]= pcbotright
-
-    print(disp_xmin)
-    print(disp_xmax)
-    print(disp_xrange)
-    print(disp_ymin)
-    print(disp_ymax)
-    print(disp_yrange)
-    print("-----------------------------------------")
 
     points_list2 = list()
 
@@ -88,30 +57,11 @@ def points_to_img(points_list, pointcloud, disparity, id):
             ratio_ypc = (ypc-pc_ymin)/pc_yrange
             ydisp = int(disp_ymin + (ratio_ypc*disp_yrange))
 
+            disp2[xdisp,ydisp] = 255
+
             xydisp = np.array((xdisp,ydisp))
             points2.append(xydisp)
         points_list2.append(points2)
-
-    print(xpc)
-    print(ratio_xpc)
-    print(xdisp)
-    
-    print(ypc)
-    print(ratio_ypc)
-    print(ydisp)
-
-    print("-----------------------------------------")
-    print("-----------------------------------------")
-
-    disptopleft = points_list2[0][0]
-    disptopright = points_list2[0][1]
-    dispbotleft = points_list2[0][2]
-    dispbotright = points_list2[0][3]
-
-    disp2[disptopleft[1],disptopleft[0]] = 252
-    disp2[disptopright[1],disptopright[0]] = 253
-    disp2[dispbotleft[1],dispbotleft[0]] = 254
-    disp2[dispbotright[1],dispbotright[0]] = 255
 
     img2 = Image.fromarray(disp2)
     img2 = img2.convert("L")
