@@ -22,62 +22,9 @@ def set_margin(points, center, margin):
     return points
 
 
-def points_to_img(points_list, pointcloud, disparity, id, path):
-   
-    pc_xmin, pc_ymin, *_ = pointcloud.min(axis=0)
-    pc_xmax, pc_ymax, *_ = pointcloud.max(axis=0)
-    pc_xrange = pc_xmax - pc_xmin
-    pc_yrange = pc_ymax - pc_ymin
+def points_to_img(points_list, pointcloud, , id, path):
 
-    # points_list = list()
-
-    # a = np.array([pc_xmin+pc_xrange*0.1, pc_ymin+pc_yrange*0.5])
-    # point= [a,a,a,a]
-    # points_list.append(point)
-    # a = np.array([pc_xmin+pc_xrange*0.2, pc_ymin+pc_yrange*0.5])
-    # point= [a,a,a,a]
-    # points_list.append(point)
-    # a = np.array([pc_xmin+pc_xrange*0.5, pc_ymin+pc_yrange*0.5])
-    # point= [a,a,a,a]
-    # points_list.append(point)
-    # a = np.array([pc_xmin+pc_xrange*0.6, pc_ymin+pc_yrange*0.5])
-    # point= [a,a,a,a]
-    # points_list.append(point)
-    # a = np.array([pc_xmin+pc_xrange*0.7, pc_ymin+pc_yrange*0.5])
-    # point= [a,a,a,a]
-    # points_list.append(point)
-    # a = np.array([pc_xmin+pc_xrange*0.8, pc_ymin+pc_yrange*0.5])
-    # point= [a,a,a,a]
-    # points_list.append(point)
-    # a = np.array([pc_xmin+pc_xrange*0.9, pc_ymin+pc_yrange*0.5])
-    # point= [a,a,a,a]
-    # points_list.append(point)
-    # a = np.array([pc_xmin+pc_xrange*0.1, pc_ymin+pc_yrange*0.75])
-    # point= [a,a,a,a]
-    # points_list.append(point)
-    # a = np.array([pc_xmin+pc_xrange*0.2, pc_ymin+pc_yrange*0.75])
-    # point= [a,a,a,a]
-    # points_list.append(point)
-    # a = np.array([pc_xmin+pc_xrange*0.5, pc_ymin+pc_yrange*0.75])
-    # point= [a,a,a,a]
-    # points_list.append(point)
-    # a = np.array([pc_xmin+pc_xrange*0.6, pc_ymin+pc_yrange*0.75])
-    # point= [a,a,a,a]
-    # points_list.append(point)
-    # a = np.array([pc_xmin+pc_xrange*0.7, pc_ymin+pc_yrange*0.75])
-    # point= [a,a,a,a]
-    # points_list.append(point)
-    # a = np.array([pc_xmin+pc_xrange*0.8, pc_ymin+pc_yrange*0.75])
-    # point= [a,a,a,a]
-    # points_list.append(point)
-    # a = np.array([pc_xmin+pc_xrange*0.9, pc_ymin+pc_yrange*0.75])
-    # point= [a,a,a,a]
-    # points_list.append(point)
-
-
-    disp = ros_numpy.numpify(disparity.image)
-
-    disp2 = copy.deepcopy(disp)
+    points_list2 = list()
 
     keyframes = os.listdir(path)
     for keyframe in keyframes:
@@ -86,53 +33,37 @@ def points_to_img(points_list, pointcloud, disparity, id, path):
                 key = Image.open(os.path.join(path, keyframe))
                 break
 
-
-    disp_pos = np.where(disp>15)
-    disp_pos_np = np.vstack(disp_pos).T
-
-    disp_ymin, disp_xmin = disp_pos_np.min(axis=0)
-    disp_ymax, disp_xmax = disp_pos_np.max(axis=0)
-    disp_xrange = disp_xmax - disp_xmin
-    disp_yrange = disp_ymax - disp_ymin
-
-    points_list2 = list()
-
     for points in points_list:
 
         points2 = list()
 
         for point in points:
 
-            xpc = point[0]
-            ypc = point[1]
-            zpc = point[2]
-
-            ratio_xpc = (xpc-pc_xmin)/pc_xrange
-            xdisp = int(disp_xmin + (ratio_xpc*disp_xrange))
+            P = np.array[[1988.57113, 0.0, 971.45848, 0.0], [0.0, 1988.57113, 714.05443, 0.0],[ 0.0, 0.0, 1.0, 0.0]]
+            xyz = np.array([[point[0]],
+                           [point[1]],
+                           [point[2]],
+                           [1]])
             
-            ratio_ypc = (ypc-pc_ymin)/pc_yrange
-            ydisp = int(disp_ymin + (ratio_ypc*disp_yrange))
+            uvw = np.matmul(P, xyz)
+            u = uvw[0][0]
+            v = uvw[0][1]
+            w = uvw[0][2]
 
+            xdisp = u/w
+            ydisp = v/w
 
-            xdisp = int(((xpc * 1510.16711) / (zpc + 959.76112)))
-            ydisp = int(((xpc * 1506.62189) / (zpc + 704.53197)))
-
-            disp2[ydisp, xdisp] = 255
-            key.putpixel((xdisp, ydisp), (255, 255, 255))
+            key.putpixel((xdisp, ydisp), (255, 0, 0))
 
             xydisp = np.array((ydisp, xdisp))
             points2.append(xydisp)
+
         points_list2.append(points2)
 
-    img2 = Image.fromarray(disp2)
-    img2 = img2.convert("L")
-    img2.save("/home/bomiquel/Desktop/" + str(id) + "_grayscale.png")
     key.save("/home/bomiquel/Desktop/" + str(id) + "_colour.png")
 
 
     return points_list2
-
- 
 
 def get_bb(info, margin, pointcloud, disparity, id, path):
 
