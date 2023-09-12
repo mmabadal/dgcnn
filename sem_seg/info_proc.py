@@ -114,8 +114,8 @@ def points_to_img(points_list, pointcloud, disparity, id, path):
             ydisp = int(disp_ymin + (ratio_ypc*disp_yrange))
 
 
-            xdisp = ((xpc * 1510.16711) / (zpc + 959.76112))
-            ydisp = ((xpc * 1506.62189) / (zpc + 704.53197))
+            xdisp = int(((xpc * 1510.16711) / (zpc + 959.76112)))
+            ydisp = int(((xpc * 1506.62189) / (zpc + 704.53197)))
 
             disp2[ydisp, xdisp] = 255
             key.putpixel((xdisp, ydisp), (255, 255, 255))
@@ -176,7 +176,7 @@ def get_bb(info, margin, pointcloud, disparity, id, path):
 
         point2 = chain[-1][0:3]
 
-        center = point1 + vector/2
+        # center = point1 + vector/2
 
         point3 = point1 # + vector_orth/2
         point4 = point1 # - vector_orth/2
