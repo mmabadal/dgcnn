@@ -213,10 +213,11 @@ class Pointcloud_Seg:
         
         left2worldned = self.get_transform()
 
-        path_out_base_orig = os.path.join(self.path_out, str(header.stamp)+"_base_orig.obj")
-        fout_base = open(path_out_base_orig, 'w')
-        for i in range(pred_sub.shape[0]):
-            fout_base.write('v %f %f %f %d %d %d\n' % (pc_np[i,0], pc_np[i,1], pc_np[i,2], pc_np[i,3], pc_np[i,4], pc_np[i,5]))
+        if self.out == True:
+            path_out_base_orig = os.path.join(self.path_out, str(header.stamp)+"_base_orig.obj")
+            fout_base = open(path_out_base_orig, 'w')
+            for i in range(pc_np.shape[0]):
+                fout_base.write('v %f %f %f %d %d %d\n' % (pc_np[i,0], pc_np[i,1], pc_np[i,2], pc_np[i,3], pc_np[i,4], pc_np[i,5]))
 
 
         pc_np[:, 2] *= -1  # flip Z axis        # //PARAM
