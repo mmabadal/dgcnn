@@ -28,6 +28,52 @@ def points_to_img(points_list, pointcloud, disparity, id):
     pc_xrange = pc_xmax - pc_xmin
     pc_yrange = pc_ymax - pc_ymin
 
+    points_list = list()
+
+    a = np.array([pc_xmin+pc_xrange*0.1, pc_ymin+pc_yrange*0.5])
+    point= [a,a,a,a]
+    points_list.append(point)
+    a = np.array([pc_xmin+pc_xrange*0.2, pc_ymin+pc_yrange*0.5])
+    point= [a,a,a,a]
+    points_list.append(point)
+    a = np.array([pc_xmin+pc_xrange*0.5, pc_ymin+pc_yrange*0.5])
+    point= [a,a,a,a]
+    points_list.append(point)
+    a = np.array([pc_xmin+pc_xrange*0.6, pc_ymin+pc_yrange*0.5])
+    point= [a,a,a,a]
+    points_list.append(point)
+    a = np.array([pc_xmin+pc_xrange*0.7, pc_ymin+pc_yrange*0.5])
+    point= [a,a,a,a]
+    points_list.append(point)
+    a = np.array([pc_xmin+pc_xrange*0.8, pc_ymin+pc_yrange*0.5])
+    point= [a,a,a,a]
+    points_list.append(point)
+    a = np.array([pc_xmin+pc_xrange*0.9, pc_ymin+pc_yrange*0.5])
+    point= [a,a,a,a]
+    points_list.append(point)
+    a = np.array([pc_xmin+pc_xrange*0.1, pc_ymin+pc_yrange*0.75])
+    point= [a,a,a,a]
+    points_list.append(point)
+    a = np.array([pc_xmin+pc_xrange*0.2, pc_ymin+pc_yrange*0.75])
+    point= [a,a,a,a]
+    points_list.append(point)
+    a = np.array([pc_xmin+pc_xrange*0.5, pc_ymin+pc_yrange*0.75])
+    point= [a,a,a,a]
+    points_list.append(point)
+    a = np.array([pc_xmin+pc_xrange*0.6, pc_ymin+pc_yrange*0.75])
+    point= [a,a,a,a]
+    points_list.append(point)
+    a = np.array([pc_xmin+pc_xrange*0.7, pc_ymin+pc_yrange*0.75])
+    point= [a,a,a,a]
+    points_list.append(point)
+    a = np.array([pc_xmin+pc_xrange*0.8, pc_ymin+pc_yrange*0.75])
+    point= [a,a,a,a]
+    points_list.append(point)
+    a = np.array([pc_xmin+pc_xrange*0.9, pc_ymin+pc_yrange*0.75])
+    point= [a,a,a,a]
+    points_list.append(point)
+
+
     disp = ros_numpy.numpify(disparity.image)
 
     disp2 = copy.deepcopy(disp)
