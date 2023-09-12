@@ -22,7 +22,7 @@ def set_margin(points, center, margin):
     return points
 
 
-def points_to_img(points_list, pointcloud, , id, path):
+def points_to_img(points_list, pointcloud, disparity, id, path):
 
     points_list2 = list()
 
@@ -39,19 +39,32 @@ def points_to_img(points_list, pointcloud, , id, path):
 
         for point in points:
 
-            P = np.array[[1988.57113, 0.0, 971.45848, 0.0], [0.0, 1988.57113, 714.05443, 0.0],[ 0.0, 0.0, 1.0, 0.0]]
+            P = np.array([[1988.57113/4, 0.0, 971.45848/4, 0.0], [0.0, 1988.57113/4, 714.05443/4, 0.0],[ 0.0, 0.0, 1.0, 0.0]])
             xyz = np.array([[point[0]],
                            [point[1]],
                            [point[2]],
                            [1]])
-            
-            uvw = np.matmul(P, xyz)
-            u = uvw[0][0]
-            v = uvw[0][1]
-            w = uvw[0][2]
+            print(P)
+            print(P.shape)
+            print(xyz)
+            print(xyz.shape)
 
-            xdisp = u/w
-            ydisp = v/w
+            uvw = np.matmul(P, xyz)
+            print(uvw)
+            print(uvw.shape)
+
+            u = uvw[0][0]
+            v = uvw[1][0]
+            w = uvw[2][0]
+
+            xdisp = int(u/w)
+            ydisp = int(v/w)
+
+            print(u)
+            print(v)
+            print(w)
+            print(xdisp)
+            print(ydisp)
 
             key.putpixel((xdisp, ydisp), (255, 0, 0))
 
