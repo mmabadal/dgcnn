@@ -97,7 +97,9 @@ class Pointcloud_Seg:
         self.time = True
         self.path_in = rospy.get_param('/turbot/slamon/working_directory', "/home/bomiquel/Documents/srv/recerca/slam/pipes/online_tests")
         self.path_out = os.path.join(self.path_in, "pipes")
-        self.path_graph= os.path.join(self.path_in, "graph_vertices.txt")
+        self.path_graph = os.path.join(self.path_in, "graph_vertices.txt")
+        self.path_keyframes = os.path.join(self.path_in, "keyframes")
+
 
         if not os.path.exists(self.path_out):
             os.makedirs(self.path_out)
@@ -413,7 +415,7 @@ class Pointcloud_Seg:
                     color = self.label2color[pred_sub_world[i,6]]
                     fout_pred.write('v %f %f %f %d %d %d\n' % (pred_sub_world[i,0], pred_sub_world[i,1], pred_sub_world[i,2], color[0], color[1], color[2]))
 
-            header.frame_id = "robot_0/stereo_down/left_optical"
+            header.frame_id = "turbot/stereo_down/left_optical"
 
             # TODO: CHECK restar tiempos y check de que no haya pasado más de 0,1 segundos
             file_id = open(self.path_graph, 'r')
@@ -439,7 +441,7 @@ class Pointcloud_Seg:
                     id = info[1]
                     break
             
-            self.infobbs = info_proc.get_bb(info3, 0.05, pred_sub, self.disp, id)
+            self.infobbs = info_proc.get_bb(info3, 0.05, pred_sub, self.disp, id, self.path_keyframes)
             self.infobbs.header = header
             self.infobbs.frame_id = int(id)
 

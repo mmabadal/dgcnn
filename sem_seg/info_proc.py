@@ -1,3 +1,4 @@
+import os
 import copy
 import ros_numpy
 import numpy as np
@@ -21,7 +22,7 @@ def set_margin(points, center, margin):
     return points
 
 
-def points_to_img(points_list, pointcloud, disparity, id):
+def points_to_img(points_list, pointcloud, disparity, id, path):
    
     pc_xmin, pc_ymin, *_ = pointcloud.min(axis=0)
     pc_xmax, pc_ymax, *_ = pointcloud.max(axis=0)
@@ -78,6 +79,14 @@ def points_to_img(points_list, pointcloud, disparity, id):
 
     disp2 = copy.deepcopy(disp)
 
+    keyframes = os.listdir(path)
+    for keyframe in keyframes:
+        if "left" in keyframe:
+            if id in keyframe:
+                key = Image.open(os.path.join(path, keyframe))
+                break
+
+
     disp_pos = np.where(disp>15)
     disp_pos_np = np.vstack(disp_pos).T
 
@@ -104,6 +113,7 @@ def points_to_img(points_list, pointcloud, disparity, id):
             ydisp = int(disp_ymin + (ratio_ypc*disp_yrange))
 
             disp2[ydisp, xdisp] = 255
+            key.putpixel((xdisp, ydisp), (255, 255, 255))
 
             xydisp = np.array((ydisp, xdisp))
             points2.append(xydisp)
@@ -111,13 +121,15 @@ def points_to_img(points_list, pointcloud, disparity, id):
 
     img2 = Image.fromarray(disp2)
     img2 = img2.convert("L")
-    img2.save("/home/bomiquel/Desktop/" + str(id) + ".png")
+    img2.save("/home/bomiquel/Desktop/" + str(id) + "_grayscale.png")
+    key.save("/home/bomiquel/Desktop/" + str(id) + "_colour.png")
+
 
     return points_list2
 
  
 
-def get_bb(info, margin, pointcloud, disparity, id):
+def get_bb(info, margin, pointcloud, disparity, id, path):
 
     infobbs = info_bbs()
     p1 = Point32()
@@ -213,7 +225,7 @@ def get_bb(info, margin, pointcloud, disparity, id):
         # points = set_margin(points, center, margin)
         points_list.append(points)
 
-    points_list_2 = points_to_img(points_list, pointcloud, disparity, id)
+    points_list_2 = points_to_img(points_list, pointcloud, disparity, id, path)
     print(f"LEN POINTS LIST 2: {len(points_list_2)}")
 
     for i, points in enumerate(points_list_2):
