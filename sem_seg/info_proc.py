@@ -28,50 +28,50 @@ def points_to_img(points_list, pointcloud, disparity, id):
     pc_xrange = pc_xmax - pc_xmin
     pc_yrange = pc_ymax - pc_ymin
 
-    points_list = list()
+    # points_list = list()
 
-    a = np.array([pc_xmin+pc_xrange*0.1, pc_ymin+pc_yrange*0.5])
-    point= [a,a,a,a]
-    points_list.append(point)
-    a = np.array([pc_xmin+pc_xrange*0.2, pc_ymin+pc_yrange*0.5])
-    point= [a,a,a,a]
-    points_list.append(point)
-    a = np.array([pc_xmin+pc_xrange*0.5, pc_ymin+pc_yrange*0.5])
-    point= [a,a,a,a]
-    points_list.append(point)
-    a = np.array([pc_xmin+pc_xrange*0.6, pc_ymin+pc_yrange*0.5])
-    point= [a,a,a,a]
-    points_list.append(point)
-    a = np.array([pc_xmin+pc_xrange*0.7, pc_ymin+pc_yrange*0.5])
-    point= [a,a,a,a]
-    points_list.append(point)
-    a = np.array([pc_xmin+pc_xrange*0.8, pc_ymin+pc_yrange*0.5])
-    point= [a,a,a,a]
-    points_list.append(point)
-    a = np.array([pc_xmin+pc_xrange*0.9, pc_ymin+pc_yrange*0.5])
-    point= [a,a,a,a]
-    points_list.append(point)
-    a = np.array([pc_xmin+pc_xrange*0.1, pc_ymin+pc_yrange*0.75])
-    point= [a,a,a,a]
-    points_list.append(point)
-    a = np.array([pc_xmin+pc_xrange*0.2, pc_ymin+pc_yrange*0.75])
-    point= [a,a,a,a]
-    points_list.append(point)
-    a = np.array([pc_xmin+pc_xrange*0.5, pc_ymin+pc_yrange*0.75])
-    point= [a,a,a,a]
-    points_list.append(point)
-    a = np.array([pc_xmin+pc_xrange*0.6, pc_ymin+pc_yrange*0.75])
-    point= [a,a,a,a]
-    points_list.append(point)
-    a = np.array([pc_xmin+pc_xrange*0.7, pc_ymin+pc_yrange*0.75])
-    point= [a,a,a,a]
-    points_list.append(point)
-    a = np.array([pc_xmin+pc_xrange*0.8, pc_ymin+pc_yrange*0.75])
-    point= [a,a,a,a]
-    points_list.append(point)
-    a = np.array([pc_xmin+pc_xrange*0.9, pc_ymin+pc_yrange*0.75])
-    point= [a,a,a,a]
-    points_list.append(point)
+    # a = np.array([pc_xmin+pc_xrange*0.1, pc_ymin+pc_yrange*0.5])
+    # point= [a,a,a,a]
+    # points_list.append(point)
+    # a = np.array([pc_xmin+pc_xrange*0.2, pc_ymin+pc_yrange*0.5])
+    # point= [a,a,a,a]
+    # points_list.append(point)
+    # a = np.array([pc_xmin+pc_xrange*0.5, pc_ymin+pc_yrange*0.5])
+    # point= [a,a,a,a]
+    # points_list.append(point)
+    # a = np.array([pc_xmin+pc_xrange*0.6, pc_ymin+pc_yrange*0.5])
+    # point= [a,a,a,a]
+    # points_list.append(point)
+    # a = np.array([pc_xmin+pc_xrange*0.7, pc_ymin+pc_yrange*0.5])
+    # point= [a,a,a,a]
+    # points_list.append(point)
+    # a = np.array([pc_xmin+pc_xrange*0.8, pc_ymin+pc_yrange*0.5])
+    # point= [a,a,a,a]
+    # points_list.append(point)
+    # a = np.array([pc_xmin+pc_xrange*0.9, pc_ymin+pc_yrange*0.5])
+    # point= [a,a,a,a]
+    # points_list.append(point)
+    # a = np.array([pc_xmin+pc_xrange*0.1, pc_ymin+pc_yrange*0.75])
+    # point= [a,a,a,a]
+    # points_list.append(point)
+    # a = np.array([pc_xmin+pc_xrange*0.2, pc_ymin+pc_yrange*0.75])
+    # point= [a,a,a,a]
+    # points_list.append(point)
+    # a = np.array([pc_xmin+pc_xrange*0.5, pc_ymin+pc_yrange*0.75])
+    # point= [a,a,a,a]
+    # points_list.append(point)
+    # a = np.array([pc_xmin+pc_xrange*0.6, pc_ymin+pc_yrange*0.75])
+    # point= [a,a,a,a]
+    # points_list.append(point)
+    # a = np.array([pc_xmin+pc_xrange*0.7, pc_ymin+pc_yrange*0.75])
+    # point= [a,a,a,a]
+    # points_list.append(point)
+    # a = np.array([pc_xmin+pc_xrange*0.8, pc_ymin+pc_yrange*0.75])
+    # point= [a,a,a,a]
+    # points_list.append(point)
+    # a = np.array([pc_xmin+pc_xrange*0.9, pc_ymin+pc_yrange*0.75])
+    # point= [a,a,a,a]
+    # points_list.append(point)
 
 
     disp = ros_numpy.numpify(disparity.image)
@@ -171,27 +171,27 @@ def get_bb(info, margin, pointcloud, disparity, id):
         points_list.append(points)
 
 
-        for i, elbow in enumerate(elbow_list):
+        # for i, elbow in enumerate(elbow_list):
 
-            vector = vector_list[i+1][0:2]
-            vector_orth = np.array([-vector[1], vector[0]])
-            vector_orth = vector_orth/np.linalg.norm(vector_orth)
-            vector_orth = 0.05 * vector_orth
+        #     vector = vector_list[i+1][0:2]
+        #     vector_orth = np.array([-vector[1], vector[0]])
+        #     vector_orth = vector_orth/np.linalg.norm(vector_orth)
+        #     vector_orth = 0.05 * vector_orth
 
-            point1 = elbow[0:2]
+        #     point1 = elbow[0:2]
 
-            point2 = point1 + vector
+        #     point2 = point1 + vector
 
-            center = point1 + vector/2
+        #     center = point1 + vector/2
 
-            point3 = point1 # + vector_orth/2
-            point4 = point1 # - vector_orth/2
-            point5 = point2 # + vector_orth/2
-            point6 = point2 # - vector_orth/2
+        #     point3 = point1 # + vector_orth/2
+        #     point4 = point1 # - vector_orth/2
+        #     point5 = point2 # + vector_orth/2
+        #     point6 = point2 # - vector_orth/2
 
-            points = [point3, point4, point5, point6]
-            # points = set_margin(points, center, margin)
-            points_list.append(points)
+        #     points = [point3, point4, point5, point6]
+        #     # points = set_margin(points, center, margin)
+        #     points_list.append(points)
 
     for valve_info in info_valves_list:
 
@@ -201,8 +201,8 @@ def get_bb(info, margin, pointcloud, disparity, id):
         vector_orth = vector_orth/np.linalg.norm(vector_orth)
         vector_orth = 0.09 * vector_orth
 
-        point1 = center-(vector/2)
-        point2 = center+(vector/2)
+        point1 = center#-(vector/2)
+        point2 = center#+(vector/2)
 
         point3 = center # point1 + vector_orth/2
         point4 = center # point1 - vector_orth/2
