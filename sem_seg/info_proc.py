@@ -105,12 +105,17 @@ def points_to_img(points_list, pointcloud, disparity, id, path):
 
             xpc = point[0]
             ypc = point[1]
+            zpc = point[2]
 
             ratio_xpc = (xpc-pc_xmin)/pc_xrange
             xdisp = int(disp_xmin + (ratio_xpc*disp_xrange))
             
             ratio_ypc = (ypc-pc_ymin)/pc_yrange
             ydisp = int(disp_ymin + (ratio_ypc*disp_yrange))
+
+
+            xdisp = ((xpc * 1510.16711) / (zpc + 959.76112))
+            ydisp = ((xpc * 1506.62189) / (zpc + 704.53197))
 
             disp2[ydisp, xdisp] = 255
             key.putpixel((xdisp, ydisp), (255, 255, 255))
@@ -165,11 +170,11 @@ def get_bb(info, margin, pointcloud, disparity, id, path):
         vector_orth = vector_orth/np.linalg.norm(vector_orth)
         vector_orth = 0.05 * vector_orth
 
-        point1 = chain[0][0:2]
+        point1 = chain[0][0:3]
 
         # point2 = point1 + vector
 
-        point2 = chain[-1][0:2]
+        point2 = chain[-1][0:3]
 
         center = point1 + vector/2
 
@@ -207,7 +212,7 @@ def get_bb(info, margin, pointcloud, disparity, id, path):
 
     for valve_info in info_valves_list:
 
-        center = valve_info[0][0:2]
+        center = valve_info[0][0:3]
         vector = valve_info[1][0:2]
         vector_orth = np.array([-vector[1], vector[0]])
         vector_orth = vector_orth/np.linalg.norm(vector_orth)
