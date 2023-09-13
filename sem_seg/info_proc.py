@@ -25,8 +25,14 @@ def set_margin(points, center, margin):
 def points_to_img(points_list, id, c_info, path):
 
     P = c_info.P  # TODO hacer print y ver si ya esta /4 o se ha de hacer cogiendo el binning
-
     print(P)
+    print(type(P))
+    decimation = c_info.binning_x
+    P_array = np.array([[P[0]/decimation, P[1]/decimation, P[2]/decimation, P[3]/decimation],
+                       [P[4]/decimation, P[5]/decimation, P[6]/decimation, P[7]/decimation],
+                       [P[8],            P[9],            P[10],           P[11]]])
+
+    print(P_array)
     # P = np.array([[1988.57113/4, 0.0, 971.45848/4, 0.0], [0.0, 1988.57113/4, 714.05443/4, 0.0],[ 0.0, 0.0, 1.0, 0.0]])
 
      # 1988    0     971         x        u  =  1988*x + 971*z 
@@ -53,7 +59,7 @@ def points_to_img(points_list, id, c_info, path):
                            [point[2]],
                            [1]])
 
-            uvw = np.matmul(P, xyz)
+            uvw = np.matmul(P_array, xyz)
 
             u = uvw[0][0]
             v = uvw[1][0]
@@ -100,18 +106,18 @@ def get_bb(info, margin, id, c_info, path):
 
         center = point1 + vector/2
 
-        vector_orth1 = np.array([-vector[1], vector[0], point1[3]])
+        vector_orth1 = np.array([-vector[1], vector[0], point1[2]])
         vector_orth1 = vector_orth1/np.linalg.norm(vector_orth1)
         vector_orth1 = 0.05 * vector_orth1
 
-        vector_orth2 = np.array([-vector[1], vector[0], point2[3]])
+        vector_orth2 = np.array([-vector[1], vector[0], point2[2]])
         vector_orth2 = vector_orth2/np.linalg.norm(vector_orth2)
         vector_orth2 = 0.05 * vector_orth2
 
-        point3 = point1 + vector_orth1/2
-        point4 = point1 - vector_orth1/2
-        point5 = point2 + vector_orth2/2
-        point6 = point2 - vector_orth2/2
+        point3 = point1 #+ vector_orth1/2
+        point4 = point1 #- vector_orth1/2
+        point5 = point2 #+ vector_orth2/2
+        point6 = point2 #- vector_orth2/2
 
         points = [point3, point4, point5, point6]
         #points = set_margin(points, center, margin)
@@ -125,18 +131,18 @@ def get_bb(info, margin, id, c_info, path):
 
             center = point1 + vector/2
 
-            vector_orth1 = np.array([-vector[1], vector[0], point1[3]])
+            vector_orth1 = np.array([-vector[1], vector[0], point1[2]])
             vector_orth1 = vector_orth1/np.linalg.norm(vector_orth1)
             vector_orth1 = 0.05 * vector_orth1
 
-            vector_orth2 = np.array([-vector[1], vector[0], point2[3]])
+            vector_orth2 = np.array([-vector[1], vector[0], point2[2]])
             vector_orth2 = vector_orth2/np.linalg.norm(vector_orth2)
             vector_orth2 = 0.05 * vector_orth2
 
-            point3 = point1 + vector_orth1/2
-            point4 = point1 - vector_orth1/2
-            point5 = point2 + vector_orth2/2
-            point6 = point2 - vector_orth2/2
+            point3 = point1 #+ vector_orth1/2
+            point4 = point1 #- vector_orth1/2
+            point5 = point2 #+ vector_orth2/2
+            point6 = point2 #- vector_orth2/2
 
             points = [point3, point4, point5, point6]
             #points = set_margin(points, center, margin)
@@ -153,18 +159,18 @@ def get_bb(info, margin, id, c_info, path):
         point1 = center - (vector/2)
         point2 = center + (vector/2)
 
-        vector_orth1 = np.array([-vector[1], vector[0], point1[3]])
+        vector_orth1 = np.array([-vector[1], vector[0], point1[2]])
         vector_orth1 = vector_orth1/np.linalg.norm(vector_orth1)
         vector_orth1 = 0.05 * vector_orth1
 
-        vector_orth2 = np.array([-vector[1], vector[0], point2[3]])
+        vector_orth2 = np.array([-vector[1], vector[0], point2[2]])
         vector_orth2 = vector_orth2/np.linalg.norm(vector_orth2)
         vector_orth2 = 0.05 * vector_orth2
 
-        point3 = point1 + vector_orth1/2
-        point4 = point1 - vector_orth1/2
-        point5 = point2 + vector_orth2/2
-        point6 = point2 - vector_orth2/2
+        point3 = point1 #+ vector_orth1/2
+        point4 = point1 #- vector_orth1/2
+        point5 = point2 #+ vector_orth2/2
+        point6 = point2 #- vector_orth2/2
 
         points = [point3, point4, point5, point6]
         #points = set_margin(points, center, margin)
