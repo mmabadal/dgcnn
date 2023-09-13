@@ -25,15 +25,12 @@ def set_margin(points, center, margin):
 def points_to_img(points_list, id, c_info, path):
 
     P = c_info.P  # TODO hacer print y ver si ya esta /4 o se ha de hacer cogiendo el binning
-    print(P)
-    print(type(P))
+    
     decimation = c_info.binning_x
     P_array = np.array([[P[0]/decimation, P[1]/decimation, P[2]/decimation, P[3]/decimation],
                        [P[4]/decimation, P[5]/decimation, P[6]/decimation, P[7]/decimation],
                        [P[8],            P[9],            P[10],           P[11]]])
 
-    print(P_array)
-    # P = np.array([[1988.57113/4, 0.0, 971.45848/4, 0.0], [0.0, 1988.57113/4, 714.05443/4, 0.0],[ 0.0, 0.0, 1.0, 0.0]])
 
      # 1988    0     971         x        u  =  1988*x + 971*z 
      #   0    1988   714   *     y    =   v  =  1988*y + 714*z 
@@ -101,10 +98,14 @@ def get_bb(info, margin, id, c_info, path):
 
         vector = vector_list[0][0:3]
 
+        # TODO get correspondencia distancia del vector 3d a distancia pixeles 2d y calcular orth y margin en disp
+
         point1 = chain[0][0:3]
         point2 = point1 + vector
 
-        center = point1 + vector/2
+        # TODO points_to_img  aqui para sacar points 3 4 5 6 con orth + margin
+
+        center = point1 + vector/2 # TODO se hara en 2d
 
         vector_orth1 = np.array([-vector[1], vector[0], point1[2]])
         vector_orth1 = vector_orth1/np.linalg.norm(vector_orth1)
@@ -126,10 +127,14 @@ def get_bb(info, margin, id, c_info, path):
         for i, elbow in enumerate(elbow_list):
 
             point1 = elbow[0:2]
+            vector = vector_list[i+1][0:3]
+            # TODO get correspondencia distancia del vector 3d a distancia pixeles 2d y calcular orth y margin en disp
 
             point2 = point1 + vector
 
-            center = point1 + vector/2
+            # TODO points_to_img  aqui para sacar points 3 4 5 6 con orth + margin
+
+            center = point1 + vector/2  # TODO se hara en 2d
 
             vector_orth1 = np.array([-vector[1], vector[0], point1[2]])
             vector_orth1 = vector_orth1/np.linalg.norm(vector_orth1)
@@ -151,13 +156,14 @@ def get_bb(info, margin, id, c_info, path):
     for valve_info in info_valves_list:
 
         center = valve_info[0][0:3]
-        vector = valve_info[1][0:3]   #   TODO puede petar, creo que este vector es 2D, solucion abajo
-        #vector = np.array([valve_info[1][0], valve_info[1][1], valve_info[0][2]])
-
-        print(vector)
+        vector = valve_info[1][0:3]
+        # TODO get correspondencia distancia del vector 3d a distancia pixeles 2d y calcular orth y margin en disp
 
         point1 = center - (vector/2)
         point2 = center + (vector/2)
+
+        # TODO points_to_img  aqui para sacar points 3 4 5 6 con orth + margin
+        # TODO obtener center en 2d
 
         vector_orth1 = np.array([-vector[1], vector[0], point1[2]])
         vector_orth1 = vector_orth1/np.linalg.norm(vector_orth1)
@@ -176,7 +182,7 @@ def get_bb(info, margin, id, c_info, path):
         #points = set_margin(points, center, margin)
         points_list.append(points)
 
-    points_list_2 = points_to_img(points_list, id, c_info, path)
+    points_list_2 = points_to_img(points_list, id, c_info, path)  # TODO ya no se hara aqui
     print(f"LEN POINTS LIST 2: {len(points_list_2)}")
 
     for i, points in enumerate(points_list_2):
