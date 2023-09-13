@@ -17,15 +17,18 @@ import conversion_utils
 from natsort import natsorted
 from scipy.spatial.transform import Rotation as Rot
 
-from std_msgs.msg import Int32
 import message_filters
-from sensor_msgs.msg import PointField
-import sensor_msgs.point_cloud2 as pc2
-from sensor_msgs.msg import PointCloud2
-from nav_msgs.msg import Odometry
-from geometry_msgs.msg import Point32, Polygon
-from stereo_msgs.msg import DisparityImage
+
+from std_msgs.msg import Int32
+
 from dgcnn.msg import info_bbs
+
+from nav_msgs.msg import Odometry
+
+from sensor_msgs.msg import CameraInfo
+from sensor_msgs.msg import PointField
+from sensor_msgs.msg import PointCloud2
+import sensor_msgs.point_cloud2 as pc2
 
 
 class Pointcloud_Seg:
@@ -112,17 +115,12 @@ class Pointcloud_Seg:
         # set subscribers
         pc_sub = message_filters.Subscriber('/turbot/slamon/keyframe_points2', PointCloud2)         # //PARAM
         odom_sub = message_filters.Subscriber('/turbot/slamon/graph_robot_odometry', Odometry)      # //PARAM
-        disp_sub = message_filters.Subscriber('/turbot/slamon/keyframe_disparity', DisparityImage)  # //PARAM
+        info_sub = message_filters.Subscriber('/stereo_down/scaled_x4/left/camera_info', CameraInfo)
 
-        # pc_sub = message_filters.Subscriber('/robot_0/slamon/points2', PointCloud2)               # //PARAM
-        # odom_sub = message_filters.Subscriber('/robot_0/slamon/graph_robot_odometry', Odometry)   # //PARAM
-        ts_pc_odom = message_filters.ApproximateTimeSynchronizer([pc_sub, odom_sub, disp_sub], queue_size=10, slop=0.001)
+        ts_pc_odom = message_filters.ApproximateTimeSynchronizer([pc_sub, odom_sub, info_sub], queue_size=10, slop=0.001)
         ts_pc_odom.registerCallback(self.cb_pc)
 
-        #pc_sub.registerCallback(self.cb_pc)
-
-        loop_sub = message_filters.Subscriber('/turbot/slamon/loop_closings_num', Int32)            # //PARAM
-        # loop_sub = message_filters.Subscriber('/robot_0/slamon/loop_closings_num', Int32)         # //PARAM
+        loop_sub = message_filters.Subscriber('/turbot/slamon/loop_closings_num', Int32)
         loop_sub.registerCallback(self.cb_loop)
 
         # Set class image publishers
@@ -132,20 +130,14 @@ class Pointcloud_Seg:
         self.pub_pc_info = rospy.Publisher("/turbot/slamon/points2_info", PointCloud2, queue_size=4)
         self.pub_pc_info_world = rospy.Publisher("/turbot/slamon/points2_info_world", PointCloud2, queue_size=4)
         self.pub_info_bbs = rospy.Publisher('/turbot/slamon/info_bbs', info_bbs, queue_size=4)
-        # self.pub_pc_base = rospy.Publisher("/robot_0/slamon/points2_base", PointCloud2, queue_size=4)
-        # self.pub_pc_seg = rospy.Publisher("/robot_0/slamon/points2_seg", PointCloud2, queue_size=4)
-        # self.pub_pc_inst = rospy.Publisher("/robot_0/slamon/points2_inst", PointCloud2, queue_size=4)
-        # self.pub_pc_info = rospy.Publisher("/robot_0/slamon/points2_info", PointCloud2, queue_size=4)
-        # self.pub_pc_info_world = rospy.Publisher("/robot_0/slamon/points2_info_world", PointCloud2, queue_size=4)
-
 
         # Set segmentation timer
         rospy.Timer(rospy.Duration(self.period), self.run)
 
-    def cb_pc(self, pc, odom, disp):
+    def cb_pc(self, pc, odom, c_info):
         self.pc = pc
         self.odom = odom
-        self.disp = disp
+        self.c_info = c_info
         self.new_pc = True
 
     def cb_loop(self, loop):
@@ -263,10 +255,6 @@ class Pointcloud_Seg:
 
         # get valve instances
         instances_ref_valve_list, pred_sub_pipe_ref, stolen_list  = get_instances.get_instances(pred_sub_valve, self.dim_v, self.rad_v, self.min_p_v, ref=True, ref_data = pred_sub_pipe, ref_rad = 0.1)    # //PARAM
-        # instances_ref_valve_list, pred_sub_pipe_ref, stolen_list  = get_instances.get_instances_o3d(pred_sub_valve, self.dim_v, self.rad_v, self.min_p_v, ref=True, ref_data = pred_sub_pipe, ref_rad = 0.1)
-
-        # project valve isntances, removed because produced errors on valve matching due to the points gathered @ the floor
-        # instances_ref_valve_list = project_inst.project_inst(instances_ref_valve_list, pc_proj) # pc_np_base 
 
         # get valve information
         info_valves_list = list()
@@ -290,13 +278,6 @@ class Pointcloud_Seg:
             vector = vector*0.18                                                             # resize vector to valve size //PARAM
             info_valves_list.append([xyz_central, vector, max_idx, inst[:,0:3], max_info])   # append valve instance info
 
-        # info_valves_list.append([np.array([0.2,0.2,0.2]),np.array([0.1,0.1,0]),1,np.array([[1,2,3], [4,5,6]]), np.array([0.5])]) # force valve (test purposes)
-
-            #  print best valve matching
-            # trans = np.eye(4) 
-            # trans[:3,:3] = inst_o3d.get_rotation_matrix_from_xyz((0,0, -rad))
-            # get_info.draw_registration_result(inst_o3d, self.targets_list[max_idx], trans)
-
         # based on valve fitness, delete it and return stolen points to pipe prediction
         descart_valves_list = [i for i, x in enumerate(info_valves_list) if x[4][0] < 0.4]     # if max fitnes < thr  //PARAM
         for i in descart_valves_list:
@@ -316,7 +297,6 @@ class Pointcloud_Seg:
 
         # get pipe instances
         instances_ref_pipe_list, _, _  = get_instances.get_instances(pred_sub_pipe_ref, self.dim_p, self.rad_p, self.min_p_p)
-        # instances_ref_pipe_list, _, _  = get_instances.get_instances_o3d(pred_sub_pipe_ref, self.dim_p, self.rad_p, self.min_p_p)
 
         info_pipes_list = list()
         info_connexions_list = list()
@@ -349,12 +329,10 @@ class Pointcloud_Seg:
         info_valves_list_copy = copy.deepcopy(info_valves_list)
         info_valves_list2 = get_info.refine_valves(info_valves_list_copy, info_pipes_list2) 
 
-        #info1 = [info_pipes_list, info_connexions_list, info_valves_list, instances_ref_pipe_list]
-        #info2 = [info_pipes_list2, info_connexions_list2, info_valves_list, instances_ref_pipe_list] 
-        info3 = [info_pipes_list2, info_connexions_list2, info_valves_list2, instances_ref_pipe_list]
+        info_list = [info_pipes_list2, info_connexions_list2, info_valves_list2, instances_ref_pipe_list]
 
         if len(info_pipes_list2)>0 or len(info_valves_list2)>0:
-            info_array = conversion_utils.info_to_array(info3)
+            info_array = conversion_utils.info_to_array(info_list)
             pc_info = self.array2pc_info(header, info_array)
             self.pub_pc_info.publish(pc_info)
 
@@ -378,7 +356,7 @@ class Pointcloud_Seg:
 
                 np.save(path_out_info_npy, info_array)
 
-                conversion_utils.info_to_ply(info3, path_out_info_ply)
+                conversion_utils.info_to_ply(info_list, path_out_info_ply)
               
                 path_out_world_info = os.path.join(self.path_out, str(header.stamp)+"_info_world.ply")
                 info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list = conversion_utils.array_to_info(info_array_world)
@@ -441,7 +419,7 @@ class Pointcloud_Seg:
                     id = info[1]
                     break
             
-            self.infobbs = info_proc.get_bb(info3, 0.05, pred_sub, self.disp, id, self.path_keyframes)
+            self.infobbs = info_proc.get_bb(info_list, 0.05, id, self.c_info, self.path_keyframes)
             self.infobbs.header = header
             self.infobbs.frame_id = int(id)
 

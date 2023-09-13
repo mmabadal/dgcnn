@@ -4,7 +4,7 @@ import ros_numpy
 import numpy as np
 from PIL import Image
 from dgcnn.msg import info_bbs
-from stereo_msgs.msg import DisparityImage
+from sensor_msgs.msg import CameraInfo
 from geometry_msgs.msg import Point32, Polygon
 
 
@@ -22,7 +22,16 @@ def set_margin(points, center, margin):
     return points
 
 
-def points_to_img(points_list, pointcloud, disparity, id, path):
+def points_to_img(points_list, id, c_info, path):
+
+    P = c_info.P  # TODO hacer print y ver si ya esta /4 o se ha de hacer cogiendo el binning
+
+    print(P)
+    # P = np.array([[1988.57113/4, 0.0, 971.45848/4, 0.0], [0.0, 1988.57113/4, 714.05443/4, 0.0],[ 0.0, 0.0, 1.0, 0.0]])
+
+     # 1988    0     971         x        u  =  1988*x + 971*z 
+     #   0    1988   714   *     y    =   v  =  1988*y + 714*z 
+     #   0     0      1          z        w  =  z 
 
     points_list2 = list()
 
@@ -39,32 +48,19 @@ def points_to_img(points_list, pointcloud, disparity, id, path):
 
         for point in points:
 
-            P = np.array([[1988.57113/4, 0.0, 971.45848/4, 0.0], [0.0, 1988.57113/4, 714.05443/4, 0.0],[ 0.0, 0.0, 1.0, 0.0]])
             xyz = np.array([[point[0]],
                            [point[1]],
                            [point[2]],
                            [1]])
-            print(P)
-            print(P.shape)
-            print(xyz)
-            print(xyz.shape)
 
             uvw = np.matmul(P, xyz)
-            print(uvw)
-            print(uvw.shape)
 
             u = uvw[0][0]
             v = uvw[1][0]
             w = uvw[2][0]
 
-            xdisp = int(u/w)
-            ydisp = int(v/w)
-
-            print(u)
-            print(v)
-            print(w)
-            print(xdisp)
-            print(ydisp)
+            xdisp = int(u/w) # = (1988*x + 971*z) / z
+            ydisp = int(v/w) # = (1988*y + 714*z) / z
 
             key.putpixel((xdisp, ydisp), (255, 0, 0))
 
@@ -75,10 +71,9 @@ def points_to_img(points_list, pointcloud, disparity, id, path):
 
     key.save("/home/bomiquel/Desktop/" + str(id) + "_colour.png")
 
-
     return points_list2
 
-def get_bb(info, margin, pointcloud, disparity, id, path):
+def get_bb(info, margin, id, c_info, path):
 
     infobbs = info_bbs()
     p1 = Point32()
@@ -87,20 +82,10 @@ def get_bb(info, margin, pointcloud, disparity, id, path):
     p4 = Point32()
     polygon = Polygon()
 
-    # TODO delete this
-    # info = np.load("/home/bomiquel/SLAM_ws/src/dgcnn/test_polygon/out/1604421321894689_info_ref.npy", allow_pickle = True)
-
     info_pipes_list = info[0]
-    info_connexions_list = info[1]
     info_valves_list = info[2]
-    instances_ref_pipe_list = info[3]
 
     points_list = list()
-
-    margin = 0.05
-
-    print(f"LEN INFO PIPES LIST: {len(info_pipes_list)}")
-    print(f"LEN INFO VALVES LIST: {len(info_valves_list)}")
 
     for pipe_info in info_pipes_list:
 
@@ -108,73 +93,84 @@ def get_bb(info, margin, pointcloud, disparity, id, path):
         elbow_list = pipe_info[1]
         vector_list = pipe_info[2]
 
-        vector = vector_list[0][0:2]
-
-        vector_orth = np.array([-vector[1], vector[0]])
-        vector_orth = vector_orth/np.linalg.norm(vector_orth)
-        vector_orth = 0.05 * vector_orth
+        vector = vector_list[0][0:3]
 
         point1 = chain[0][0:3]
+        point2 = point1 + vector
 
-        # point2 = point1 + vector
+        center = point1 + vector/2
 
-        point2 = chain[-1][0:3]
+        vector_orth1 = np.array([-vector[1], vector[0], point1[3]])
+        vector_orth1 = vector_orth1/np.linalg.norm(vector_orth1)
+        vector_orth1 = 0.05 * vector_orth1
 
-        # center = point1 + vector/2
+        vector_orth2 = np.array([-vector[1], vector[0], point2[3]])
+        vector_orth2 = vector_orth2/np.linalg.norm(vector_orth2)
+        vector_orth2 = 0.05 * vector_orth2
 
-        point3 = point1 # + vector_orth/2
-        point4 = point1 # - vector_orth/2
-        point5 = point2 # + vector_orth/2
-        point6 = point2 # - vector_orth/2
+        point3 = point1 + vector_orth1/2
+        point4 = point1 - vector_orth1/2
+        point5 = point2 + vector_orth2/2
+        point6 = point2 - vector_orth2/2
 
         points = [point3, point4, point5, point6]
-        # points = set_margin(points, center, margin)
+        #points = set_margin(points, center, margin)
         points_list.append(points)
 
+        for i, elbow in enumerate(elbow_list):
 
-        # for i, elbow in enumerate(elbow_list):
+            point1 = elbow[0:2]
 
-        #     vector = vector_list[i+1][0:2]
-        #     vector_orth = np.array([-vector[1], vector[0]])
-        #     vector_orth = vector_orth/np.linalg.norm(vector_orth)
-        #     vector_orth = 0.05 * vector_orth
+            point2 = point1 + vector
 
-        #     point1 = elbow[0:2]
+            center = point1 + vector/2
 
-        #     point2 = point1 + vector
+            vector_orth1 = np.array([-vector[1], vector[0], point1[3]])
+            vector_orth1 = vector_orth1/np.linalg.norm(vector_orth1)
+            vector_orth1 = 0.05 * vector_orth1
 
-        #     center = point1 + vector/2
+            vector_orth2 = np.array([-vector[1], vector[0], point2[3]])
+            vector_orth2 = vector_orth2/np.linalg.norm(vector_orth2)
+            vector_orth2 = 0.05 * vector_orth2
 
-        #     point3 = point1 # + vector_orth/2
-        #     point4 = point1 # - vector_orth/2
-        #     point5 = point2 # + vector_orth/2
-        #     point6 = point2 # - vector_orth/2
+            point3 = point1 + vector_orth1/2
+            point4 = point1 - vector_orth1/2
+            point5 = point2 + vector_orth2/2
+            point6 = point2 - vector_orth2/2
 
-        #     points = [point3, point4, point5, point6]
-        #     # points = set_margin(points, center, margin)
-        #     points_list.append(points)
+            points = [point3, point4, point5, point6]
+            #points = set_margin(points, center, margin)
+            points_list.append(points)
 
     for valve_info in info_valves_list:
 
         center = valve_info[0][0:3]
-        vector = valve_info[1][0:2]
-        vector_orth = np.array([-vector[1], vector[0]])
-        vector_orth = vector_orth/np.linalg.norm(vector_orth)
-        vector_orth = 0.09 * vector_orth
+        vector = valve_info[1][0:3]   #   TODO puede petar, creo que este vector es 2D, solucion abajo
+        #vector = np.array([valve_info[1][0], valve_info[1][1], valve_info[0][2]])
 
-        point1 = center#-(vector/2)
-        point2 = center#+(vector/2)
+        print(vector)
 
-        point3 = center # point1 + vector_orth/2
-        point4 = center # point1 - vector_orth/2
-        point5 = center # point2 + vector_orth/2
-        point6 = center # point2 - vector_orth/2
+        point1 = center - (vector/2)
+        point2 = center + (vector/2)
+
+        vector_orth1 = np.array([-vector[1], vector[0], point1[3]])
+        vector_orth1 = vector_orth1/np.linalg.norm(vector_orth1)
+        vector_orth1 = 0.05 * vector_orth1
+
+        vector_orth2 = np.array([-vector[1], vector[0], point2[3]])
+        vector_orth2 = vector_orth2/np.linalg.norm(vector_orth2)
+        vector_orth2 = 0.05 * vector_orth2
+
+        point3 = point1 + vector_orth1/2
+        point4 = point1 - vector_orth1/2
+        point5 = point2 + vector_orth2/2
+        point6 = point2 - vector_orth2/2
 
         points = [point3, point4, point5, point6]
-        # points = set_margin(points, center, margin)
+        #points = set_margin(points, center, margin)
         points_list.append(points)
 
-    points_list_2 = points_to_img(points_list, pointcloud, disparity, id, path)
+    points_list_2 = points_to_img(points_list, id, c_info, path)
     print(f"LEN POINTS LIST 2: {len(points_list_2)}")
 
     for i, points in enumerate(points_list_2):
