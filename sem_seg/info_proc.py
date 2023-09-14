@@ -107,18 +107,18 @@ def get_bb(info, margin, id, c_info, path):
 
         center = point1 + vector/2 # TODO se hara en 2d
 
-        vector_orth1 = np.array([-vector[1], vector[0], point1[2]])
+        vector_orth1 = np.array([-vector[1], vector[0], 0])
         vector_orth1 = vector_orth1/np.linalg.norm(vector_orth1)
         vector_orth1 = 0.05 * vector_orth1
 
-        vector_orth2 = np.array([-vector[1], vector[0], point2[2]])
+        vector_orth2 = np.array([-vector[1], vector[0], 0])
         vector_orth2 = vector_orth2/np.linalg.norm(vector_orth2)
         vector_orth2 = 0.05 * vector_orth2
 
-        point3 = point1 #+ vector_orth1/2
-        point4 = point1 #- vector_orth1/2
-        point5 = point2 #+ vector_orth2/2
-        point6 = point2 #- vector_orth2/2
+        point3 = point1 + vector_orth1/2
+        point4 = point1 - vector_orth1/2
+        point5 = point2 + vector_orth2/2
+        point6 = point2 - vector_orth2/2
 
         points = [point3, point4, point5, point6]
         #points = set_margin(points, center, margin)
@@ -136,18 +136,18 @@ def get_bb(info, margin, id, c_info, path):
 
             center = point1 + vector/2  # TODO se hara en 2d
 
-            vector_orth1 = np.array([-vector[1], vector[0], point1[2]])
+            vector_orth1 = np.array([-vector[1], vector[0],0])
             vector_orth1 = vector_orth1/np.linalg.norm(vector_orth1)
             vector_orth1 = 0.05 * vector_orth1
 
-            vector_orth2 = np.array([-vector[1], vector[0], point2[2]])
+            vector_orth2 = np.array([-vector[1], vector[0], 0])
             vector_orth2 = vector_orth2/np.linalg.norm(vector_orth2)
             vector_orth2 = 0.05 * vector_orth2
 
-            point3 = point1 #+ vector_orth1/2
-            point4 = point1 #- vector_orth1/2
-            point5 = point2 #+ vector_orth2/2
-            point6 = point2 #- vector_orth2/2
+            point3 = point1 + vector_orth1/2
+            point4 = point1 - vector_orth1/2
+            point5 = point2 + vector_orth2/2
+            point6 = point2 - vector_orth2/2
 
             points = [point3, point4, point5, point6]
             #points = set_margin(points, center, margin)
@@ -165,18 +165,18 @@ def get_bb(info, margin, id, c_info, path):
         # TODO points_to_img  aqui para sacar points 3 4 5 6 con orth + margin
         # TODO obtener center en 2d
 
-        vector_orth1 = np.array([-vector[1], vector[0], point1[2]])
+        vector_orth1 = np.array([-vector[1], vector[0],0])
         vector_orth1 = vector_orth1/np.linalg.norm(vector_orth1)
         vector_orth1 = 0.05 * vector_orth1
 
-        vector_orth2 = np.array([-vector[1], vector[0], point2[2]])
+        vector_orth2 = np.array([-vector[1], vector[0], 0])
         vector_orth2 = vector_orth2/np.linalg.norm(vector_orth2)
         vector_orth2 = 0.05 * vector_orth2
 
-        point3 = point1 #+ vector_orth1/2
-        point4 = point1 #- vector_orth1/2
-        point5 = point2 #+ vector_orth2/2
-        point6 = point2 #- vector_orth2/2
+        point3 = point1 + vector_orth1/2
+        point4 = point1 - vector_orth1/2
+        point5 = point2 + vector_orth2/2
+        point6 = point2 - vector_orth2/2
 
         points = [point3, point4, point5, point6]
         #points = set_margin(points, center, margin)
