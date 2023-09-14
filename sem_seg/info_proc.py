@@ -14,28 +14,21 @@ def set_margin(points, point1, point2, margin):
         if i<2:
             if point[0] >= point1[0]:
                 point[0] += margin
+                point[1] -= margin
             else:
                 point[0] -= margin
-
-            if point[1] >= point1[1]:
                 point[1] += margin
-            else:
-                point[1] -= margin
             points[i] = point
 
     for i, point in enumerate(points):
         if i>1:
-            if point[0] >= point2[0]:
-                point[0] += margin
+            if point[2] >= point2[0]:
+                point[2] += margin
+                point[3] -= margin
             else:
-                point[0] -= margin
-
-            if point[1] >= point2[1]:
-                point[1] += margin
-            else:
-                point[1] -= margin
+                point[2] -= margin
+                point[3] += margin
             points[i] = point
-
 
     return points
 
@@ -72,10 +65,9 @@ def points_to_img(points_list, id, c_info, path):
         points2 = list()
 
         k = k+1
+        if k == 4:
+            k = 0
         colors = [(255,0,0),(0,255,0),(0,0,255),(255,255,0),(255,0,255),(0,255, 255),(255,255,255),(128,0,0),(0,128,0),(0,0,128),(128,128,0),(128,0,128)]
-        print(type(colors))
-        print(type(colors[k]))
-        print(type(colors[k][0]))
 
         for point in points:
 
@@ -147,8 +139,11 @@ def get_bb(info, margin, id, c_info, path):
         points_list.append(points1)
         points2 = [point3, point4, point5, point6]
         points_list.append(points2)
-        points3 = set_margin(points2, center, margin)
+        points3 = set_margin(points2, point1, point2, margin)
         points_list.append(points3)
+
+        print("after pipe")
+        print(points_list)
 
         for i, elbow in enumerate(elbow_list):
 
@@ -175,6 +170,9 @@ def get_bb(info, margin, id, c_info, path):
             points3 = set_margin(points2, point1, point2, margin)
             points_list.append(points3)
 
+            print("after elbow")
+            print(points_list)
+
 
     for valve_info in info_valves_list:
 
@@ -197,11 +195,20 @@ def get_bb(info, margin, id, c_info, path):
         points_list.append(points1)
         points2 = [point3, point4, point5, point6]
         points_list.append(points2)
-        points3 = set_margin(points2, center, margin)
+        points3 = set_margin(points2, point1, point2, margin)
         points_list.append(points3)
 
+        print("after valve")
+        print(points_list)
+
+    print("final 3d")
+    print(points_list)
+    
     points_list_2 = points_to_img(points_list, id, c_info, path)
-    print(f"LEN POINTS LIST 2: {len(points_list_2)}")
+
+
+    print("final 2d")
+    print(points_list_2)
 
     for i, points in enumerate(points_list_2):
 
