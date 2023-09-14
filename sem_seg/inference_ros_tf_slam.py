@@ -419,7 +419,7 @@ class Pointcloud_Seg:
                     id = info[1]
                     break
             
-            self.infobbs = info_proc.get_bb(info_list, 0.05, id, self.c_info, self.path_keyframes)
+            self.infobbs = info_proc.get_bb(info_list, 0.1, id, self.c_info, self.path_keyframes)
             self.infobbs.header = header
             self.infobbs.frame_id = int(id)
 
