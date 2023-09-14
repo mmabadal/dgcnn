@@ -146,12 +146,12 @@ def get_bb(info, margin, id, c_info, path):
         #points22 = copy.deepcopy(points2)
         #points3 = set_margin(points22, point1, point2, margin)
         vector_margin = vector_list[0][0:3]*1.1
-        point1_margin = center - vector_margin
-        point2_margin = center + vector_margin
-        point3_margin = point1_margin + (vector_orth/2)*1.1
-        point4_margin = point1_margin - (vector_orth/2)*1.1
-        point5_margin = point2_margin + (vector_orth/2)*1.1
-        point6_margin = point2_margin - (vector_orth/2)*1.1
+        point1_margin = center - (vector_margin/2)
+        point2_margin = center + (vector_margin/2)
+        point3_margin = point1_margin + ((vector_orth/2)*1.5)
+        point4_margin = point1_margin - ((vector_orth/2)*1.5)
+        point5_margin = point2_margin + ((vector_orth/2)*1.5)
+        point6_margin = point2_margin - ((vector_orth/2)*1.5)
         points3 = [point3_margin, point4_margin, point5_margin, point6_margin]
         points_list.append(points3)
 
@@ -183,12 +183,12 @@ def get_bb(info, margin, id, c_info, path):
             #points22 = copy.deepcopy(points2)
             #points3 = set_margin(points22, point1, point2, margin)
             vector_margin = vector_list[0][0:3]*1.1
-            point1_margin = center - vector_margin
-            point2_margin = center + vector_margin
-            point3_margin = point1_margin + (vector_orth/2)*1.1
-            point4_margin = point1_margin - (vector_orth/2)*1.1
-            point5_margin = point2_margin + (vector_orth/2)*1.1
-            point6_margin = point2_margin - (vector_orth/2)*1.1
+            point1_margin = center - (vector_margin/2)
+            point2_margin = center + (vector_margin/2)
+            point3_margin = point1_margin + ((vector_orth/2)*1.5)
+            point4_margin = point1_margin - ((vector_orth/2)*1.5)
+            point5_margin = point2_margin + ((vector_orth/2)*1.5)
+            point6_margin = point2_margin - ((vector_orth/2)*1.5)
             points3 = [point3_margin, point4_margin, point5_margin, point6_margin]
             points_list.append(points3)
 
@@ -220,12 +220,12 @@ def get_bb(info, margin, id, c_info, path):
         #points22 = copy.deepcopy(points2)
         #points3 = set_margin(points22, point1, point2, margin)
         vector_margin = vector_list[0][0:3]*1.1
-        point1_margin = center - vector_margin
-        point2_margin = center + vector_margin
-        point3_margin = point1_margin + (vector_orth/2)*1.1
-        point4_margin = point1_margin - (vector_orth/2)*1.1
-        point5_margin = point2_margin + (vector_orth/2)*1.1
-        point6_margin = point2_margin - (vector_orth/2)*1.1
+        point1_margin = center - (vector_margin/2)
+        point2_margin = center + (vector_margin/2)
+        point3_margin = point1_margin + ((vector_orth/2)*1.5)
+        point4_margin = point1_margin - ((vector_orth/2)*1.5)
+        point5_margin = point2_margin + ((vector_orth/2)*1.5)
+        point6_margin = point2_margin - ((vector_orth/2)*1.5)
         points3 = [point3_margin, point4_margin, point5_margin, point6_margin]
         points_list.append(points3)
 
