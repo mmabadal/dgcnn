@@ -24,9 +24,13 @@ def set_margin(points, center, margin):
 
 def points_to_img(points_list, id, c_info, path):
 
-    P = c_info.P 
-    
     decimation = c_info.binning_x
+
+    P = c_info.P 
+
+    height = c_info.height/decimation
+    width = c_info.width/decimation
+    
     P_array = np.array([[P[0]/decimation, P[1]/decimation, P[2]/decimation, P[3]/decimation],
                        [P[4]/decimation, P[5]/decimation, P[6]/decimation, P[7]/decimation],
                        [P[8],            P[9],            P[10],           P[11]]])
@@ -43,10 +47,14 @@ def points_to_img(points_list, id, c_info, path):
             if id in keyframe:
                 key = Image.open(os.path.join(path, keyframe))
                 break
+    k = -1
 
     for points in points_list:
 
         points2 = list()
+
+        k = k+1
+        colors = [(255,0,0),(0,255,0),(0,0,255),(255,255,0),(255,0,255),(0,255, 255),(255,255,255),(128,0,0),(0,128,0),(0,0,128),(128,128,0),(128,0,128)]
 
         for point in points:
 
@@ -64,7 +72,10 @@ def points_to_img(points_list, id, c_info, path):
             xdisp = int(u/w) # = (1988*x + 971*z) / z
             ydisp = int(v/w) # = (1988*y + 714*z) / z
 
-            key.putpixel((xdisp, ydisp), (255, 0, 0))
+            xdisp = np.clip(xdisp, 1, width-1)
+            ydisp = np.clip(ydisp, 1, height-1)
+
+            key.putpixel((xdisp, ydisp), colors[k])
 
             xydisp = np.array((ydisp, xdisp))
             points2.append(xydisp)
@@ -167,7 +178,7 @@ def get_bb(info, margin, id, c_info, path):
         points = [point1, point1, point2, point2]
         points_list.append(points)
 
-    points_list_2 = points_to_img(points_list, id, c_info, path)  # TODO ya no se hara aqui
+    points_list_2 = points_to_img(points_list, id, c_info, path)
     print(f"LEN POINTS LIST 2: {len(points_list_2)}")
 
     for i, points in enumerate(points_list_2):
