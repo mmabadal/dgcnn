@@ -55,6 +55,9 @@ def points_to_img(points_list, id, c_info, path):
 
         k = k+1
         colors = [(255,0,0),(0,255,0),(0,0,255),(255,255,0),(255,0,255),(0,255, 255),(255,255,255),(128,0,0),(0,128,0),(0,0,128),(128,128,0),(128,0,128)]
+        print(type(colors))
+        print(type(colors[k]))
+        print(type(colors[k][0]))
 
         for point in points:
 
@@ -72,8 +75,8 @@ def points_to_img(points_list, id, c_info, path):
             xdisp = int(u/w) # = (1988*x + 971*z) / z
             ydisp = int(v/w) # = (1988*y + 714*z) / z
 
-            xdisp = np.clip(xdisp, 1, width-1)
-            ydisp = np.clip(ydisp, 1, height-1)
+            xdisp = int(np.clip(xdisp, 1, width-1))
+            ydisp = int(np.clip(ydisp, 1, height-1))
 
             key.putpixel((xdisp, ydisp), colors[k])
 
@@ -124,8 +127,8 @@ def get_bb(info, margin, id, c_info, path):
 
         points = [point3, point4, point5, point6]
         points_list.append(points)
-        points = set_margin(points, center, margin)
-        points_list.append(points)
+        # points = set_margin(points, center, margin)
+        # points_list.append(points)
         points = [point1, point1, point2, point2]
         points_list.append(points)
 
@@ -149,8 +152,8 @@ def get_bb(info, margin, id, c_info, path):
 
             points = [point3, point4, point5, point6]
             points_list.append(points)
-            points = set_margin(points, center, margin)
-            points_list.append(points)
+            # points = set_margin(points, center, margin)
+            # points_list.append(points)
             points = [point1, point1, point2, point2]
             points_list.append(points)
 
@@ -173,8 +176,8 @@ def get_bb(info, margin, id, c_info, path):
 
         points = [point3, point4, point5, point6]
         points_list.append(points)
-        points = set_margin(points, center, margin)
-        points_list.append(points)
+        # points = set_margin(points, center, margin)
+        # points_list.append(points)
         points = [point1, point1, point2, point2]
         points_list.append(points)
 
