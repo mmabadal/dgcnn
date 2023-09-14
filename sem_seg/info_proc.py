@@ -139,7 +139,8 @@ def get_bb(info, margin, id, c_info, path):
         points_list.append(points1)
         points2 = [point3, point4, point5, point6]
         points_list.append(points2)
-        points3 = set_margin(points2, point1, point2, margin)
+        points22 = copy.deepcopy(points2)
+        points3 = set_margin(points22, point1, point2, margin)
         points_list.append(points3)
 
         print("after pipe")
@@ -167,7 +168,8 @@ def get_bb(info, margin, id, c_info, path):
             points_list.append(points1)
             points2 = [point3, point4, point5, point6]
             points_list.append(points2)
-            points3 = set_margin(points2, point1, point2, margin)
+            points22 = copy.deepcopy(points2)
+            points3 = set_margin(points22, point1, point2, margin)
             points_list.append(points3)
 
             print("after elbow")
@@ -195,7 +197,8 @@ def get_bb(info, margin, id, c_info, path):
         points_list.append(points1)
         points2 = [point3, point4, point5, point6]
         points_list.append(points2)
-        points3 = set_margin(points2, point1, point2, margin)
+        points22 = copy.deepcopy(points2)
+        points3 = set_margin(points22, point1, point2, margin)
         points_list.append(points3)
 
         print("after valve")
