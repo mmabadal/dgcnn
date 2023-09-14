@@ -8,17 +8,35 @@ from sensor_msgs.msg import CameraInfo
 from geometry_msgs.msg import Point32, Polygon
 
 
-def set_margin(points, center, margin):
+def set_margin(points, point1, point2, margin):
+
     for i, point in enumerate(points):
-        if point[0] >= center[0]:
-            point[0] += margin
-        else:
-            point[0] -= margin
-        if point[1] >= center[1]:
-            point[1] += margin
-        else:
-            point[1] -= margin
-        points[i] = point
+        if i<2:
+            if point[0] >= point1[0]:
+                point[0] += margin
+            else:
+                point[0] -= margin
+
+            if point[1] >= point1[1]:
+                point[1] += margin
+            else:
+                point[1] -= margin
+            points[i] = point
+
+    for i, point in enumerate(points):
+        if i>1:
+            if point[0] >= point2[0]:
+                point[0] += margin
+            else:
+                point[0] -= margin
+
+            if point[1] >= point2[1]:
+                point[1] += margin
+            else:
+                point[1] -= margin
+            points[i] = point
+
+
     return points
 
 
@@ -125,12 +143,12 @@ def get_bb(info, margin, id, c_info, path):
         point5 = point2 + vector_orth/2
         point6 = point2 - vector_orth/2
 
-        points = [point3, point4, point5, point6]
-        points_list.append(points)
-        # points = set_margin(points, center, margin)
-        # points_list.append(points)
-        points = [point1, point1, point2, point2]
-        points_list.append(points)
+        points1 = [point1, point1, point2, point2]
+        points_list.append(points1)
+        points2 = [point3, point4, point5, point6]
+        points_list.append(points2)
+        points3 = set_margin(points2, center, margin)
+        points_list.append(points3)
 
         for i, elbow in enumerate(elbow_list):
 
@@ -150,12 +168,13 @@ def get_bb(info, margin, id, c_info, path):
             point5 = point2 + vector_orth/2
             point6 = point2 - vector_orth/2
 
-            points = [point3, point4, point5, point6]
-            points_list.append(points)
-            # points = set_margin(points, center, margin)
-            # points_list.append(points)
-            points = [point1, point1, point2, point2]
-            points_list.append(points)
+            points1 = [point1, point1, point2, point2]
+            points_list.append(points1)
+            points2 = [point3, point4, point5, point6]
+            points_list.append(points2)
+            points3 = set_margin(points2, point1, point2, margin)
+            points_list.append(points3)
+
 
     for valve_info in info_valves_list:
 
@@ -174,12 +193,12 @@ def get_bb(info, margin, id, c_info, path):
         point5 = point2 + vector_orth/2
         point6 = point2 - vector_orth/2
 
-        points = [point3, point4, point5, point6]
-        points_list.append(points)
-        # points = set_margin(points, center, margin)
-        # points_list.append(points)
-        points = [point1, point1, point2, point2]
-        points_list.append(points)
+        points1 = [point1, point1, point2, point2]
+        points_list.append(points1)
+        points2 = [point3, point4, point5, point6]
+        points_list.append(points2)
+        points3 = set_margin(points2, center, margin)
+        points_list.append(points3)
 
     points_list_2 = points_to_img(points_list, id, c_info, path)
     print(f"LEN POINTS LIST 2: {len(points_list_2)}")
