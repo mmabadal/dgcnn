@@ -123,6 +123,8 @@ def get_bb(info, margin, id, c_info, path):
         points = [point3, point4, point5, point6]
         #points = set_margin(points, center, margin)
         points_list.append(points)
+        points = [point1, point1, point2, point2]
+        points_list.append(points)
 
         for i, elbow in enumerate(elbow_list):
 
@@ -152,6 +154,8 @@ def get_bb(info, margin, id, c_info, path):
             points = [point3, point4, point5, point6]
             #points = set_margin(points, center, margin)
             points_list.append(points)
+            points = [point1, point1, point2, point2]
+            points_list.append(points)
 
     for valve_info in info_valves_list:
 
@@ -180,6 +184,8 @@ def get_bb(info, margin, id, c_info, path):
 
         points = [point3, point4, point5, point6]
         #points = set_margin(points, center, margin)
+        points_list.append(points)
+        points = [point1, point1, point2, point2]
         points_list.append(points)
 
     points_list_2 = points_to_img(points_list, id, c_info, path)  # TODO ya no se hara aqui
