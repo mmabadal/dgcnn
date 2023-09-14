@@ -146,12 +146,15 @@ def get_bb(info, margin, id, c_info, path):
         #points22 = copy.deepcopy(points2)
         #points3 = set_margin(points22, point1, point2, margin)
         vector_margin = vector_list[0][0:3]*1.1
+        vector_margin2 = vector_margin/np.linalg.norm(vector_margin)
+        vector_margin2 = 0.08 * vector_margin2
+        vector_margin = vector_margin +vector_margin2
         point1_margin = center - (vector_margin/2)
         point2_margin = center + (vector_margin/2)
-        point3_margin = point1_margin + ((vector_orth/2)*1.5)
-        point4_margin = point1_margin - ((vector_orth/2)*1.5)
-        point5_margin = point2_margin + ((vector_orth/2)*1.5)
-        point6_margin = point2_margin - ((vector_orth/2)*1.5)
+        point3_margin = point1_margin + ((vector_orth/2)*(5/3))
+        point4_margin = point1_margin - ((vector_orth/2)*(5/3))
+        point5_margin = point2_margin + ((vector_orth/2)*(5/3))
+        point6_margin = point2_margin - ((vector_orth/2)*(5/3))
         points3 = [point3_margin, point4_margin, point5_margin, point6_margin]
         points_list.append(points3)
 
@@ -160,7 +163,7 @@ def get_bb(info, margin, id, c_info, path):
 
         for i, elbow in enumerate(elbow_list):
 
-            point1 = elbow[0:2]
+            point1 = elbow[0:3]
             vector = vector_list[i+1][0:3]
 
             point2 = point1 + vector
@@ -183,12 +186,15 @@ def get_bb(info, margin, id, c_info, path):
             #points22 = copy.deepcopy(points2)
             #points3 = set_margin(points22, point1, point2, margin)
             vector_margin = vector_list[0][0:3]*1.1
+            vector_margin2 = vector_margin/np.linalg.norm(vector_margin)
+            vector_margin2 = 0.08 * vector_margin2
+            vector_margin = vector_margin +vector_margin2
             point1_margin = center - (vector_margin/2)
             point2_margin = center + (vector_margin/2)
-            point3_margin = point1_margin + ((vector_orth/2)*1.5)
-            point4_margin = point1_margin - ((vector_orth/2)*1.5)
-            point5_margin = point2_margin + ((vector_orth/2)*1.5)
-            point6_margin = point2_margin - ((vector_orth/2)*1.5)
+            point3_margin = point1_margin + ((vector_orth/2)*(5/3))
+            point4_margin = point1_margin - ((vector_orth/2)*(5/3))
+            point5_margin = point2_margin + ((vector_orth/2)*(5/3))
+            point6_margin = point2_margin - ((vector_orth/2)*(5/3))
             points3 = [point3_margin, point4_margin, point5_margin, point6_margin]
             points_list.append(points3)
 
@@ -206,7 +212,7 @@ def get_bb(info, margin, id, c_info, path):
 
         vector_orth = np.array([-vector[1], vector[0],0])
         vector_orth = vector_orth/np.linalg.norm(vector_orth)
-        vector_orth = 0.07 * vector_orth
+        vector_orth = 0.08 * vector_orth
 
         point3 = point1 + vector_orth/2
         point4 = point1 - vector_orth/2
@@ -220,6 +226,9 @@ def get_bb(info, margin, id, c_info, path):
         #points22 = copy.deepcopy(points2)
         #points3 = set_margin(points22, point1, point2, margin)
         vector_margin = vector_list[0][0:3]*1.1
+        vector_margin2 = vector_margin/np.linalg.norm(vector_margin)
+        vector_margin2 = 0.08 * vector_margin2
+        vector_margin = vector_margin +vector_margin2
         point1_margin = center - (vector_margin/2)
         point2_margin = center + (vector_margin/2)
         point3_margin = point1_margin + ((vector_orth/2)*1.5)
