@@ -97,18 +97,19 @@ def get_bb(info, margin, id, c_info, path):
         vector_orth = vector_orth/np.linalg.norm(vector_orth)
         vector_orth = (0.06+margin) * vector_orth
 
-        vector_margin = vector_list[0][0:3]*1.1
-        vector_margin2 = vector_margin/np.linalg.norm(vector_margin)
-        vector_margin2 = margin*2 * vector_margin2
-        vector_margin = vector_margin +vector_margin2
+        vector_margin = vector/np.linalg.norm(vector)
+        vector_margin = margin * 2 * vector_margin
+        vector_margin = vector + vector_margin
+
         point1_margin = center - (vector_margin/2)
         point2_margin = center + (vector_margin/2)
         point3_margin = point1_margin + ((vector_orth/2))
         point4_margin = point1_margin - ((vector_orth/2))
         point5_margin = point2_margin + ((vector_orth/2))
         point6_margin = point2_margin - ((vector_orth/2))
-        points3 = [point3_margin, point4_margin, point5_margin, point6_margin]
-        points_list.append(points3)
+
+        points = [point3_margin, point4_margin, point5_margin, point6_margin]
+        points_list.append(points)
 
         for i, elbow in enumerate(elbow_list):
             
@@ -121,18 +122,19 @@ def get_bb(info, margin, id, c_info, path):
             vector_orth = vector_orth/np.linalg.norm(vector_orth)
             vector_orth = (0.06+margin) * vector_orth
 
-            vector_margin = vector_list[0][0:3]*1.1
-            vector_margin2 = vector_margin/np.linalg.norm(vector_margin)
-            vector_margin2 = margin*2 * vector_margin2
-            vector_margin = vector_margin +vector_margin2
+            vector_margin = vector/np.linalg.norm(vector)
+            vector_margin = margin * 2 * vector_margin
+            vector_margin = vector + vector_margin
+
             point1_margin = center - (vector_margin/2)
             point2_margin = center + (vector_margin/2)
             point3_margin = point1_margin + ((vector_orth/2))
             point4_margin = point1_margin - ((vector_orth/2))
             point5_margin = point2_margin + ((vector_orth/2))
             point6_margin = point2_margin - ((vector_orth/2))
-            points3 = [point3_margin, point4_margin, point5_margin, point6_margin]
-            points_list.append(points3)
+
+            points = [point3_margin, point4_margin, point5_margin, point6_margin]
+            points_list.append(points)
 
     for valve_info in info_valves_list:
 
@@ -145,18 +147,19 @@ def get_bb(info, margin, id, c_info, path):
         vector_orth = vector_orth/np.linalg.norm(vector_orth)
         vector_orth = (0.08+margin) * vector_orth
 
-        vector_margin = vector_list[0][0:3]*1.1
-        vector_margin2 = vector_margin/np.linalg.norm(vector_margin)
-        vector_margin2 = margin*2 * vector_margin2
-        vector_margin = vector_margin +vector_margin2
+        vector_margin = vector/np.linalg.norm(vector)
+        vector_margin = margin * 2 * vector_margin
+        vector_margin = vector + vector_margin
+
         point1_margin = center - (vector_margin/2)
         point2_margin = center + (vector_margin/2)
         point3_margin = point1_margin + ((vector_orth/2))
         point4_margin = point1_margin - ((vector_orth/2))
         point5_margin = point2_margin + ((vector_orth/2))
         point6_margin = point2_margin - ((vector_orth/2))
-        points3 = [point3_margin, point4_margin, point5_margin, point6_margin]
-        points_list.append(points3)
+
+        points = [point3_margin, point4_margin, point5_margin, point6_margin]
+        points_list.append(points)
     
     points_list_2d = points_to_img(points_list, id, c_info, path)
 
