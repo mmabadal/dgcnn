@@ -14,20 +14,24 @@ def set_margin(points, point1, point2, margin):
         if i<2:
             if point[0] >= point1[0]:
                 point[0] += margin
-                point[1] -= margin
             else:
                 point[0] -= margin
+            if point[1] >= point1[1]:
                 point[1] += margin
+            else:
+                point[1] -= margin
             points[i] = point
 
     for i, point in enumerate(points):
         if i>1:
             if point[0] >= point2[0]:
                 point[0] += margin
-                point[1] -= margin
             else:
                 point[0] -= margin
+            if point[1] >= point2[1]:
                 point[1] += margin
+            else:
+                point[1] -= margin
             points[i] = point
 
     return points
