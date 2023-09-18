@@ -75,6 +75,8 @@ def get_bb(info, margin, id, c_info, path):
     p2 = Point32()
     p3 = Point32()
     p4 = Point32()
+    p5 = Point32()
+    p6 = Point32()
     polygon = Polygon()
 
     info_pipes_list = info[0]
@@ -108,7 +110,7 @@ def get_bb(info, margin, id, c_info, path):
         point5_margin = point2_margin + ((vector_orth/2))
         point6_margin = point2_margin - ((vector_orth/2))
 
-        points = [point3_margin, point4_margin, point5_margin, point6_margin]
+        points = [point3_margin, point4_margin, point5_margin, point6_margin, point1_margin, point2_margin]
         points_list.append(points)
 
         for i, elbow in enumerate(elbow_list):
@@ -133,7 +135,7 @@ def get_bb(info, margin, id, c_info, path):
             point5_margin = point2_margin + ((vector_orth/2))
             point6_margin = point2_margin - ((vector_orth/2))
 
-            points = [point3_margin, point4_margin, point5_margin, point6_margin]
+            points = [point3_margin, point4_margin, point5_margin, point6_margin, point1_margin, point2_margin]
             points_list.append(points)
 
     for valve_info in info_valves_list:
@@ -158,7 +160,7 @@ def get_bb(info, margin, id, c_info, path):
         point5_margin = point2_margin + ((vector_orth/2))
         point6_margin = point2_margin - ((vector_orth/2))
 
-        points = [point3_margin, point4_margin, point5_margin, point6_margin]
+        points = [point3_margin, point4_margin, point5_margin, point6_margin, point1_margin, point2_margin]
         points_list.append(points)
     
     points_list_2d = points_to_img(points_list, id, c_info, path)
@@ -177,11 +179,19 @@ def get_bb(info, margin, id, c_info, path):
         p4.x = points[3][0]
         p4.y = points[3][1]
         p4.z = 0
+        p5.x = points[4][0]
+        p5.y = points[4][1]
+        p5.z = 0
+        p6.x = points[5][0]
+        p6.y = points[5][1]
+        p6.z = 0
 
         polygon.points.append(p1)
         polygon.points.append(p2)
         polygon.points.append(p3)
         polygon.points.append(p4)
+        polygon.points.append(p5)
+        polygon.points.append(p6)
 
         polygon2 = copy.deepcopy(polygon)
         infobbs.bbs.append(polygon2)

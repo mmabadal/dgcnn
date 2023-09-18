@@ -10,8 +10,10 @@ def main():
 
 
     box_list = list()
+    new_box_list = list()
 
     img = io.imread("/home/miguel/Desktop/test_polygon/left.jpeg")
+    img2 = io.imread("/home/miguel/Desktop/test_polygon/left.jpeg")
     imshape = img.shape
 
     margin = 25
@@ -63,8 +65,8 @@ def main():
 
     for box in box_list:
 
-        border = check_box(box, maxmins, margin) # TODO en realidad se le tendra que pasar un xmax xmin ymax ymin i ver si estan cerca del borde de la disparidad no de la imagen, primera box de la lista que sea
-        if border == False:                       # las 4 esquinas? o como lo pasa bo de disp a imagen?
+        border = check_box(box, maxmins, margin) # TODO buscar maxmins a partir de los max y min de la pointcloud apsados a coordenadas img
+        if border == False:                       
             next()
 
         vector45 = box[5]-box[4]
@@ -81,7 +83,7 @@ def main():
             iter += 1
             point = int(box[5] + iter * vector45_iter)
             p_list.append(point)
-            if point[0] < 0 or point[0] > imshape[0] or point[1] < 0 or point[1] > imshape[1]: # TODO se le puede poner aqui el margen del buscador manhattan y nos ahorrariamos tener que considerar out of range en éste
+            if point[0] < 0 or point[0] > imshape[0] or point[1] < 0 or point[1] > imshape[1]:
                 p_end1 = p_list[-2] # el ultimo que tuvo tuberia antes de salirse
                 break
             else:
@@ -97,7 +99,7 @@ def main():
             iter += 1
             point = int(box[4] + iter * vector54_iter)
             p_list.append(point)
-            if point[0] < 0 or point[0] > imshape[0] or point[1] < 0 or point[1] > imshape[1]: # TODO se le puede poner aqui el margen del buscador manhattan y nos ahorrariamos tener que considerar out of range en éste
+            if point[0] < 0 or point[0] > imshape[0] or point[1] < 0 or point[1] > imshape[1]:
                 p_end2 = p_list[-2] # el ultimo que tuvo tuberia antes de salirse
                 break
             else:
@@ -106,8 +108,30 @@ def main():
                     a = -1 - dist/vstride #  -1 - dist/vstride para tirar para atras los puntos que añadirá de mas al ir encontrando tuberia por atras (/vstride pq vamos a saltos de vstride pixeles)
                     p_end2 = p_list[a]  
                     break
+   
+    vector_orth = box[2]-box[1]
+    new_p3 = p_end1 + ((vector_orth/2))
+    new_p4 = p_end1 - ((vector_orth/2))
+    new_p5 = p_end2 + ((vector_orth/2))
+    new_p6 = p_end2 - ((vector_orth/2))
+    new_box = (new_p3, new_p4, new_p5, new_p6, p_end1, p_end2)
+    new_box_list.append(new_box)
+
+    for box in new_box_list:
+        for i, point in enumerate(box):
+            img2[point[0], point[1], 0] = 0
+            img2[point[0], point[1], 1] = 255
+            img2[point[0], point[1], 2] = 0
+            if i > 3:
+                img2[point[0], point[1], 0] = 255
+                img2[point[0], point[1], 1] = 0
+                img2[point[0], point[1], 2] = 0
+
 
     io.imshow(img)
+    io.show()
+
+    io.imshow(img2)
     io.show()
 
 # añadir nuevas iteraciones para vectores ortogonales que se haran a partir de los puntos end y que sera +- vector unitario ortogonal a los vectores unit o directamente iter y 
