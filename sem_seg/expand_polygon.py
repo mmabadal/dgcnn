@@ -60,9 +60,10 @@ def main():
 
     for box in box_list:
 
-        border = check_box(box, minmaxs, margin) # TODO buscar minmaxs a partir de los max y min de la pointcloud pasados a coordenadas img
-        if border == False:                       
-            next()
+        border = check_box(box, minmaxs, margin)
+        if border == False:         
+            a = 1              
+            # next() # TODO quitar a = 1 y descomentar esta
 
         vector56 = box[5]-box[4]
         vector56_unit = vector56/np.linalg.norm(vector56)
