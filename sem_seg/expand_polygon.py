@@ -7,8 +7,8 @@ def main():
     box_list = list()
     new_box_list = list()
 
-    img = io.imread("/home/miguel/Desktop/test_polygon/left.jpeg")
-    img2 = io.imread("/home/miguel/Desktop/test_polygon/left.jpeg")
+    img = io.imread("/home/bomiquel/SLAM_ws/src/dgcnn/sem_seg/left.jpeg")
+    img2 = io.imread("/home/bomiquel/SLAM_ws/src/dgcnn/sem_seg/left.jpeg")
     imshape = img.shape
 
     margin = 25
@@ -16,7 +16,7 @@ def main():
     cthr = 0
     nthr = 15
     vstride = 4
-    minmaxs = np.array([400,600,120,100])
+    minmaxs = np.array([120,100,400,600])
 
 
     p1 = np.array([448, 26 ])
@@ -76,7 +76,7 @@ def main():
         p_list = list()
         while 1:
             iter += 1
-            point = int(box[5] + iter * vector56_iter)
+            point = (box[5] + iter * vector56_iter).astype(int)
             p_list.append(point)
             if point[0] < 0 or point[0] > imshape[0] or point[1] < 0 or point[1] > imshape[1]:
                 p_end1 = p_list[-2] # el ultimo que tuvo tuberia antes de salirse
@@ -84,15 +84,15 @@ def main():
             else:
                 end = check_near(point, dist, img, cthr, nthr)
                 if end == True:
-                    a = -1 - dist/vstride #  -1 - dist/vstride para tirar para atras los puntos que añadirá de mas al ir encontrando tuberia por atras (/vstride pq vamos a saltos de vstride pixeles)
-                    p_end1 = p_list[a]  
+                    a = int(-1 - dist/vstride) #  -1 - dist/vstride para tirar para atras los puntos que añadirá de mas al ir encontrando tuberia por atras (/vstride pq vamos a saltos de vstride pixeles)
+                    p_end1 = p_list[-1] # TODO Change to a
                     break
 
         iter = 0
         p_list = list()
         while 1:
             iter += 1
-            point = int(box[4] + iter * vector65_iter)
+            point = (box[4] + iter * vector65_iter).astype(int)
             p_list.append(point)
             if point[0] < 0 or point[0] > imshape[0] or point[1] < 0 or point[1] > imshape[1]:
                 p_end2 = p_list[-2] # el ultimo que tuvo tuberia antes de salirse
@@ -100,15 +100,15 @@ def main():
             else:
                 end = check_near(point, dist, img, cthr, nthr)
                 if end == True:
-                    a = -1 - dist/vstride #  -1 - dist/vstride para tirar para atras los puntos que añadirá de mas al ir encontrando tuberia por atras (/vstride pq vamos a saltos de vstride pixeles)
-                    p_end2 = p_list[a]  
+                    a = int(-1 - dist/vstride) #  -1 - dist/vstride para tirar para atras los puntos que añadirá de mas al ir encontrando tuberia por atras (/vstride pq vamos a saltos de vstride pixeles)
+                    p_end2 = p_list[-1]  # TODO Change to a
                     break
    
     vector_orth = box[2]-box[1]
-    new_p3 = p_end1 + ((vector_orth/2))
-    new_p4 = p_end1 - ((vector_orth/2))
-    new_p5 = p_end2 + ((vector_orth/2))
-    new_p6 = p_end2 - ((vector_orth/2))
+    new_p3 = (p_end1 + ((vector_orth/2))).astype(int)
+    new_p4 = (p_end1 - ((vector_orth/2))).astype(int)
+    new_p5 = (p_end2 + ((vector_orth/2))).astype(int)
+    new_p6 = (p_end2 - ((vector_orth/2))).astype(int)
     new_box = (new_p3, new_p4, new_p5, new_p6, p_end1, p_end2)
     new_box_list.append(new_box)
 
@@ -140,7 +140,7 @@ def check_box(box, minmaxs, margin):
     minx, miny, maxx, maxy = minmaxs
 
     for point in box:
-        if (point[0] < minx+margin) or (point[0] > maxx[0]-margin) or (point[1] < miny+margin) or (point[1] > maxy[1]-margin):
+        if (point[0] < minx+margin) or (point[0] > maxx-margin) or (point[1] < miny+margin) or (point[1] > maxy-margin):
             border = True
             break
     return border
