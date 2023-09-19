@@ -7,15 +7,15 @@ def main():
     box_list = list()
     new_box_list = list()
 
-    img = io.imread("/home/bomiquel/SLAM_ws/src/dgcnn/sem_seg/left.jpeg")
-    img2 = io.imread("/home/bomiquel/SLAM_ws/src/dgcnn/sem_seg/left.jpeg")
+    img = io.imread("/home/miguel/dgcnn/sem_seg/left.jpeg")
+    img2 = io.imread("/home/miguel/dgcnn/sem_seg/left.jpeg")
     imshape = img.shape
 
     margin = 25
-    dist = 10
-    cthr = 0
-    nthr = 15
-    vstride = 4
+    dist = 5
+    cthr = 80
+    nthr = 50
+    vstride = 10
     minmaxs = np.array([120,100,400,600])
 
 
@@ -60,10 +60,10 @@ def main():
 
     for box in box_list:
 
-        border = check_box(box, minmaxs, margin)
-        if border == False:         
-            a = 1              
-            # next() # TODO quitar a = 1 y descomentar esta
+        border = check_box(box, minmaxs, margin) # TODO buscar minmaxs a partir de los max y min de la pointcloud pasados a coordenadas img
+        if border == False:                       
+            #next()
+            a = 1
 
         vector56 = box[5]-box[4]
         vector56_unit = vector56/np.linalg.norm(vector56)
@@ -104,14 +104,14 @@ def main():
                     a = int(-1 - dist/vstride) #  -1 - dist/vstride para tirar para atras los puntos que añadirá de mas al ir encontrando tuberia por atras (/vstride pq vamos a saltos de vstride pixeles)
                     p_end2 = p_list[-1]  # TODO Change to a
                     break
-   
-    vector_orth = box[2]-box[1]
-    new_p3 = (p_end1 + ((vector_orth/2))).astype(int)
-    new_p4 = (p_end1 - ((vector_orth/2))).astype(int)
-    new_p5 = (p_end2 + ((vector_orth/2))).astype(int)
-    new_p6 = (p_end2 - ((vector_orth/2))).astype(int)
-    new_box = (new_p3, new_p4, new_p5, new_p6, p_end1, p_end2)
-    new_box_list.append(new_box)
+
+        vector_orth = box[2]-box[1]
+        new_p1 = (p_end1 + ((vector_orth/2))).astype(int)
+        new_p2 = (p_end1 - ((vector_orth/2))).astype(int)
+        new_p3 = (p_end2 + ((vector_orth/2))).astype(int)
+        new_p4 = (p_end2 - ((vector_orth/2))).astype(int)
+        new_box = (p_end1, p_end1, p_end1, p_end1, p_end1, p_end2) # TODO new_box = (new_p1, new_p2, new_p3, new_p4, p_end1, p_end2) # TODO check new_ps que caigan fuera y proyectar detro 
+        new_box_list.append(new_box)
 
     for box in new_box_list:
         for i, point in enumerate(box):
@@ -165,7 +165,7 @@ def check_near(point, dist, img, cthr, nthr):
         for col in range(col0, col1):                           # for each col
             pixel = np.array([img[row,col,0],img[row,col,1],img[row,col,2]])
             pixel_lab = color.rgb2lab([[[pixel[0] / 255, pixel[1] / 255, pixel[2] / 255]]])
-            color_dist = color.deltaE_cie76(color_ref_lab, pixel_lab, channel_axis=-1)
+            color_dist = color.deltaE_cie76(color_ref_lab, pixel_lab)
             if color_dist < cthr:
                 n += 1 
     if n > nthr:
