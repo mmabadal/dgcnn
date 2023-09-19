@@ -1,13 +1,8 @@
-
-
-
-
 import numpy as np
 from skimage import io, color
 
 
 def main():
-
 
     box_list = list()
     new_box_list = list()
@@ -21,7 +16,7 @@ def main():
     cthr = 0
     nthr = 15
     vstride = 4
-    maxmins = np.array([400,600,120,100])
+    minmaxs = np.array([400,600,120,100])
 
 
     p1 = np.array([448, 26 ])
@@ -65,23 +60,23 @@ def main():
 
     for box in box_list:
 
-        border = check_box(box, maxmins, margin) # TODO buscar maxmins a partir de los max y min de la pointcloud apsados a coordenadas img
+        border = check_box(box, minmaxs, margin) # TODO buscar minmaxs a partir de los max y min de la pointcloud pasados a coordenadas img
         if border == False:                       
             next()
 
-        vector45 = box[5]-box[4]
-        vector45_unit = vector45/np.linalg.norm(vector45)
-        vector54_unit = vector45_unit*-1
+        vector56 = box[5]-box[4]
+        vector56_unit = vector56/np.linalg.norm(vector56)
+        vector65_unit = vector56_unit*-1
 
-        vector45_iter = vector45_unit * vstride
-        vector54_iter = vector54_unit * vstride
+        vector56_iter = vector56_unit * vstride
+        vector65_iter = vector65_unit * vstride
 
 
         iter = 0
         p_list = list()
         while 1:
             iter += 1
-            point = int(box[5] + iter * vector45_iter)
+            point = int(box[5] + iter * vector56_iter)
             p_list.append(point)
             if point[0] < 0 or point[0] > imshape[0] or point[1] < 0 or point[1] > imshape[1]:
                 p_end1 = p_list[-2] # el ultimo que tuvo tuberia antes de salirse
@@ -97,7 +92,7 @@ def main():
         p_list = list()
         while 1:
             iter += 1
-            point = int(box[4] + iter * vector54_iter)
+            point = int(box[4] + iter * vector65_iter)
             p_list.append(point)
             if point[0] < 0 or point[0] > imshape[0] or point[1] < 0 or point[1] > imshape[1]:
                 p_end2 = p_list[-2] # el ultimo que tuvo tuberia antes de salirse
@@ -139,12 +134,10 @@ def main():
 # un salto grande al principio ... pero al ser sobre 2d no tenemos tamaños, lo cual lo dificulta.
 
 
-
-
-def check_box(box, maxmins, margin):
+def check_box(box, minmaxs, margin):
     border = False
 
-    maxx, maxy, minx, miny = maxmins
+    minx, miny, maxx, maxy = minmaxs
 
     for point in box:
         if (point[0] < minx+margin) or (point[0] > maxx[0]-margin) or (point[1] < miny+margin) or (point[1] > maxy[1]-margin):
@@ -155,8 +148,8 @@ def check_box(box, maxmins, margin):
 
 def check_near(point, dist, img, cthr, nthr):
 
-    color_ref = np.array([210,210,0])
-    color_ref_lab = color.rgb2lab([[[color_ref[0] / 255, color_ref[1] / 255, color_ref[2] / 255]]])
+    color_ref_rgb = np.array([210,210,0])
+    color_ref_lab = color.rgb2lab([[[color_ref_rgb[0] / 255, color_ref_rgb[1] / 255, color_ref_rgb[2] / 255]]])
     end = True 
     imshape = img.shape
 
