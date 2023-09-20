@@ -9,6 +9,7 @@ def main():
 
     img = io.imread("/home/miguel/dgcnn/sem_seg/left.jpeg")
     img2 = io.imread("/home/miguel/dgcnn/sem_seg/left.jpeg")
+    img3 = io.imread("/home/miguel/dgcnn/sem_seg/left.jpeg")
     imshape = img.shape
 
     margin = 25
@@ -93,23 +94,32 @@ def main():
                     break
 
         vector_orth = expand[2]
-        new_p1 = (p_end1 + ((vector_orth/2))).astype(int)
-        new_p2 = (p_end1 - ((vector_orth/2))).astype(int)
-        new_p3 = (p_end2 + ((vector_orth/2))).astype(int)
-        new_p4 = (p_end2 - ((vector_orth/2))).astype(int)
-        new_box = (p_end1, p_end1, p_end1, p_end1, p_end1, p_end2) # TODO new_box = (new_p1, new_p2, new_p3, new_p4, p_end1, p_end2) # TODO check new_ps que caigan fuera y proyectar detro 
-        box_list.append(new_box)
+        p1 = (p_end1 + ((vector_orth/2))).astype(int)
+        p2 = (p_end1 - ((vector_orth/2))).astype(int)
+        p3 = (p_end2 + ((vector_orth/2))).astype(int)
+        p4 = (p_end2 - ((vector_orth/2))).astype(int)
+        box = (p1, p2, p3, p4) # TODO check new_ps que caigan fuera y proyectar detro 
+        box_list.append(box)
+
+    polygon_list = box_to_polygon(box_list, imshape)
+    
 
     for box in box_list:
         for i, point in enumerate(box):
-            img2[point[0], point[1], 0] = 0
-            img2[point[0], point[1], 1] = 255
-            img2[point[0], point[1], 2] = 0
-            if i > 3:
-                img2[point[0], point[1], 0] = 255
-                img2[point[0], point[1], 1] = 0
-                img2[point[0], point[1], 2] = 0
 
+            px = np.clip(point[0], 0, imshape[0]-1)
+            py = np.clip(point[1], 0, imshape[1]-1)
+
+            img2[px, py, 0] = 0
+            img2[px, py, 1] = 255
+            img2[px, py, 2] = 0
+
+
+    for polygon in polygon_list:
+        for i, point in enumerate(polygon):
+            img3[point[0], point[1], 0] = 0
+            img3[point[0], point[1], 1] = 255
+            img3[point[0], point[1], 2] = 0
 
     io.imshow(img)
     io.show()
@@ -117,16 +127,79 @@ def main():
     io.imshow(img2)
     io.show()
 
-# añadir nuevas iteraciones para vectores ortogonales que se haran a partir de los puntos end y que sera +- vector unitario ortogonal a los vectores unit o directamente iter y 
-# sera en loop hasta que no se encuentren near, tener en cuuenta que no se vaya a infinito ya que al principio detectara la propia tuberia, se puede anular el principio, hacer
-# un salto grande al principio ... pero al ser sobre 2d no tenemos tamaños, lo cual lo dificulta.
+    io.imshow(img3)
+    io.show()
+
+
+def box_to_polygon(box_list, imshape):
+
+    polygon_list = list()
+
+    for box in box_list:
+
+        polygon = list()
+        
+        h = imshape[0]
+        w = imshape[1]
+
+        for n, point in enumerate(box):
+            if point[0] in range (0,h) and point[1] in range(0,w):
+                polygon.append(point)
+            else:
+                previous = n-1
+                following = (n+1) % len(box)
+
+                v1 = box[following] - box[n]
+                v2 = box[previous] - box[n]
+
+                for i in range(1,100):
+                    p = (point + (v1 * (i/100))).astype(int)
+                    if p[0] in range(0,h) and p[1] in range(0,w):
+                        polygon.append(p)
+                        break
+                for i in range(1,100):
+                    p = (point + (v2 * (i/100))).astype(int)
+                    if p[0] in range(0,h) and p[1] in range(0,w):
+                        polygon.append(p)
+                        break
+
+        for i, a in enumerate([0,h]):
+            for j, b in enumerate([0,w]):
+                corner = np.array([a,b])
+                inside = is_inside(corner, box)
+                if inside == True:
+                    polygon.append(corner)
+
+        polygon_list.append(polygon)
+
+    return polygon_list
+
+
+def is_left(p, p1, p2):
+    return (p2[0] - p1[0]) * (p[1] - p1[1]) - (p[0] - p1[0]) * (p2[1] - p1[1])
+
+
+def is_inside(p, box):
+    p1 = box[0]
+    p2 = box[1]
+    p3 = box[2]
+    p4 = box[3]
+
+    left1 = is_left(p, p1, p2)
+    left2 = is_left(p, p2, p3)
+    left3 = is_left(p, p3, p4)
+    left4 = is_left(p, p4, p1)
+
+    if ((left1 > 0 and left2 > 0 and left3 > 0 and left4 > 0) or
+            (left1 < 0 and left2 < 0 and left3 < 0 and left4 < 0)):
+        return True
+    else:
+        return False
 
 
 def check_box(box, minmaxs, margin):
     border = False
-
     minx, miny, maxx, maxy = minmaxs
-
     for point in box:
         if (point[0] < minx+margin) or (point[0] > maxx-margin) or (point[1] < miny+margin) or (point[1] > maxy-margin):
             border = True
@@ -135,7 +208,6 @@ def check_box(box, minmaxs, margin):
 
 
 def check_near(point, dist, img, cthr, nthr):
-
     color_ref_rgb = np.array([210,210,0])
     color_ref_lab = color.rgb2lab([[[color_ref_rgb[0] / 255, color_ref_rgb[1] / 255, color_ref_rgb[2] / 255]]])
     end = True 
@@ -158,8 +230,6 @@ def check_near(point, dist, img, cthr, nthr):
     if n > nthr:
         end = False
     return end
-
-
 
 
 if __name__ == "__main__":
