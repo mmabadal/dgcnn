@@ -28,13 +28,6 @@ def points_to_img(points_list, id, c_info, path):
 
     points_list_2d = list()
 
-    # keyframes = os.listdir(path)
-    # for keyframe in keyframes:
-    #     if "left" in keyframe:
-    #         if id in keyframe:
-    #             key = Image.open(os.path.join(path, keyframe))
-    #             break
-
     for points in points_list:
 
         points2 = list()
@@ -58,19 +51,15 @@ def points_to_img(points_list, id, c_info, path):
             xdisp = int(np.clip(xdisp, 1, width-1))
             ydisp = int(np.clip(ydisp, 1, height-1))
 
-            # key.putpixel((xdisp, ydisp), (255,0,0))
-
             xydisp = np.array((ydisp, xdisp))
             points2.append(xydisp)
 
         points_list_2d.append(points2)
 
-    # key.save("/home/bomiquel/Desktop/" + str(id) + "_colour.png")
-
     return points_list_2d
 
 
-def get_bb(info, pointcloud, margin, id, c_info, path, ):
+def get_bb(info, pointcloud, margin, id, img, c_info, path):
 
     infobbs = info_bbs()
     p1 = Point32()
@@ -86,7 +75,7 @@ def get_bb(info, pointcloud, margin, id, c_info, path, ):
 
     expand_list = list()
 
-    for pipe_info in info_pipes_list:  # TODO controlar que al otener 3 4 5 6 y añadir margin a puntos 1 2 3 4 5 6 estos no caigan despues fuera en img, (comprovar que no queden por encima o debajo de maxx minx maxyminy)
+    for pipe_info in info_pipes_list: 
 
         chain = pipe_info[0]
         elbow_list = pipe_info[1]
@@ -145,7 +134,20 @@ def get_bb(info, pointcloud, margin, id, c_info, path, ):
 
     minmaxs = np.array([minmaxs_2d[0][0], minmaxs_2d[0][1], minmaxs_2d[1][0], minmaxs_2d[1][1]])
 
-    polygon_list = create_polygons(expand_list, minmaxs, c_info)
+    polygon_list = create_polygons(expand_list_2d, minmaxs, img, c_info)
+
+    # keyframes = os.listdir(path)
+    # for keyframe in keyframes:
+    #     if "left" in keyframe:
+    #         if id in keyframe:
+    #             key = Image.open(os.path.join(path, keyframe))
+    #             break
+
+    for polygon in polygon_list:
+        for point in polygon:
+            img.putpixel((point[0], point[1]), (255,0,0))
+
+    img.save("/home/bomiquel/Desktop/" + str(id) + "_colour.png")
 
     for i, box in enumerate(polygon_list):  # TODO meter un for ya que ahora puede tener mas de 4, de momento se queda con los 4 primeros, que todos tendran minimo y no peta
 
@@ -176,7 +178,7 @@ def get_bb(info, pointcloud, margin, id, c_info, path, ):
     return infobbs
 
 
-def create_polygons(expand_list, minmaxs, c_info):
+def create_polygons(expand_list, minmaxs, img, c_info):
 
     box_list = list()
 
@@ -265,6 +267,8 @@ def create_polygons(expand_list, minmaxs, c_info):
         box_list.append(box)
 
     polygon_list = box_to_polygon(box_list, imshape)
+
+    return polygon_list
 
 
 def box_to_polygon(box_list, imshape):

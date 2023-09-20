@@ -25,6 +25,7 @@ from dgcnn.msg import info_bbs
 
 from nav_msgs.msg import Odometry
 
+from sensor_msgs.msg import Image
 from sensor_msgs.msg import CameraInfo
 from sensor_msgs.msg import PointField
 from sensor_msgs.msg import PointCloud2
