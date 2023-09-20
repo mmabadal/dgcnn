@@ -136,8 +136,8 @@ class Pointcloud_Seg:
         # Set segmentation timer
         rospy.Timer(rospy.Duration(self.period), self.run)
 
-    def cb_pc(self, im, pc, odom, c_info):
-        self.im = im
+    def cb_pc(self, img, pc, odom, c_info):
+        self.img = img
         self.pc = pc
         self.odom = odom
         self.c_info = c_info
@@ -422,7 +422,7 @@ class Pointcloud_Seg:
                     id = info[1]
                     break
             
-            self.infobbs = info_proc.get_bb(info_list, pred_sub, 0.03, id, self.im, self.c_info, self.path_keyframes)
+            self.infobbs = info_proc.get_bb(info_list, pred_sub, 0.03, id, self.img, self.c_info, self.path_keyframes)  # TODO pasar la img a numpy con cv_image = self.bridge.imgmsg_to_cv2(image, "rgb8"),  crear bridge ... mirar github oss_ros y si no simbaad
             self.infobbs.header = header
             self.infobbs.frame_id = int(id)
 

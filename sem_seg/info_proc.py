@@ -62,12 +62,7 @@ def points_to_img(points_list, id, c_info, path):
 def get_bb(info, pointcloud, margin, id, img, c_info, path):
 
     infobbs = info_bbs()
-    p1 = Point32()
-    p2 = Point32()
-    p3 = Point32()
-    p4 = Point32()
-    # p5 = Point32()
-    # p6 = Point32()
+    p = Point32()
     polygon = Polygon()
 
     info_pipes_list = info[0]
@@ -136,47 +131,25 @@ def get_bb(info, pointcloud, margin, id, img, c_info, path):
 
     polygon_list = create_polygons(expand_list_2d, minmaxs, img, c_info)
 
-    # keyframes = os.listdir(path)
-    # for keyframe in keyframes:
-    #     if "left" in keyframe:
-    #         if id in keyframe:
-    #             key = Image.open(os.path.join(path, keyframe))
-    #             break
+    # for polygon in polygon_list:
+    #     for point in polygon:
+    #         img.putpixel((point[0], point[1]), (255,0,0))
+    #img.save("/home/bomiquel/Desktop/" + str(id) + "_colour.png")
 
-    for polygon in polygon_list:
-        for point in polygon:
-            img.putpixel((point[0], point[1]), (255,0,0))
-
-    img.save("/home/bomiquel/Desktop/" + str(id) + "_colour.png")
-
-    for i, box in enumerate(polygon_list):  # TODO meter un for ya que ahora puede tener mas de 4, de momento se queda con los 4 primeros, que todos tendran minimo y no peta
-
-        p1.x = box[0][0]
-        p1.y = box[0][1]
-        p1.z = 0
-        p2.x = box[1][0]
-        p2.y = box[1][1]
-        p2.z = 0
-        p3.x = box[2][0]
-        p3.y = box[2][1]
-        p3.z = 0
-        p4.x = box[3][0]
-        p4.y = box[3][1]
-        p4.z = 0
-
-        polygon.points.append(p1)
-        polygon.points.append(p2)
-        polygon.points.append(p3)
-        polygon.points.append(p4)
-
+    for box in polygon_list:  # TODO meter un for ya que ahora puede tener mas de 4, de momento se queda con los 4 primeros, que todos tendran minimo y no peta
+        for point in enumerate(box):
+            p.x = point[0]
+            p.y = point[1]
+            p.z = 0
+            p2 = copy.deepcopy(p)
+            polygon.points.append(p2)
 
         polygon2 = copy.deepcopy(polygon)
         infobbs.bbs.append(polygon2)
-        
+
         polygon.points.clear()
 
     return infobbs
-
 
 def create_polygons(expand_list, minmaxs, img, c_info):
 
