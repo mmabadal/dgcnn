@@ -85,7 +85,7 @@ def get_bb(info, pointcloud, margin, id, c_info, path, ):
 
     box_list = list()
 
-    for pipe_info in info_pipes_list:  # TODO los puntos 3 4 5 6 ya no hacen falta, y ademas hayq ue controlar que al añadir margin a pintos 1 y 2 estos no caigan despues fuera en img, (comprovar que no queden por encima o debajo de maxx minx maxyminy)
+    for pipe_info in info_pipes_list:  # TODO controlar que al otener 3 4 5 6 y añadir margin a puntos 1 2 3 4 5 6 estos no caigan despues fuera en img, (comprovar que no queden por encima o debajo de maxx minx maxyminy)
 
         chain = pipe_info[0]
         elbow_list = pipe_info[1]

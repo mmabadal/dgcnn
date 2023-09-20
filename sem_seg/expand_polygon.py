@@ -4,8 +4,8 @@ from skimage import io, color
 
 def main():
 
+    expand_list = list()
     box_list = list()
-    new_box_list = list()
 
     img = io.imread("/home/miguel/dgcnn/sem_seg/left.jpeg")
     img2 = io.imread("/home/miguel/dgcnn/sem_seg/left.jpeg")
@@ -19,65 +19,52 @@ def main():
     minmaxs = np.array([120,100,400,600])
 
 
-    p1 = np.array([448, 26 ])
-    p2 = np.array([472, 139])
-    p3 = np.array([249, 49 ])
-    p4 = np.array([269, 168])
-    p5 = np.array([253, 116])
-    p6 = np.array([468, 83 ])
-    box = (p1, p2, p3, p4, p5, p6)
-    box_list.append(box)
+    p1 = np.array([253, 116])
+    p2 = np.array([468, 83 ])
+    vector_orth = np.array([269, 168]) - np.array([249, 49 ])
+    expand = (p1, p2, vector_orth)
+    expand_list.append(expand)
 
-    p1 = np.array([246, 81 ])
-    p2 = np.array([258, 142])
-    p3 = np.array([137, 101])
-    p4 = np.array([151, 155])
-    p5 = np.array([252, 110])
-    p6 = np.array([147, 129])
-    box = (p1, p2, p3, p4, p5, p6)
-    box_list.append(box)
+    p1 = np.array([252, 110])
+    p2 = np.array([147, 129])
+    vector_orth = np.array([151, 155]) - np.array([137, 101])
+    expand = (p1, p2, vector_orth)
+    expand_list.append(expand)
 
-    p1 = np.array([630, 445])
-    p2 = np.array([591, 505])
-    p3 = np.array([713, 504])
-    p4 = np.array([674, 569])
-    p5 = np.array([612, 477])
-    p6 = np.array([693, 535])
-    box = (p1, p2, p3, p4, p5, p6)
-    box_list.append(box)
+    p1 = np.array([612, 477])
+    p2 = np.array([693, 535])
+    vector_orth =  np.array([591, 505]) - np.array([630, 445])
+    expand = (p1, p2, vector_orth)
+    expand_list.append(expand)
 
 
-    for box in box_list:
-        for i, point in enumerate(box):
-            img[point[0], point[1], 0] = 0
-            img[point[0], point[1], 1] = 255
-            img[point[0], point[1], 2] = 0
-            if i > 3:
-                img[point[0], point[1], 0] = 255
-                img[point[0], point[1], 1] = 0
+    for expand in expand_list:
+        for i, point in enumerate(expand):
+            if i < 2:
+                img[point[0], point[1], 0] = 0
+                img[point[0], point[1], 1] = 255
                 img[point[0], point[1], 2] = 0
 
+    for expand in expand_list:
 
-    for box in box_list:
-
-        border = check_box(box, minmaxs, margin) # TODO buscar minmaxs a partir de los max y min de la pointcloud pasados a coordenadas img
+        border = check_box(expand, minmaxs, margin) # TODO buscar minmaxs a partir de los max y min de la pointcloud pasados a coordenadas img
         if border == False:                       
             #next()
             a = 1
 
-        vector56 = box[5]-box[4]
-        vector56_unit = vector56/np.linalg.norm(vector56)
-        vector65_unit = vector56_unit*-1
+        vector1 = expand[1]-expand[0]
+        vector1_unit = vector1/np.linalg.norm(vector1)
+        vector2_unit = vector1_unit*-1
 
-        vector56_iter = vector56_unit * vstride
-        vector65_iter = vector65_unit * vstride
+        vector1_iter = vector1_unit * vstride
+        vector2_iter = vector2_unit * vstride
 
 
         iter = 0
         p_list = list()
         while 1:
             iter += 1
-            point = (box[5] + iter * vector56_iter).astype(int)
+            point = (expand[1] + iter * vector1_iter).astype(int)
             p_list.append(point)
             if point[0] < 0 or point[0] > imshape[0] or point[1] < 0 or point[1] > imshape[1]:
                 p_end1 = p_list[-2] # el ultimo que tuvo tuberia antes de salirse
@@ -93,7 +80,7 @@ def main():
         p_list = list()
         while 1:
             iter += 1
-            point = (box[4] + iter * vector65_iter).astype(int)
+            point = (expand[0] + iter * vector2_iter).astype(int)
             p_list.append(point)
             if point[0] < 0 or point[0] > imshape[0] or point[1] < 0 or point[1] > imshape[1]:
                 p_end2 = p_list[-2] # el ultimo que tuvo tuberia antes de salirse
@@ -105,15 +92,15 @@ def main():
                     p_end2 = p_list[-1]  # TODO Change to a
                     break
 
-        vector_orth = box[2]-box[1]
+        vector_orth = expand[2]
         new_p1 = (p_end1 + ((vector_orth/2))).astype(int)
         new_p2 = (p_end1 - ((vector_orth/2))).astype(int)
         new_p3 = (p_end2 + ((vector_orth/2))).astype(int)
         new_p4 = (p_end2 - ((vector_orth/2))).astype(int)
         new_box = (p_end1, p_end1, p_end1, p_end1, p_end1, p_end2) # TODO new_box = (new_p1, new_p2, new_p3, new_p4, p_end1, p_end2) # TODO check new_ps que caigan fuera y proyectar detro 
-        new_box_list.append(new_box)
+        box_list.append(new_box)
 
-    for box in new_box_list:
+    for box in box_list:
         for i, point in enumerate(box):
             img2[point[0], point[1], 0] = 0
             img2[point[0], point[1], 1] = 255
