@@ -85,8 +85,9 @@ def get_bb(info, pointcloud, margin, id, img, c_info, path):
         vector_orth = np.array([-vector[1], vector[0], 0])
         vector_orth = vector_orth/np.linalg.norm(vector_orth)
         vector_orth = (0.06+margin) * vector_orth
+        point3 = point1 + vector_orth
 
-        expand = [point1, point2, vector_orth]
+        expand = [point1, point2, point3]
         expand_list.append(expand)
 
         for i, elbow in enumerate(elbow_list):
@@ -100,8 +101,9 @@ def get_bb(info, pointcloud, margin, id, img, c_info, path):
             vector_orth = np.array([-vector[1], vector[0],0])
             vector_orth = vector_orth/np.linalg.norm(vector_orth)
             vector_orth = (0.06+margin) * vector_orth
+            point3 = point1 + vector_orth
 
-            expand = [point1, point2, vector_orth]
+            expand = [point1, point2, point3]
             expand_list.append(expand)
 
     for valve_info in info_valves_list:
@@ -115,16 +117,20 @@ def get_bb(info, pointcloud, margin, id, img, c_info, path):
         vector_orth = np.array([-vector[1], vector[0],0])
         vector_orth = vector_orth/np.linalg.norm(vector_orth)
         vector_orth = (0.08+margin) * vector_orth
+        point3 = point1 + vector_orth
 
-        expand = [point1, point2, vector_orth]
+        expand = [point1, point2, point3]
         expand_list.append(expand)
     
     expand_list_2d = points_to_img(expand_list, c_info)
 
+    for expand_2d in expand_list_2d:
+        expand_2d[2] = expand_2d[2] - expand_2d[0]
+
     pc_xmin, pc_ymin, *_ = pointcloud.min(axis=0)
     pc_xmax, pc_ymax, *_ = pointcloud.max(axis=0)
 
-    minmaxs_pc = [[np.array([pc_xmin, pc_ymin, 0]), np.array([pc_xmax, pc_ymax, 0])]]
+    minmaxs_pc = [[np.array([pc_xmin, pc_ymin, 1]), np.array([pc_xmax, pc_ymax, 1])]]  # TODO mirar si se puede hacer sin inventar z (check comits antiguos de cuando hicimos tests de esquinas), si no necesitare disparidad
     minmaxs_2d = points_to_img(minmaxs_pc, c_info)
 
     minmaxs = np.array([minmaxs_2d[0][0], minmaxs_2d[0][1], minmaxs_2d[1][0], minmaxs_2d[1][1]])
