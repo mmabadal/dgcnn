@@ -208,7 +208,7 @@ def check_box(box, minmaxs, margin):
 
 
 def check_near(point, dist, img, cthr, nthr):
-    color_ref_rgb = np.array([210,210,0])
+    color_ref_rgb = np.array([210,210,0])   # TODO dinamico?
     color_ref_lab = color.rgb2lab([[[color_ref_rgb[0] / 255, color_ref_rgb[1] / 255, color_ref_rgb[2] / 255]]])
     end = True 
     imshape = img.shape
