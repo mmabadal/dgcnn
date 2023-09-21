@@ -63,7 +63,7 @@ def get_bb(info, pointcloud, margin, id, img, c_info, path):
 
     infobbs = info_bbs()
     p = Point32()
-    polygon = Polygon()
+    polygon_ros = Polygon()
 
     info_pipes_list = info[0]
     info_valves_list = info[2]
@@ -133,14 +133,21 @@ def get_bb(info, pointcloud, margin, id, img, c_info, path):
     minmaxs_pc = [[np.array([pc_xmin, pc_ymin, 1]), np.array([pc_xmax, pc_ymax, 1])]]  # TODO mirar si se puede hacer sin inventar z (check comits antiguos de cuando hicimos tests de esquinas), si no necesitare disparidad
     minmaxs_2d = points_to_img(minmaxs_pc, c_info)
 
-    minmaxs = np.array([minmaxs_2d[0][0], minmaxs_2d[0][1], minmaxs_2d[1][0], minmaxs_2d[1][1]])
+    minmaxs = np.array([minmaxs_2d[0][0][0], minmaxs_2d[0][0][1], minmaxs_2d[0][1][0], minmaxs_2d[0][1][1]])
 
     polygon_list = create_polygons(expand_list_2d, minmaxs, img, c_info)
 
+    keyframes = os.listdir(path)
+    for keyframe in keyframes:
+        if "left" in keyframe:
+            if id in keyframe:
+                key = Image.open(os.path.join(path, keyframe))
+                break
+
     for polygon in polygon_list:
         for point in polygon:
-            img.putpixel((point[0], point[1]), (255,0,0))
-    img.save("/home/bomiquel/Desktop/" + str(id) + "_colour.png")
+            key.putpixel((point[0], point[1]), (255,0,0))
+    key.save("/home/bomiquel/Desktop/" + str(id) + "_colour.png")
 
     for box in polygon_list:
         for point in enumerate(box):
@@ -148,12 +155,12 @@ def get_bb(info, pointcloud, margin, id, img, c_info, path):
             p.y = point[1]
             p.z = 0
             p2 = copy.deepcopy(p)
-            polygon.points.append(p2)
+            polygon_ros.points.append(p2)
 
-        polygon2 = copy.deepcopy(polygon)
-        infobbs.bbs.append(polygon2)
+        polygon_ros_2 = copy.deepcopy(polygon_ros)
+        infobbs.bbs.append(polygon_ros_2)
 
-        polygon.points.clear()
+        polygon_ros.points.clear()
 
     return infobbs
 
@@ -207,6 +214,7 @@ def create_polygons(expand_list, minmaxs, img, c_info):
 
         iter = 0
         p_list = list()
+        p_list.append(expand[1])
         while 1:
             iter += 1
             point = (expand[1] + iter * vector1_iter).astype(int)
@@ -223,6 +231,7 @@ def create_polygons(expand_list, minmaxs, img, c_info):
 
         iter = 0
         p_list = list()
+        p_list.append(expand[0])
         while 1:
             iter += 1
             point = (expand[0] + iter * vector2_iter).astype(int)
@@ -258,8 +267,8 @@ def box_to_polygon(box_list, imshape):
 
         polygon = list()
         
-        h = imshape[0]
-        w = imshape[1]
+        h = int(imshape[0])
+        w = int(imshape[1])
 
         for n, point in enumerate(box):
             if point[0] in range (0,h) and point[1] in range(0,w):
