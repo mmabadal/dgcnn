@@ -9,7 +9,7 @@ from sensor_msgs.msg import CameraInfo
 from geometry_msgs.msg import Point32, Polygon
 
 
-def points_to_img(points_list, id, c_info, path):
+def points_to_img(points_list, c_info):
 
     decimation = c_info.binning_x
 
@@ -119,13 +119,13 @@ def get_bb(info, pointcloud, margin, id, img, c_info, path):
         expand = [point1, point2, vector_orth]
         expand_list.append(expand)
     
-    expand_list_2d = points_to_img(expand_list, id, c_info, path)
+    expand_list_2d = points_to_img(expand_list, c_info)
 
     pc_xmin, pc_ymin, *_ = pointcloud.min(axis=0)
     pc_xmax, pc_ymax, *_ = pointcloud.max(axis=0)
 
-    minmaxs_pc = [[np.array([pc_xmin,pc_ymin]),np.array([pc_xmax,pc_ymax])]]
-    minmaxs_2d = points_to_img(minmaxs_pc, id, c_info, path)
+    minmaxs_pc = [[np.array([pc_xmin, pc_ymin, 0]), np.array([pc_xmax, pc_ymax, 0])]]
+    minmaxs_2d = points_to_img(minmaxs_pc, c_info)
 
     minmaxs = np.array([minmaxs_2d[0][0], minmaxs_2d[0][1], minmaxs_2d[1][0], minmaxs_2d[1][1]])
 
