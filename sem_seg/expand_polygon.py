@@ -48,9 +48,9 @@ def main():
 
     for expand in expand_list:
 
-        border = check_box(expand, minmaxs, margin) # TODO buscar minmaxs a partir de los max y min de la pointcloud pasados a coordenadas img
+        border = check_box(expand, minmaxs, margin) # 
         if border == False:                       
-            #next()
+            #next()   # TODO check esto
             a = 1
 
         vector1 = expand[1]-expand[0]
@@ -98,7 +98,7 @@ def main():
         p2 = (p_end1 - ((vector_orth/2))).astype(int)
         p3 = (p_end2 + ((vector_orth/2))).astype(int)
         p4 = (p_end2 - ((vector_orth/2))).astype(int)
-        box = (p1, p2, p3, p4) # TODO check new_ps que caigan fuera y proyectar detro 
+        box = (p1, p2, p3, p4)
         box_list.append(box)
 
     polygon_list = box_to_polygon(box_list, imshape)

@@ -131,12 +131,12 @@ def get_bb(info, pointcloud, margin, id, img, c_info, path):
 
     polygon_list = create_polygons(expand_list_2d, minmaxs, img, c_info)
 
-    # for polygon in polygon_list:
-    #     for point in polygon:
-    #         img.putpixel((point[0], point[1]), (255,0,0))
-    #img.save("/home/bomiquel/Desktop/" + str(id) + "_colour.png")
+    for polygon in polygon_list:
+        for point in polygon:
+            img.putpixel((point[0], point[1]), (255,0,0))
+    img.save("/home/bomiquel/Desktop/" + str(id) + "_colour.png")
 
-    for box in polygon_list:  # TODO meter un for ya que ahora puede tener mas de 4, de momento se queda con los 4 primeros, que todos tendran minimo y no peta
+    for box in polygon_list:
         for point in enumerate(box):
             p.x = point[0]
             p.y = point[1]
@@ -186,9 +186,9 @@ def create_polygons(expand_list, minmaxs, img, c_info):
 
     for expand in expand_list:
 
-        border = check_box(expand, minmaxs, margin) # TODO buscar minmaxs a partir de los max y min de la pointcloud pasados a coordenadas img
+        border = check_box(expand, minmaxs, margin) 
         if border == False:                       
-            #next()
+            #next() # TODO test
             a = 1
 
         vector1 = expand[1]-expand[0]
@@ -236,7 +236,7 @@ def create_polygons(expand_list, minmaxs, img, c_info):
         p2 = (p_end1 - ((vector_orth/2))).astype(int)
         p3 = (p_end2 + ((vector_orth/2))).astype(int)
         p4 = (p_end2 - ((vector_orth/2))).astype(int)
-        box = (p1, p2, p3, p4) # TODO check new_ps que caigan fuera y proyectar detro 
+        box = (p1, p2, p3, p4)
         box_list.append(box)
 
     polygon_list = box_to_polygon(box_list, imshape)

@@ -422,7 +422,8 @@ class Pointcloud_Seg:
                     id = info[1]
                     break
             
-            self.infobbs = info_proc.get_bb(info_list, pred_sub, 0.03, id, self.img, self.c_info, self.path_keyframes)  # TODO pasar la img a numpy con cv_image = self.bridge.imgmsg_to_cv2(image, "rgb8"),  crear bridge ... mirar github oss_ros y si no simbaad
+            img_np = np.array(np.frombuffer(self.img.data, dtype=np.uint8).reshape(self.img.height, self.img.width,3))
+            self.infobbs = info_proc.get_bb(info_list, pred_sub, 0.03, id, img_np, self.c_info, self.path_keyframes)
             self.infobbs.header = header
             self.infobbs.frame_id = int(id)
 
