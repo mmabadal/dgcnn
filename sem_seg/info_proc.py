@@ -59,7 +59,7 @@ def points_to_img(points_list, c_info):
     return points_list_2d
 
 
-def get_bb(info, pointcloud, margin, id, img, c_info, path):
+def get_bb(info, pointcloud, margin, id, img, disp_msg, c_info, path):
 
     infobbs = info_bbs()
     p = Point32()
@@ -85,7 +85,14 @@ def get_bb(info, pointcloud, margin, id, img, c_info, path):
         vector_orth = np.array([-vector[1], vector[0], 0])
         vector_orth = vector_orth/np.linalg.norm(vector_orth)
         vector_orth = (0.06+margin) * vector_orth
+
+
         point3 = point1 + vector_orth
+        
+        print(point1)
+        print(point2)
+        print(point3)
+        print(vector_orth)
 
         expand = [point1, point2, point3]
         expand_list.append(expand)
@@ -129,11 +136,16 @@ def get_bb(info, pointcloud, margin, id, img, c_info, path):
 
     pc_xmin, pc_ymin, *_ = pointcloud.min(axis=0)
     pc_xmax, pc_ymax, *_ = pointcloud.max(axis=0)
-
-    minmaxs_pc = [[np.array([pc_xmin, pc_ymin, 1]), np.array([pc_xmax, pc_ymax, 1])]]  # TODO mirar si se puede hacer sin inventar z (check comits antiguos de cuando hicimos tests de esquinas), si no necesitare disparidad
+    minmaxs_pc = [[np.array([pc_xmin, pc_ymin, 1]), np.array([pc_xmax, pc_ymax, 1])]]
     minmaxs_2d = points_to_img(minmaxs_pc, c_info)
-
     minmaxs = np.array([minmaxs_2d[0][0][0], minmaxs_2d[0][0][1], minmaxs_2d[0][1][0], minmaxs_2d[0][1][1]])
+
+    disp = ros_numpy.numpify(disp_msg.image)
+    disp_pos = np.where(disp>15)
+    disp_pos_np = np.vstack(disp_pos).T
+    disp_ymin, disp_xmin = disp_pos_np.min(axis=0)
+    disp_ymax, disp_xmax = disp_pos_np.max(axis=0)
+    minmaxs = np.array([disp_xmin, disp_ymin, disp_xmax, disp_ymax])
 
     polygon_list = create_polygons(expand_list_2d, minmaxs, img, c_info)
 

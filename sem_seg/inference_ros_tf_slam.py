@@ -29,6 +29,7 @@ from sensor_msgs.msg import Image
 from sensor_msgs.msg import CameraInfo
 from sensor_msgs.msg import PointField
 from sensor_msgs.msg import PointCloud2
+from stereo_msgs.msg import DisparityImage
 import sensor_msgs.point_cloud2 as pc2
 
 
@@ -115,11 +116,12 @@ class Pointcloud_Seg:
 
         # set subscribers
         im_sub = message_filters.Subscriber('/turbot/slamon/keyframe', Image)         # //PARAM
+        disp_sub = message_filters.Subscriber('/turbot/slamon/keyframe_disparity', DisparityImage)         # //PARAM
         pc_sub = message_filters.Subscriber('/turbot/slamon/keyframe_points2', PointCloud2)         # //PARAM
         odom_sub = message_filters.Subscriber('/turbot/slamon/graph_robot_odometry', Odometry)      # //PARAM
         info_sub = message_filters.Subscriber('/stereo_down/scaled_x4/left/camera_info', CameraInfo)
 
-        ts_pc_odom = message_filters.ApproximateTimeSynchronizer([im_sub, pc_sub, odom_sub, info_sub], queue_size=10, slop=0.001)
+        ts_pc_odom = message_filters.ApproximateTimeSynchronizer([im_sub, disp_sub,pc_sub, odom_sub, info_sub], queue_size=10, slop=0.001)
         ts_pc_odom.registerCallback(self.cb_pc)
 
         loop_sub = message_filters.Subscriber('/turbot/slamon/loop_closings_num', Int32)
@@ -136,8 +138,9 @@ class Pointcloud_Seg:
         # Set segmentation timer
         rospy.Timer(rospy.Duration(self.period), self.run)
 
-    def cb_pc(self, img, pc, odom, c_info):
+    def cb_pc(self, img, disp, pc, odom, c_info):
         self.img = img
+        self.disp = disp
         self.pc = pc
         self.odom = odom
         self.c_info = c_info
@@ -423,7 +426,7 @@ class Pointcloud_Seg:
                     break
             
             img_np = np.array(np.frombuffer(self.img.data, dtype=np.uint8).reshape(self.img.height, self.img.width,3))
-            self.infobbs = info_proc.get_bb(info_list, pred_sub, 0.03, id, img_np, self.c_info, self.path_keyframes)
+            self.infobbs = info_proc.get_bb(info_list, pred_sub, 0.03, id, img_np, self.disp, self.c_info, self.path_keyframes)
             self.infobbs.header = header
             self.infobbs.frame_id = int(id)
 
