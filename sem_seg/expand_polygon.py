@@ -16,9 +16,8 @@ def main():
     dist = 5
     cthr = 80
     nthr = 50
-    vstride = 10
+    vstride = 5
     minmaxs = np.array([120,100,400,600])
-
 
     p1 = np.array([253, 116])
     p2 = np.array([468, 83 ])
@@ -38,19 +37,21 @@ def main():
     expand = (p1, p2, vector_orth)
     expand_list.append(expand)
 
+    colors = ((255,0,0,),(0,255,0),(0,0,255))
 
-    for expand in expand_list:
+
+    for c, expand in enumerate(expand_list):
         for i, point in enumerate(expand):
             if i < 2:
-                img[point[0], point[1], 0] = 0
-                img[point[0], point[1], 1] = 255
-                img[point[0], point[1], 2] = 0
+                img[point[0], point[1], 0] = colors[c][0]
+                img[point[0], point[1], 1] = colors[c][1]
+                img[point[0], point[1], 2] = colors[c][2]
 
     for expand in expand_list:
 
-        border = check_box(expand, minmaxs, margin) # 
+        border = check_box(expand, minmaxs, margin) 
         if border == False:                       
-            #next()   # TODO check esto
+            #next() # TODO test
             a = 1
 
         vector1 = expand[1]-expand[0]
@@ -63,6 +64,7 @@ def main():
 
         iter = 0
         p_list = list()
+        p_list.append(expand[1])
         while 1:
             iter += 1
             point = (expand[1] + iter * vector1_iter).astype(int)
@@ -79,6 +81,7 @@ def main():
 
         iter = 0
         p_list = list()
+        p_list.append(expand[0])
         while 1:
             iter += 1
             point = (expand[0] + iter * vector2_iter).astype(int)
@@ -103,32 +106,34 @@ def main():
 
     polygon_list = box_to_polygon(box_list, imshape)
     
-
-    for box in box_list:
+    for c, box in enumerate(box_list):
         for i, point in enumerate(box):
 
             px = np.clip(point[0], 0, imshape[0]-1)
             py = np.clip(point[1], 0, imshape[1]-1)
 
-            img2[px, py, 0] = 0
-            img2[px, py, 1] = 255
-            img2[px, py, 2] = 0
+            img2[px, py, 0] = colors[c][0]
+            img2[px, py, 1] = colors[c][1]
+            img2[px, py, 2] = colors[c][2]
 
 
-    for polygon in polygon_list:
+    for c, polygon in enumerate(polygon_list):
         for i, point in enumerate(polygon):
-            img3[point[0], point[1], 0] = 0
-            img3[point[0], point[1], 1] = 255
-            img3[point[0], point[1], 2] = 0
+            img3[point[0], point[1], 0] = colors[c][0]
+            img3[point[0], point[1], 1] = colors[c][1]
+            img3[point[0], point[1], 2] = colors[c][2]
 
     io.imshow(img)
     io.show()
+    io.imsave('/home/miguel/Desktop/1.png', img)
 
     io.imshow(img2)
     io.show()
+    io.imsave('/home/miguel/Desktop/2.png', img2)
 
     io.imshow(img3)
     io.show()
+    io.imsave('/home/miguel/Desktop/3.png', img3)
 
 
 def box_to_polygon(box_list, imshape):
@@ -139,8 +144,8 @@ def box_to_polygon(box_list, imshape):
 
         polygon = list()
         
-        h = imshape[0]
-        w = imshape[1]
+        h = int(imshape[0])
+        w = int(imshape[1])
 
         for n, point in enumerate(box):
             if point[0] in range (0,h) and point[1] in range(0,w):

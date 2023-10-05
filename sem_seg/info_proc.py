@@ -86,14 +86,8 @@ def get_bb(info, pointcloud, margin, id, img, disp_msg, c_info, path):
         vector_orth = vector_orth/np.linalg.norm(vector_orth)
         vector_orth = (0.06+margin) * vector_orth
 
-
         point3 = point1 + vector_orth
         
-        print(point1)
-        print(point2)
-        print(point3)
-        print(vector_orth)
-
         expand = [point1, point2, point3]
         expand_list.append(expand)
 
@@ -186,28 +180,10 @@ def create_polygons(expand_list, minmaxs, img, c_info):
     imshape = np.array([height, width])
 
     margin = 25
-    dist = 10
-    cthr = 0
-    nthr = 15
-    vstride = 4
-
-    p1 = np.array([253, 116])
-    p2 = np.array([468, 83 ])
-    vector_orth = np.array([269, 168]) - np.array([249, 49 ])
-    expand = (p1, p2, vector_orth)
-    expand_list.append(expand)
-
-    p1 = np.array([252, 110])
-    p2 = np.array([147, 129])
-    vector_orth = np.array([151, 155]) - np.array([137, 101])
-    expand = (p1, p2, vector_orth)
-    expand_list.append(expand)
-
-    p1 = np.array([612, 477])
-    p2 = np.array([693, 535])
-    vector_orth =  np.array([591, 505]) - np.array([630, 445])
-    expand = (p1, p2, vector_orth)
-    expand_list.append(expand)
+    dist = 5
+    cthr = 80
+    nthr = 50
+    vstride = 5
 
     for expand in expand_list:
 
