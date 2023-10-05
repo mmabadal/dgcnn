@@ -240,11 +240,14 @@ def create_polygons(expand_list, minmaxs, img, c_info):
         p3 = (p_end2 + ((vector_orth/2))).astype(int)
         p4 = (p_end2 - ((vector_orth/2))).astype(int)
         box = (p1, p2, p3, p4)
-        box_list.append(box)
-
+        #box_list.append(box)   # TODO descomentar
+    
+    # TODO test, quitar siguiente append
+    box_list.append((np.array([minmaxs[0], minmaxs[1]]), np.array([minmaxs[0], minmaxs[3]]), np.array([minmaxs[2], minmaxs[1]]), np.array([minmaxs[2], minmaxs[3]])))
+    
     polygon_list = box_to_polygon(box_list, imshape)
 
-    return polygon_list
+    return box_list # TODO volver a polygon_list, solo es para ver si las cajas salen bien, o tampoco, si no, ir un paso atras a los 2 punros por instancia
 
 
 def box_to_polygon(box_list, imshape):
