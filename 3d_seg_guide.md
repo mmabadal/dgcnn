@@ -6,21 +6,21 @@
 - cuda: 10.1
 - cudnn: 8.0
 
-'''
- $ conda create --name XXXXX python=3.7
- $ conda activate XXXXX
- $ pip install tensorflow==1.14
- $ conda install natsort
- $ conda install scipy
- $ pip install open3d==0.9
- $ conda install matplotlib
- $ conda install -c conda-forge plyfile
- $ pip install scikit-image
- $ conda install -c anaconda protobuf
- $ pip install rospkg
- $ pip install rosnumpy
- $ pip install pyyaml
-'''
+
+- conda create --name XXXXX python=3.7
+- conda activate XXXXX
+- pip install tensorflow==1.14
+- conda install natsort
+- conda install scipy
+- pip install open3d==0.9
+- conda install matplotlib
+- conda install -c conda-forge plyfile
+- pip install scikit-image
+- conda install -c anaconda protobuf
+- pip install rospkg
+- pip install rosnumpy
+- pip install pyyaml
+
  
 # get data
 
