@@ -6,6 +6,7 @@
 - cuda: 10.1
 - cudnn: 8.0
 
+'''
  $ conda create --name XXXXX python=3.7
  $ conda activate XXXXX
  $ pip install tensorflow==1.14
@@ -19,7 +20,7 @@
  $ pip install rospkg
  $ pip install rosnumpy
  $ pip install pyyaml
- 
+'''
  
 # get data
 
