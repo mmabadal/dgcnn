@@ -143,12 +143,16 @@ def get_bb(info, pointcloud, margin, id, img, disp_msg, c_info):
 
     polygon_list = create_polygons(expand_list_2d, minmaxs, img, c_info)
 
+
+
+
     img_pil = Image.fromarray(img) 
+
 
     for polygon in polygon_list:
         for point in polygon:
             img_pil.putpixel((point[0], point[1]), (255,0,0))
-    img_pil.save("/home/bomiquel/Desktop/" + str(id) + "_colour.png")
+    img_pil.save("../out/img/" + str(id) + "_colour.png")
 
     for box in polygon_list:
         for point in enumerate(box):
@@ -206,8 +210,8 @@ def create_polygons(expand_list, minmaxs, img, c_info):
                 p_end1 = p_list[-2] # el ultimo que tuvo tuberia antes de salirse
                 break
             else:
-                color = get_color(expand, img)
-                end = check_near(point, color, dist, img, cthr, nthr)
+                col = get_color(expand, img)
+                end = check_near(point, col, dist, img, cthr, nthr)
                 if end == True:
                     p_end1 = p_list[-1]
                     break
@@ -223,7 +227,8 @@ def create_polygons(expand_list, minmaxs, img, c_info):
                 p_end2 = p_list[-2] # el ultimo que tuvo tuberia antes de salirse
                 break
             else:
-                end = check_near(point, color, dist, img, cthr, nthr)
+                col = get_color(expand, img)
+                end = check_near(point, col, dist, img, cthr, nthr)
                 if end == True:
                     p_end2 = p_list[-1]
                     break
@@ -320,10 +325,10 @@ def check_box(box, minmaxs, margin):
     return border
 
 
-def check_near(point, color, dist, img, cthr, nthr):
-    #color_ref_rgb = color
-    color_ref_rgb = np.array([210,210,0])   # TODO dinamico?
-    color_ref_lab = color.rgb2lab([[[color_ref_rgb[0] / 255, color_ref_rgb[1] / 255, color_ref_rgb[2] / 255]]])
+def check_near(point, col, dist, img, cthr, nthr):
+    #color_rgb = col
+    color_rgb = np.array([210,210,0])   # TODO dinamico?
+    color_lab = color.rgb2lab([[[color_rgb[0] / 255, color_rgb[1] / 255, color_rgb[2] / 255]]])
     end = True 
     imshape = img.shape
 
@@ -338,7 +343,7 @@ def check_near(point, color, dist, img, cthr, nthr):
         for col in range(col0, col1):                           # for each col
             pixel = np.array([img[row,col,0],img[row,col,1],img[row,col,2]])
             pixel_lab = color.rgb2lab([[[pixel[0] / 255, pixel[1] / 255, pixel[2] / 255]]])
-            color_dist = color.deltaE_cie76(color_ref_lab, pixel_lab)
+            color_dist = color.deltaE_cie76(color_lab, pixel_lab)
             if color_dist < cthr:
                 n += 1 
     if n > nthr:

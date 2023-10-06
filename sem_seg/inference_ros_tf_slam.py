@@ -103,7 +103,7 @@ class Pointcloud_Seg:
         self.time = True
         self.path = rospy.get_param('/turbot/slamon/working_directory', "../out")
         self.path_out = os.path.join(self.path, "pipes")
-        self.path_graph = os.path.join(self.path, "graph_vertices.txt")
+        self.path_graph = os.path.join(self.path, "execution_2/graph_vertices.txt")
 
 
         if not os.path.exists(self.path_out):
@@ -426,6 +426,7 @@ class Pointcloud_Seg:
                     break
             
             img_np = np.array(np.frombuffer(self.img.data, dtype=np.uint8).reshape(self.img.height, self.img.width,3))
+            img_np = img_np[...,::-1]
             self.infobbs = info_proc.get_bb(info_list, pred_sub, 0.03, id, img_np, self.disp, self.c_info)
             self.infobbs.header = header
             self.infobbs.frame_id = int(id)
