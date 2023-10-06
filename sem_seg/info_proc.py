@@ -59,7 +59,7 @@ def points_to_img(points_list, c_info):
     return points_list_2d
 
 
-def get_bb(info, pointcloud, margin, id, img, disp_msg, c_info, path):
+def get_bb(info, pointcloud, margin, id, img, disp_msg, c_info):
 
     infobbs = info_bbs()
     p = Point32()
@@ -143,17 +143,12 @@ def get_bb(info, pointcloud, margin, id, img, disp_msg, c_info, path):
 
     polygon_list = create_polygons(expand_list_2d, minmaxs, img, c_info)
 
-    keyframes = os.listdir(path)
-    for keyframe in keyframes:
-        if "left" in keyframe:
-            if id in keyframe:
-                key = Image.open(os.path.join(path, keyframe))
-                break
+    img_pil = Image.fromarray(img) 
 
     for polygon in polygon_list:
         for point in polygon:
-            key.putpixel((point[0], point[1]), (255,0,0))
-    key.save("/home/bomiquel/Desktop/" + str(id) + "_colour.png")
+            img_pil.putpixel((point[0], point[1]), (255,0,0))
+    img_pil.save("/home/bomiquel/Desktop/" + str(id) + "_colour.png")
 
     for box in polygon_list:
         for point in enumerate(box):
@@ -211,10 +206,10 @@ def create_polygons(expand_list, minmaxs, img, c_info):
                 p_end1 = p_list[-2] # el ultimo que tuvo tuberia antes de salirse
                 break
             else:
-                end = check_near(point, dist, img, cthr, nthr)
+                color = get_color(expand, img)
+                end = check_near(point, color, dist, img, cthr, nthr)
                 if end == True:
-                    a = int(-1 - dist/vstride) #  -1 - dist/vstride para tirar para atras los puntos que añadirá de mas al ir encontrando tuberia por atras (/vstride pq vamos a saltos de vstride pixeles)
-                    p_end1 = p_list[-1] # TODO Change to a
+                    p_end1 = p_list[-1]
                     break
 
         iter = 0
@@ -228,10 +223,9 @@ def create_polygons(expand_list, minmaxs, img, c_info):
                 p_end2 = p_list[-2] # el ultimo que tuvo tuberia antes de salirse
                 break
             else:
-                end = check_near(point, dist, img, cthr, nthr)
+                end = check_near(point, color, dist, img, cthr, nthr)
                 if end == True:
-                    a = int(-1 - dist/vstride) #  -1 - dist/vstride para tirar para atras los puntos que añadirá de mas al ir encontrando tuberia por atras (/vstride pq vamos a saltos de vstride pixeles)
-                    p_end2 = p_list[-1]  # TODO Change to a
+                    p_end2 = p_list[-1]
                     break
 
         vector_orth = expand[2]
@@ -326,7 +320,8 @@ def check_box(box, minmaxs, margin):
     return border
 
 
-def check_near(point, dist, img, cthr, nthr):
+def check_near(point, color, dist, img, cthr, nthr):
+    #color_ref_rgb = color
     color_ref_rgb = np.array([210,210,0])   # TODO dinamico?
     color_ref_lab = color.rgb2lab([[[color_ref_rgb[0] / 255, color_ref_rgb[1] / 255, color_ref_rgb[2] / 255]]])
     end = True 
@@ -349,3 +344,8 @@ def check_near(point, dist, img, cthr, nthr):
     if n > nthr:
         end = False
     return end
+
+
+def get_color(expand, img):
+    color = np.array([210,210,0])
+    return color
