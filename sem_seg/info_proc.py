@@ -51,7 +51,7 @@ def points_to_img(points_list, c_info):
             xdisp = int(np.clip(xdisp, 1, width-1))
             ydisp = int(np.clip(ydisp, 1, height-1))
 
-            xydisp = np.array((ydisp, xdisp))
+            xydisp = np.array((xdisp, ydisp))
             points2.append(xydisp)
 
         points_list_2d.append(points2)
@@ -128,11 +128,11 @@ def get_bb(info, pointcloud, margin, id, img, disp_msg, c_info):
     for expand_2d in expand_list_2d:
         expand_2d[2] = expand_2d[2] - expand_2d[0]
 
-    pc_xmin, pc_ymin, *_ = pointcloud.min(axis=0)
-    pc_xmax, pc_ymax, *_ = pointcloud.max(axis=0)
-    minmaxs_pc = [[np.array([pc_xmin, pc_ymin, 1]), np.array([pc_xmax, pc_ymax, 1])]]
-    minmaxs_2d = points_to_img(minmaxs_pc, c_info)
-    minmaxs = np.array([minmaxs_2d[0][0][0], minmaxs_2d[0][0][1], minmaxs_2d[0][1][0], minmaxs_2d[0][1][1]])
+    # pc_ymin, pc_xmin, *_ = pointcloud.min(axis=0)
+    # pc_ymax, pc_xmax, *_ = pointcloud.max(axis=0)
+    # minmaxs_pc = [[np.array([pc_xmin, pc_ymin, 1]), np.array([pc_xmax, pc_ymax, 1])]]
+    # minmaxs_2d = points_to_img(minmaxs_pc, c_info)
+    # minmaxs2 = np.array([minmaxs_2d[0][0][0], minmaxs_2d[0][0][1], minmaxs_2d[0][1][0], minmaxs_2d[0][1][1]])
 
     disp = ros_numpy.numpify(disp_msg.image)
     disp_pos = np.where(disp>15)
@@ -143,15 +143,18 @@ def get_bb(info, pointcloud, margin, id, img, disp_msg, c_info):
 
     polygon_list = create_polygons(expand_list_2d, minmaxs, img, c_info)
 
+    polygon_list = polygon_list + expand_list_2d
 
+    colors = ((255,0,0,),(0,255,0),(0,0,255))
+    lp= len(expand_list_2d)
 
 
     img_pil = Image.fromarray(img) 
 
-
-    for polygon in polygon_list:
+    for i, polygon in enumerate(polygon_list):
+        k = int(i/lp)
         for point in polygon:
-            img_pil.putpixel((point[0], point[1]), (255,0,0))
+            img_pil.putpixel((point[0], point[1]), colors[k])
     img_pil.save("../out/img/" + str(id) + "_colour.png")
 
     for box in polygon_list:
@@ -208,13 +211,17 @@ def create_polygons(expand_list, minmaxs, img, c_info):
             p_list.append(point)
             if point[0] < 0 or point[0] > imshape[0] or point[1] < 0 or point[1] > imshape[1]:
                 p_end1 = p_list[-2] # el ultimo que tuvo tuberia antes de salirse
+                #print("out")
                 break
             else:
                 col = get_color(expand, img)
                 end = check_near(point, col, dist, img, cthr, nthr)
                 if end == True:
-                    p_end1 = p_list[-1]
+                    #print("col check fail")
+                    p_end1 = p_list[-2]
                     break
+                #print("col check ok")
+
 
         iter = 0
         p_list = list()
@@ -225,13 +232,17 @@ def create_polygons(expand_list, minmaxs, img, c_info):
             p_list.append(point)
             if point[0] < 0 or point[0] > imshape[0] or point[1] < 0 or point[1] > imshape[1]:
                 p_end2 = p_list[-2] # el ultimo que tuvo tuberia antes de salirse
+                #print("out")
                 break
             else:
                 col = get_color(expand, img)
                 end = check_near(point, col, dist, img, cthr, nthr)
                 if end == True:
-                    p_end2 = p_list[-1]
+                    #print("col check fail")
+                    p_end2 = p_list[-2]
                     break
+                #print("col check ok")
+
 
         vector_orth = expand[2]
         p1 = (p_end1 + ((vector_orth/2))).astype(int)
@@ -239,14 +250,13 @@ def create_polygons(expand_list, minmaxs, img, c_info):
         p3 = (p_end2 + ((vector_orth/2))).astype(int)
         p4 = (p_end2 - ((vector_orth/2))).astype(int)
         box = (p1, p2, p3, p4)
-        #box_list.append(box)   # TODO descomentar
-    
-    # TODO test, quitar siguiente append
-    box_list.append((np.array([minmaxs[0], minmaxs[1]]), np.array([minmaxs[0], minmaxs[3]]), np.array([minmaxs[2], minmaxs[1]]), np.array([minmaxs[2], minmaxs[3]])))
+        box_list.append(box)
     
     polygon_list = box_to_polygon(box_list, imshape)
 
-    return box_list # TODO volver a polygon_list, solo es para ver si las cajas salen bien, o tampoco, si no, ir un paso atras a los 2 punros por instancia
+    polygon_list = polygon_list + box_list
+
+    return polygon_list # TODO volver a polygon_list en cuanto expand list parece que puntos bien y vector mal, =mente comprobar con ply
 
 
 def box_to_polygon(box_list, imshape):
@@ -257,8 +267,8 @@ def box_to_polygon(box_list, imshape):
 
         polygon = list()
         
-        h = int(imshape[0])
-        w = int(imshape[1])
+        w = int(imshape[0])
+        h = int(imshape[1])
 
         for n, point in enumerate(box):
             if point[0] in range (0,h) and point[1] in range(0,w):
@@ -317,7 +327,7 @@ def is_inside(p, box):
 
 def check_box(box, minmaxs, margin):
     border = False
-    minx, miny, maxx, maxy = minmaxs
+    minx, miny, maxx, maxy = minmaxs  # TODO  check orden
     for point in box:
         if (point[0] < minx+margin) or (point[0] > maxx-margin) or (point[1] < miny+margin) or (point[1] > maxy-margin):
             border = True

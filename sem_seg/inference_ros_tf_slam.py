@@ -109,7 +109,7 @@ class Pointcloud_Seg:
         if not os.path.exists(self.path_out):
             os.makedirs(self.path_out)
 
-        self.init = False
+        # self.init = False
         self.new_pc = False
 
         self.infobbs = info_bbs()
@@ -136,6 +136,9 @@ class Pointcloud_Seg:
         self.pub_info_bbs = rospy.Publisher('/turbot/slamon/info_bbs', info_bbs, queue_size=4)
 
         # Set segmentation timer
+
+        self.set_model()
+
         rospy.Timer(rospy.Duration(self.period), self.run)
 
     def cb_pc(self, img, disp, pc, odom, c_info):
@@ -147,7 +150,7 @@ class Pointcloud_Seg:
         self.new_pc = True
 
     def cb_loop(self, loop):
-        print("loop is: " + str(self.loop))
+        #print("loop is: " + str(self.loop))
         if loop.data != self.loop:
             self.loop = loop.data
             self.update_positions()
@@ -182,29 +185,30 @@ class Pointcloud_Seg:
             'loss': loss}
 
     def run(self,_):
-        rospy.loginfo('[%s]: Running', self.name)	
+        #rospy.loginfo('[%s]: Running', self.name)	
 
         # New pc available
         if not self.new_pc:
             rospy.loginfo('[%s]: No new pointcloud', self.name)	
             return
         self.new_pc = False
+        rospy.loginfo('[%s]: --- new pointcloud!!!', self.name)	
 
         # Retrieve image
         try:
             pc = self.pc
             header = self.pc.header
-            if not self.init:
-                rospy.loginfo('[%s]: Start pc segmentation', self.name)	
+            # if not self.init:
+            #     rospy.loginfo('[%s]: Start pc segmentation', self.name)	
         except:
             rospy.logwarn('[%s]: There is no input pc to run the segmentation', self.name)
             return
 
-        # Set model
-        if not self.init:
-            self.set_model()
-            self.init = True
-            return
+        # # Set model
+        # if not self.init:
+        #     self.set_model()
+        #     self.init = True
+        #     return
 
         pc_np = self.pc2array(pc)
         if pc_np.shape[0] < 2000:               # return if points < thr   //PARAM
@@ -404,24 +408,24 @@ class Pointcloud_Seg:
             # TODO: CHECK restar tiempos y check de que no haya pasado más de 0,1 segundos
             file_id = open(self.path_graph, 'r')
             lines = file_id.readlines()[1:]
-            print(f"Raw pc header: {header}")
+            #print(f"Raw pc header: {header}")
             for line in lines:
                 info = [x for x in line.split(',')]
 
                 ts = info[0]
-                print(f"Raw txt header: {ts}") 
+                #print(f"Raw txt header: {ts}") 
 
                 ts_float = float(ts)
-                print(f"Modified txt header float: {ts_float}")  
+                #print(f"Modified txt header float: {ts_float}")  
 
                 header_float = header.stamp.secs + header.stamp.nsecs*1e-9
-                print(f"Modified pc header float: {header_float}")
+                #print(f"Modified pc header float: {header_float}")
 
                 time_dif = abs(ts_float-header_float)
-                print(f"time_dif: {time_dif}")
+                #print(f"time_dif: {time_dif}")
 
                 if time_dif < 0.1:
-                    print("im in!")
+                    #print("im in!")
                     id = info[1]
                     break
             
@@ -452,6 +456,7 @@ class Pointcloud_Seg:
         if instances_ref is None: # if instances were not found
             rospy.loginfo('[%s]: No instances found', self.name)	
             return
+        rospy.loginfo('[%s]: --- instances found!!!', self.name)	
 
         for i in range(pred_sub.shape[0]):
             color = self.label2color[pred_sub[i,6]]

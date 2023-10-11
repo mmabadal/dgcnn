@@ -1,0 +1,1 @@
+% frame a,frame b,inliers,ax,ay,az,aqx,aqy,aqz,aqw,bx,by,bz,bqx,bqy,bqz,bqw
