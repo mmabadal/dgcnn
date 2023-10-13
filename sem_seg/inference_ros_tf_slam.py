@@ -413,20 +413,21 @@ class Pointcloud_Seg:
                 info = [x for x in line.split(',')]
 
                 ts = info[0]
-                #print(f"Raw txt header: {ts}") 
+                print(f"Raw txt header: {ts}") 
 
                 ts_float = float(ts)
-                #print(f"Modified txt header float: {ts_float}")  
+                print(f"Modified txt header float: {ts_float}")  
 
                 header_float = header.stamp.secs + header.stamp.nsecs*1e-9
-                #print(f"Modified pc header float: {header_float}")
+                print(f"Modified pc header float: {header_float}")
 
                 time_dif = abs(ts_float-header_float)
-                #print(f"time_dif: {time_dif}")
+                print(f"time_dif: {time_dif}")
 
                 if time_dif < 0.1:
-                    #print("im in!")
+                    print("im in!")
                     id = info[1]
+                    print(f"id: {id}")
                     break
             
             img_np = np.array(np.frombuffer(self.img.data, dtype=np.uint8).reshape(self.img.height, self.img.width,3))
