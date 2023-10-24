@@ -191,8 +191,8 @@ def create_polygons(expand_list, minmaxs, img, c_info):
 
         border = check_box(expand, minmaxs, margin) 
         if border == False:                       
-            #next() # TODO test
-            a = 1
+            next()  # TODO test
+            #a = 1
 
         vector1 = expand[1]-expand[0]
         vector1_unit = vector1/np.linalg.norm(vector1)
@@ -256,7 +256,7 @@ def create_polygons(expand_list, minmaxs, img, c_info):
 
     polygon_list = polygon_list + box_list
 
-    return polygon_list # TODO volver a polygon_list en cuanto expand list parece que puntos bien y vector mal, =mente comprobar con ply
+    return polygon_list
 
 
 def box_to_polygon(box_list, imshape):
@@ -327,7 +327,7 @@ def is_inside(p, box):
 
 def check_box(box, minmaxs, margin):
     border = False
-    minx, miny, maxx, maxy = minmaxs  # TODO  check orden
+    minx, miny, maxx, maxy = minmaxs
     for point in box:
         if (point[0] < minx+margin) or (point[0] > maxx-margin) or (point[1] < miny+margin) or (point[1] > maxy-margin):
             border = True
@@ -336,8 +336,8 @@ def check_box(box, minmaxs, margin):
 
 
 def check_near(point, col, dist, img, cthr, nthr):
-    #color_rgb = col
-    color_rgb = np.array([210,210,0])   # TODO dinamico?
+    color_rgb = col   # TODO test
+    # color_rgb = np.array([210,210,0])
     color_lab = color.rgb2lab([[[color_rgb[0] / 255, color_rgb[1] / 255, color_rgb[2] / 255]]])
     end = True 
     imshape = img.shape
@@ -362,5 +362,20 @@ def check_near(point, col, dist, img, cthr, nthr):
 
 
 def get_color(expand, img):
-    color = np.array([210,210,0])
+
+    samples = 10
+    p1 = expand[1]
+    p2 = expand[2]
+    v12 = p2-p1 
+
+    pixel_col_list = list()
+
+    for i in range(samples):
+        pixel = (p1+((v12/samples)*i+1)).astype(int)
+        pixel_col = np.array([img[pixel[0],pixel[1],0],img[pixel[0],pixel[1],1],img[pixel[0],pixel[1],2]])
+        pixel_col_list.append(pixel_col)
+
+    color_stack = np.stack(pixel_col_list, axis=0)
+    color = (np.mean(color_stack, axis=0)).astype(int)
+
     return color
