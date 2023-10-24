@@ -413,19 +413,19 @@ class Pointcloud_Seg:
                 info = [x for x in line.split(',')]
 
                 ts = info[0]
-                print(f"Raw txt header: {ts}") 
+                #print(f"Raw txt header: {ts}") 
 
                 ts_float = float(ts)
-                print(f"Modified txt header float: {ts_float}")  
+                #print(f"Modified txt header float: {ts_float}")  
 
                 header_float = header.stamp.secs + header.stamp.nsecs*1e-9
-                print(f"Modified pc header float: {header_float}")
+                #print(f"Modified pc header float: {header_float}")
 
                 time_dif = abs(ts_float-header_float)
-                print(f"time_dif: {time_dif}")
+                #print(f"time_dif: {time_dif}")
 
                 if time_dif < 0.1:
-                    print("im in!")
+                    #print("im in!")
                     id = info[1]
                     print(f"id: {id}")
                     break
@@ -692,7 +692,6 @@ class Pointcloud_Seg:
             tr_ned_down = np.matmul(tr_ned_downbase, tr_downbase_down)
             tr_ned_left = np.matmul(tr_ned_down, tr_down_left)
 
-            # TODO: CHECK restar tiempos y check de que no haya pasado más de 0,1 segundos
             ts_float = info[0]
 
             files = os.listdir(self.path_out)
@@ -701,10 +700,10 @@ class Pointcloud_Seg:
                 header_float = float(name[:10] + '.' + name[10:])
 
                 time_dif = abs(ts_float-header_float)
-                print(f"time_dif: {time_dif}")
+                #print(f"time_dif: {time_dif}")
 
                 if time_dif < 0.1:
-                    print("im in!")
+                    #print("im in!")
                     break
 
             file_pc = os.path.join(self.path_out, name + '_info.npy')

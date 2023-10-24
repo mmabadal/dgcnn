@@ -143,8 +143,6 @@ def get_bb(info, pointcloud, margin, id, img, disp_msg, c_info):
 
     polygon_list = create_polygons(expand_list_2d, minmaxs, img, c_info)
 
-    polygon_list = polygon_list + expand_list_2d
-
     colors = ((255,0,0,),(0,255,0),(0,0,255))
     lp= len(expand_list_2d)
 
@@ -183,66 +181,69 @@ def create_polygons(expand_list, minmaxs, img, c_info):
 
     margin = 25
     dist = 5
-    cthr = 80
+    cthr = 40
     nthr = 50
     vstride = 5
 
     for expand in expand_list:
 
-        border = check_box(expand, minmaxs, margin) 
-        if border == False:                       
-            next()  # TODO test
-            #a = 1
+        border = check_expand(expand, minmaxs, margin) 
 
-        vector1 = expand[1]-expand[0]
-        vector1_unit = vector1/np.linalg.norm(vector1)
-        vector2_unit = vector1_unit*-1
+        if border == True:  
+            #print("---- expand accepted ----")
+            col = get_color(expand, img)
 
-        vector1_iter = vector1_unit * vstride
-        vector2_iter = vector2_unit * vstride
+            vector1 = expand[1]-expand[0]
+            vector1_unit = vector1/np.linalg.norm(vector1)
+            vector2_unit = vector1_unit*-1
 
+            vector1_iter = vector1_unit * vstride
+            vector2_iter = vector2_unit * vstride
 
-        iter = 0
-        p_list = list()
-        p_list.append(expand[1])
-        while 1:
-            iter += 1
-            point = (expand[1] + iter * vector1_iter).astype(int)
-            p_list.append(point)
-            if point[0] < 0 or point[0] > imshape[0] or point[1] < 0 or point[1] > imshape[1]:
-                p_end1 = p_list[-2] # el ultimo que tuvo tuberia antes de salirse
-                #print("out")
-                break
-            else:
-                col = get_color(expand, img)
-                end = check_near(point, col, dist, img, cthr, nthr)
-                if end == True:
-                    #print("col check fail")
-                    p_end1 = p_list[-2]
+            iter = 0
+            p_list = list()
+            p_list.append(expand[1])
+            while 1:
+                iter += 1
+                point = (expand[1] + iter * vector1_iter).astype(int)
+                p_list.append(point)
+                if point[0] < 0 or point[0] > imshape[0] or point[1] < 0 or point[1] > imshape[1]:
+                    p_end1 = p_list[-2] # el ultimo que tuvo tuberia antes de salirse
+                    #print("out")
                     break
-                #print("col check ok")
+                else:
+                    end = check_near(point, col, dist, img, cthr, nthr)
+                    if end == True:
+                        #print("col check fail")
+                        p_end1 = p_list[-2]
+                        break
+                    #print("col check ok")
 
-
-        iter = 0
-        p_list = list()
-        p_list.append(expand[0])
-        while 1:
-            iter += 1
-            point = (expand[0] + iter * vector2_iter).astype(int)
-            p_list.append(point)
-            if point[0] < 0 or point[0] > imshape[0] or point[1] < 0 or point[1] > imshape[1]:
-                p_end2 = p_list[-2] # el ultimo que tuvo tuberia antes de salirse
-                #print("out")
-                break
-            else:
-                col = get_color(expand, img)
-                end = check_near(point, col, dist, img, cthr, nthr)
-                if end == True:
-                    #print("col check fail")
-                    p_end2 = p_list[-2]
+            iter = 0
+            p_list = list()
+            p_list.append(expand[0])
+            while 1:
+                iter += 1
+                point = (expand[0] + iter * vector2_iter).astype(int)
+                p_list.append(point)
+                if point[0] < 0 or point[0] > imshape[0] or point[1] < 0 or point[1] > imshape[1]:
+                    p_end2 = p_list[-2] # el ultimo que tuvo tuberia antes de salirse
+                    #print("out")
                     break
-                #print("col check ok")
+                else:
+                    end = check_near(point, col, dist, img, cthr, nthr)
+                    if end == True:
+                        #print("col check fail")
+                        p_end2 = p_list[-2]
+                        break
+                    #print("col check ok")
 
+        else:
+            #print("---- expand discarted ----")  
+            #print(minmaxs)
+            #print(expand)
+            p_end1 = expand[1]
+            p_end2 = expand[0]
 
         vector_orth = expand[2]
         p1 = (p_end1 + ((vector_orth/2))).astype(int)
@@ -253,8 +254,6 @@ def create_polygons(expand_list, minmaxs, img, c_info):
         box_list.append(box)
     
     polygon_list = box_to_polygon(box_list, imshape)
-
-    polygon_list = polygon_list + box_list
 
     return polygon_list
 
@@ -325,10 +324,10 @@ def is_inside(p, box):
         return False
 
 
-def check_box(box, minmaxs, margin):
+def check_expand(expand, minmaxs, margin):
     border = False
     minx, miny, maxx, maxy = minmaxs
-    for point in box:
+    for point in expand[:-1]:
         if (point[0] < minx+margin) or (point[0] > maxx-margin) or (point[1] < miny+margin) or (point[1] > maxy-margin):
             border = True
             break
@@ -336,16 +335,15 @@ def check_box(box, minmaxs, margin):
 
 
 def check_near(point, col, dist, img, cthr, nthr):
-    color_rgb = col   # TODO test
-    # color_rgb = np.array([210,210,0])
+    color_rgb = col
     color_lab = color.rgb2lab([[[color_rgb[0] / 255, color_rgb[1] / 255, color_rgb[2] / 255]]])
     end = True 
     imshape = img.shape
 
-    row0 = max(point[0]-dist,0)
-    row1 = min(point[0]+dist+1, imshape[0])
-    col0 = max(point[1]-dist,0)
-    col1 = min(point[1]+dist+1, imshape[1])
+    row0 = max(point[1]-dist,0)
+    row1 = min(point[1]+dist+1, imshape[0])
+    col0 = max(point[0]-dist,0)
+    col1 = min(point[0]+dist+1, imshape[1])
 
     n = 0
 
@@ -364,15 +362,15 @@ def check_near(point, col, dist, img, cthr, nthr):
 def get_color(expand, img):
 
     samples = 10
-    p1 = expand[1]
-    p2 = expand[2]
+    p1 = expand[0]
+    p2 = expand[1]
     v12 = p2-p1 
 
     pixel_col_list = list()
 
-    for i in range(samples):
-        pixel = (p1+((v12/samples)*i+1)).astype(int)
-        pixel_col = np.array([img[pixel[0],pixel[1],0],img[pixel[0],pixel[1],1],img[pixel[0],pixel[1],2]])
+    for i in range(samples+1):
+        pixel = (p1+((v12/samples)*i)).astype(int)
+        pixel_col = np.array([img[pixel[1],pixel[0],0],img[pixel[1],pixel[0],1],img[pixel[1],pixel[0],2]])
         pixel_col_list.append(pixel_col)
 
     color_stack = np.stack(pixel_col_list, axis=0)
