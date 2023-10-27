@@ -67,7 +67,14 @@ def get_bb(info, pointcloud, margin, id, img, disp_msg, c_info):
 
     info_pipes_list = info[0]
     info_valves_list = info[2]
+    inst_pipe_list = info[3]
 
+    print("------------------")
+    print(info_pipes_list)
+    print("----")
+    print(inst_pipe_list)
+    print("------------------")
+    
     expand_list = list()
 
     for pipe_info in info_pipes_list: 
