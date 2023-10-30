@@ -68,54 +68,56 @@ def get_bb(info, pointcloud, margin, id, img, disp_msg, c_info):
     info_pipes_list = info[0]
     info_valves_list = info[2]
     inst_pipe_list = info[3]
-
-    print("------------------")
-    print(info_pipes_list)
-    print("----")
-    print(inst_pipe_list)
-    print("------------------")
     
     expand_list = list()
 
     for pipe_info in info_pipes_list: 
 
         chain = pipe_info[0]
+        chain_list = [row for row in chain]
+
         elbow_list = pipe_info[1]
         vector_list = pipe_info[2]
  
 
         vector = vector_list[0][0:3]
-        point1 = chain[0][0:3]
-        center = point1 + vector/2
+        point1 = chain_list[0][0:3]
+        center = point1 + (vector/2)
         point2 = center + (vector/2)
 
+        for i, array in enumerate(chain_list):
+            if np.array_equal(array, point2):
+                idx_p2 = i
+                break
 
-        idx_p2 = chain.index(point2)
         belong_list = pipe_info[3]
         inst = inst_pipe_list[belong_list[0]]
         for belong in belong_list[1:]:
             inst = np.vstack((inst,inst_pipe_list[belong]))
+        
+        inst  = inst[:, :-5]
 
-        chain_crop = copy.deepcopy(chain)
-        chain_crop = chain_crop[:idx_p2+1]     # chain_crop[1:idx_p2] - si queremos dropear el primer y ultimo elemento para que no pille parte del codo, checkear que tenga una dsitancia minima??
-        inst_near = points_within_distance(inst, chain_crop, 0.06+margin)
+        chain_list_crop = copy.deepcopy(chain_list)
+        chain_list_crop = chain_list_crop[:idx_p2+1]     # chain_list_crop[1:idx_p2] - si queremos dropear el primer y ultimo elemento para que no pille parte del codo, checkear que tenga una dsitancia minima??
+        inst_near = points_within_distance(inst, chain_list_crop, 0.06+margin)
+        center = np.mean(inst_near, axis=0)
 
         line_coef = np.polyfit(inst_near[:, 0], inst_near[:, 1], 1)
-        p1x = chain[0][0]
+        p1x = chain_list[0][0]
         p1y = line_coef[0]*p1x + line_coef[1]
-        point1 = np.array([p1x, p1y])
+        point1 = np.array([p1x, p1y, point1[2]])
         if len(elbow_list) > 0:
             p2x = elbow_list[0]
         else:
-            p2x = chain[-1][0]
+            p2x = chain_list[-1][0]
         p2y = line_coef[0]*p2x + line_coef[1]
-        point2 = np.array([p2x, p2y])
+        point2 = np.array([p2x, p2y, point2[2]])
         vector = point2-point1
 
         # line_coef = np.polyfit(inst_near[:, 0], inst_near[:, 1], 1)
-        # p1x = chain[0][0]
+        # p1x = chain_list[0][0]
         # p1y = line_coef[0]*p1x + line_coef[1]
-        # point1 = np.array([p1x, p1y])
+        # point1 = np.array([p1x, p1y, center[2]])
         # center = np.mean(inst_near, axis=0)
         # point2 = center + center-point1
         # vector = point2-point1
@@ -394,6 +396,7 @@ def check_near(point, col, dist, img, cthr, nthr):
                 n += 1 
     if n > nthr:
         end = False
+        print("col check")
     return end
 
 
@@ -403,6 +406,8 @@ def get_color(expand, img):
     p1 = expand[0]
     p2 = expand[1]
     v12 = p2-p1 
+
+    # TODO pasar instance pasada a disp, coger puntos que han pasado el check, añadirlos a la instance, volver a calcular vector ....
 
     pixel_col_list = list()
 
