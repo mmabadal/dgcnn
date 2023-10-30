@@ -82,12 +82,43 @@ def get_bb(info, pointcloud, margin, id, img, disp_msg, c_info):
         chain = pipe_info[0]
         elbow_list = pipe_info[1]
         vector_list = pipe_info[2]
+ 
 
         vector = vector_list[0][0:3]
-
         point1 = chain[0][0:3]
         center = point1 + vector/2
         point2 = center + (vector/2)
+
+
+        idx_p2 = chain.index(point2)
+        belong_list = pipe_info[3]
+        inst = inst_pipe_list[belong_list[0]]
+        for belong in belong_list[1:]:
+            inst = np.vstack((inst,inst_pipe_list[belong]))
+
+        chain_crop = copy.deepcopy(chain)
+        chain_crop = chain_crop[:idx_p2+1]     # chain_crop[1:idx_p2] - si queremos dropear el primer y ultimo elemento para que no pille parte del codo, checkear que tenga una dsitancia minima??
+        inst_near = points_within_distance(inst, chain_crop, 0.06+margin)
+
+        line_coef = np.polyfit(inst_near[:, 0], inst_near[:, 1], 1)
+        p1x = chain[0][0]
+        p1y = line_coef[0]*p1x + line_coef[1]
+        point1 = np.array([p1x, p1y])
+        if len(elbow_list) > 0:
+            p2x = elbow_list[0]
+        else:
+            p2x = chain[-1][0]
+        p2y = line_coef[0]*p2x + line_coef[1]
+        point2 = np.array([p2x, p2y])
+        vector = point2-point1
+
+        # line_coef = np.polyfit(inst_near[:, 0], inst_near[:, 1], 1)
+        # p1x = chain[0][0]
+        # p1y = line_coef[0]*p1x + line_coef[1]
+        # point1 = np.array([p1x, p1y])
+        # center = np.mean(inst_near, axis=0)
+        # point2 = center + center-point1
+        # vector = point2-point1
 
         vector_orth = np.array([-vector[1], vector[0], 0])
         vector_orth = vector_orth/np.linalg.norm(vector_orth)
@@ -384,3 +415,18 @@ def get_color(expand, img):
     color = (np.mean(color_stack, axis=0)).astype(int)
 
     return color
+
+
+def points_within_distance(points_array, target_points, distance):
+    result = []
+    
+    for point in points_array:
+        for target_point in target_points:
+            # Calculate the Euclidean distance between the current point and the target point.
+            dist = np.linalg.norm(point - target_point)
+            
+            if dist <= distance:
+                result.append(point)
+                break  # Break the inner loop when a match is found
+    
+    return np.array(result)
