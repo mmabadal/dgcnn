@@ -644,21 +644,27 @@ def get_info_connexions(connexions, chains):
 
 def get_info_skeleton(instance, close):
 
+
+    # transform instance to o3d pointcloud
+    instance_o3d = o3d.geometry.PointCloud()
+    instance_o3d.points = o3d.utility.Vector3dVector(instance[:,0:3])
+    instance_o3d.colors = o3d.utility.Vector3dVector(instance[:,3:6]/255)
+
     print_opt = False
     print_opt2 = False
     
     if print_opt2 == True:
-        print_o3d(instance)
+        print_o3d(instance_o3d)
 
     # VOXELS FROM POINTCLOUD
-    voxel_grid1 = o3d.geometry.VoxelGrid.create_from_point_cloud(instance,voxel_size=0.008)     # voxelice instance //PARAM
+    voxel_grid1 = o3d.geometry.VoxelGrid.create_from_point_cloud(instance_o3d,voxel_size=0.008)     # voxelice instance //PARAM
     
     if print_opt2 == True:
         print_o3d(voxel_grid1)
 
     # get voxels
     voxels_list = list()
-    instance1_points = np.asarray(instance.points)
+    instance1_points = np.asarray(instance_o3d.points)
     for p in instance1_points:
         voxel = o3d.geometry.VoxelGrid.get_voxel(voxel_grid1, p)
         voxels_list.append(voxel)
@@ -773,7 +779,7 @@ def get_info_skeleton(instance, close):
 
     # convert voxels of chains and connexions to points
     corr_list = list()
-    instance1_points = np.asarray(instance.points)
+    instance1_points = np.asarray(instance_o3d.points)
 
     # get correlation list, indicating for each row, onto wich voxel falls the point on same row of the instance1_points array
     for p in instance1_points:
@@ -807,25 +813,29 @@ def get_info_skeleton(instance, close):
 
         elbow_idx_list = get_elbows(chain)                              # find elbows
 
-        elbow_list = list()
-        for i in elbow_idx_list:                                        # append elbow points
-            elbow_list.append(chain[i])
-
         # find chain vectors
         vector_chain_list = list()
         if len(elbow_idx_list) == 0:                                        # if chain has no elbows
-            vector_chain = chain[-1] - chain[0]                             # vector from start to finish
+            #vector_chain = chain[-1] - chain[0]                             # vector from start to finish
+            chain, vector_chain = get_vector(chain[0], chain[-1], chain, instance, False, False)
             vector_chain_list.append(vector_chain)
         else:                                                               # if chain has any elbow
-            vector_chain = chain[elbow_idx_list[0]] - chain[0]   # first vector from start to first_elbow
+            #vector_chain = chain[elbow_idx_list[0]] - chain[0]   # first vector from start to first_elbow
+            chain, vector_chain = get_vector(chain[0], chain[elbow_idx_list[0]], chain, instance, False, True)
             vector_chain_list.append(vector_chain)
 
             for e in range(len(elbow_idx_list)-1):                                                          # middle elbows
-                vector_chain = chain[elbow_idx_list[e+1]] - chain[elbow_idx_list[e]]  # vector from current_elbow to next_elbow
+                #vector_chain = chain[elbow_idx_list[e+1]] - chain[elbow_idx_list[e]]  # vector from current_elbow to next_elbow
+                chain, vector_chain = get_vector(chain[elbow_idx_list[e]], chain[elbow_idx_list[e+1]], chain, instance, True, True)
                 vector_chain_list.append(vector_chain)
 
-            vector_chain = chain[-1] - chain[elbow_idx_list[-1]] # last vector from last_elbow to end
+            #vector_chain = chain[-1] - chain[elbow_idx_list[-1]] # last vector from last_elbow to end
+            chain, vector_chain = get_vector(chain[elbow_idx_list[-1]], chain[-1], chain, instance, True, False)
             vector_chain_list.append(vector_chain)
+
+        elbow_list = list()
+        for i in elbow_idx_list:                                        # append elbow points
+            elbow_list.append(chain[i])
 
         # get % points
         #mid = get_position_idx1(chain, 50)
@@ -1107,6 +1117,59 @@ def get_elbows(chain):
 
     return elbow_idx_list
 
+
+def get_vector(p1, p2, chain, inst, crop1, crop2):   # TODO regression line
+
+    margin = 0.03                       # //PARAM
+
+    chain_list = [row for row in chain]
+
+    for i, array in enumerate(chain_list):
+        if np.array_equal(array, p2):
+            idx_p1 = i
+            break
+
+    for i, array in enumerate(chain_list):
+        if np.array_equal(array, p2):
+            idx_p2 = i
+            break
+
+    chain_list_crop = chain[idx_p1:idx_p2+1]
+
+    inst_near = points_within_distance(inst, chain_list_crop, 0.06+margin)
+    center = np.mean(inst_near, axis=0)
+
+    line_coef = np.polyfit(inst_near[:, 0], inst_near[:, 1], 1)
+    p1_new_x = p1[0]
+    p1_new_y = line_coef[0]*p1_new_x + line_coef[1]
+    p1_new = np.array([p1_new_x, p1_new_y, p1[2]])
+
+    p2_new_x = p2[0]
+    p2_new_y = line_coef[0]*p2_new_x + line_coef[1]
+    p2_new = np.array([p2_new_x, p2_new_y, p2[2]])
+
+    chain_list[idx_p1] = p1_new
+    chain_list[idx_p2] = p2_new
+
+    chain = np.array(chain_list)
+    vector = p2_new-p1_new
+
+    return chain, vector
+
+
+def points_within_distance(points_array, target_points, distance):
+    result = []
+    
+    for point in points_array:
+        for target_point in target_points:
+            # Calculate the Euclidean distance between the current point and the target point.
+            dist = np.linalg.norm(point - target_point)
+            
+            if dist <= distance:
+                result.append(point)
+                break  # Break the inner loop when a match is found
+    
+    return np.array(result)
 
 
 def get_position_idx1(chain, percentage):
