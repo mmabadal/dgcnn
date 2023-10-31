@@ -75,13 +75,57 @@ def get_bb(info, pointcloud, margin, id, img, disp_msg, c_info):
 
         chain = pipe_info[0]
         chain_list = [row for row in chain]
+
         elbow_list = pipe_info[1]
         vector_list = pipe_info[2]
  
+
         vector = vector_list[0][0:3]
         point1 = chain_list[0][0:3]
         center = point1 + (vector/2)
         point2 = center + (vector/2)
+
+        for i, array in enumerate(chain_list):
+            if np.array_equal(array, point2):
+                idx_p2 = i
+                break
+
+        belong_list = pipe_info[3]
+        inst = inst_pipe_list[belong_list[0]]
+        for belong in belong_list[1:]:
+            inst = np.vstack((inst,inst_pipe_list[belong]))
+        
+        inst  = inst[:, :-5]
+
+        chain_list_crop = copy.deepcopy(chain_list)
+        chain_list_crop = chain_list_crop[:idx_p2+1]     # chain_list_crop[1:idx_p2] - si queremos dropear el primer y ultimo elemento para que no pille parte del codo, checkear que tenga una dsitancia minima??
+        inst_near = points_within_distance(inst, chain_list_crop, 0.06+margin)
+        center = np.mean(inst_near, axis=0)
+
+        line_coef = np.polyfit(inst_near[:, 0], inst_near[:, 1], 1)
+        p1x = chain_list[0][0]
+        p1y = line_coef[0]*p1x + line_coef[1]
+        point1 = np.array([p1x, p1y, point1[2]])
+        if len(elbow_list) > 0:
+            p2x = elbow_list[0]
+        else:
+            p2x = chain_list[-1][0]
+        p2y = line_coef[0]*p2x + line_coef[1]
+        point2 = np.array([p2x, p2y, point2[2]])
+
+
+        print("vector normal: " + str(vector))
+        vector = point2-point1
+
+        print("vector regresion post: " + str(vector))
+
+        # line_coef = np.polyfit(inst_near[:, 0], inst_near[:, 1], 1)
+        # p1x = chain_list[0][0]
+        # p1y = line_coef[0]*p1x + line_coef[1]
+        # point1 = np.array([p1x, p1y, center[2]])
+        # center = np.mean(inst_near, axis=0)
+        # point2 = center + center-point1
+        # vector = point2-point1
 
         vector_orth = np.array([-vector[1], vector[0], 0])
         vector_orth = vector_orth/np.linalg.norm(vector_orth)
