@@ -816,33 +816,17 @@ def get_info_skeleton(instance, close):
         # find chain vectors
         vector_chain_list = list()
         if len(elbow_idx_list) == 0:                                        # if chain has no elbows
-            #chain, vector_chain = get_vector(chain[0], chain[-1], chain, instance, False, False)
-            vector_chain = get_vector(chain[0], chain[-1], chain, instance, False, False)
-            print("vector regresion pre: " + str(vector_chain))
-            vector_chain = chain[-1] - chain[0]                             # vector from start to finish
-            print("vector normal: " + str(vector_chain))
+            chain, vector_chain = get_vector(chain[0], chain[-1], chain, instance, False, False)
             vector_chain_list.append(vector_chain)
         else:                                                               # if chain has any elbow
-            #chain, vector_chain = get_vector(chain[0], chain[elbow_idx_list[0]], chain, instance, False, True)
-            vector_chain = get_vector(chain[0], chain[elbow_idx_list[0]], chain, instance, False, True)
-            print("vector regresion pre: " + str(vector_chain))
-            vector_chain = chain[elbow_idx_list[0]] - chain[0]   # first vector from start to first_elbow
-            print("vector normal: " + str(vector_chain))
+            chain, vector_chain = get_vector(chain[0], chain[elbow_idx_list[0]], chain, instance, False, True)
             vector_chain_list.append(vector_chain)
 
             for e in range(len(elbow_idx_list)-1):                                                          # middle elbows
-                #chain, vector_chain = get_vector(chain[elbow_idx_list[e]], chain[elbow_idx_list[e+1]], chain, instance, True, True)
-                vector_chain = get_vector(chain[elbow_idx_list[e]], chain[elbow_idx_list[e+1]], chain, instance, True, True)
-                print("vector regresion pre: " + str(vector_chain))
-                vector_chain = chain[elbow_idx_list[e+1]] - chain[elbow_idx_list[e]]  # vector from current_elbow to next_elbow
-                print("vector normal: " + str(vector_chain))
+                chain, vector_chain = get_vector(chain[elbow_idx_list[e]], chain[elbow_idx_list[e+1]], chain, instance, True, True)
                 vector_chain_list.append(vector_chain)
 
-            #chain, vector_chain = get_vector(chain[elbow_idx_list[-1]], chain[-1], chain, instance, True, False)
-            vector_chain = get_vector(chain[elbow_idx_list[-1]], chain[-1], chain, instance, True, False)
-            print("vector regresion pre: " + str(vector_chain))
-            vector_chain = chain[-1] - chain[elbow_idx_list[-1]] # last vector from last_elbow to end
-            print("vector normal: " + str(vector_chain))
+            chain, vector_chain = get_vector(chain[elbow_idx_list[-1]], chain[-1], chain, instance, True, False)
             vector_chain_list.append(vector_chain)
 
         elbow_list = list()
@@ -1130,7 +1114,7 @@ def get_elbows(chain):
     return elbow_idx_list
 
 
-def get_vector(p1, p2, chain, inst, crop1, crop2):   # TODO regression line
+def get_vector(p1, p2, chain, inst, crop1, crop2):
 
     margin = 0.03                       # //PARAM
 
@@ -1138,7 +1122,7 @@ def get_vector(p1, p2, chain, inst, crop1, crop2):   # TODO regression line
     chain_list = [row for row in chain]
 
     for i, array in enumerate(chain_list):
-        if np.array_equal(array, p2):
+        if np.array_equal(array, p1):
             idx_p1 = i
             break
 
@@ -1146,6 +1130,11 @@ def get_vector(p1, p2, chain, inst, crop1, crop2):   # TODO regression line
         if np.array_equal(array, p2):
             idx_p2 = i
             break
+
+    if crop1==True:
+        idx_p1 +=1
+    if crop2==True:
+        idx_p1 -=1    
 
     chain_list_crop = chain[idx_p1:idx_p2+1]
 
