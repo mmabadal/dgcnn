@@ -1122,6 +1122,7 @@ def get_vector(p1, p2, chain, inst, crop1, crop2):   # TODO regression line
 
     margin = 0.03                       # //PARAM
 
+    inst = inst[:,:3]
     chain_list = [row for row in chain]
 
     for i, array in enumerate(chain_list):
