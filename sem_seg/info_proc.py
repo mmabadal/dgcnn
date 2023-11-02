@@ -79,10 +79,33 @@ def get_bb(info, pointcloud, margin, id, img, disp_msg, c_info):
         elbow_list = pipe_info[1]
         vector_list = pipe_info[2]
 
+        belong_list = pipe_info[3]
+        inst = inst_pipe_list[belong_list[0]]
+        for belong in belong_list[1:]:
+            inst = np.vstack((inst,inst_pipe_list[belong]))
+        inst  = inst[:, :-5]
+
         vector = vector_list[0][0:3]
         point1 = chain_list[0][0:3]
         center = point1 + (vector/2)
         point2 = center + (vector/2)
+
+        for i, array in enumerate(chain_list):
+            if np.array_equal(array, point1):
+                idx_p1 = i
+                break
+
+        for i, array in enumerate(chain_list):
+            if np.array_equal(array, point2):
+                idx_p2 = i
+                break
+
+        chain_list_crop = copy.deepcopy(chain_list)
+        chain_list_crop = chain[idx_p1:idx_p2+1]
+        inst_near = points_within_distance(inst, chain_list_crop, 0.06+margin)
+
+        print(inst_near)
+        print(type(inst_near))
 
         vector_orth = np.array([-vector[1], vector[0], 0])
         vector_orth = vector_orth/np.linalg.norm(vector_orth)
@@ -90,23 +113,37 @@ def get_bb(info, pointcloud, margin, id, img, disp_msg, c_info):
 
         point3 = point1 + vector_orth
         
-        expand = [point1, point2, point3]
+        expand = [point1, point2, point3]  # TODO añadir inst crop aqui y analizarlo luego
         expand_list.append(expand)
 
         for i, elbow in enumerate(elbow_list):
             
             vector = vector_list[i+1][0:3]
-
             point1 = elbow[0:3]
             center = point1 + vector/2
             point2 = center + (vector/2)
+
+
+            for i, array in enumerate(chain_list):
+                if np.array_equal(array, point1):
+                    idx_p1 = i
+                    break
+
+            for i, array in enumerate(chain_list):
+                if np.array_equal(array, point2):
+                    idx_p2 = i
+                    break
+
+            chain_list_crop = copy.deepcopy(chain_list)
+            chain_list_crop = chain[idx_p1:idx_p2+1]
+            inst_near = points_within_distance(inst, chain_list_crop, 0.06+margin)
 
             vector_orth = np.array([-vector[1], vector[0],0])
             vector_orth = vector_orth/np.linalg.norm(vector_orth)
             vector_orth = (0.06+margin) * vector_orth
             point3 = point1 + vector_orth
 
-            expand = [point1, point2, point3]
+            expand = [point1, point2, point3]   # TODO añadir inst crop aqui y analizarlo luego
             expand_list.append(expand)
 
     for valve_info in info_valves_list:
@@ -122,7 +159,7 @@ def get_bb(info, pointcloud, margin, id, img, disp_msg, c_info):
         vector_orth = (0.08+margin) * vector_orth
         point3 = point1 + vector_orth
 
-        expand = [point1, point2, point3]
+        expand = [point1, point2, point3] 
         expand_list.append(expand)
     
     expand_list_2d = points_to_img(expand_list, c_info)
@@ -147,7 +184,6 @@ def get_bb(info, pointcloud, margin, id, img, disp_msg, c_info):
 
     colors = ((255,0,0,),(0,255,0),(0,0,255))
     lp= len(expand_list_2d)
-
 
     img_pil = Image.fromarray(img) 
 
