@@ -816,17 +816,17 @@ def get_info_skeleton(instance, close):
         # find chain vectors
         vector_chain_list = list()
         if len(elbow_idx_list) == 0:                                        # if chain has no elbows
-            chain, vector_chain = get_vector(chain[0], chain[-1], chain, instance, False, False)
+            chain, vector_chain = get_vector(0, chain.shape[0]-1, chain, instance, False, False)
             vector_chain_list.append(vector_chain)
         else:                                                               # if chain has any elbow
-            chain, vector_chain = get_vector(chain[0], chain[elbow_idx_list[0]], chain, instance, False, True)
+            chain, vector_chain = get_vector(0, elbow_idx_list[0], chain, instance, False, True)
             vector_chain_list.append(vector_chain)
 
             for e in range(len(elbow_idx_list)-1):                                                          # middle elbows
-                chain, vector_chain = get_vector(chain[elbow_idx_list[e]], chain[elbow_idx_list[e+1]], chain, instance, True, True)
+                chain, vector_chain = get_vector(elbow_idx_list[e], elbow_idx_list[e+1], chain, instance, True, True)
                 vector_chain_list.append(vector_chain)
 
-            chain, vector_chain = get_vector(chain[elbow_idx_list[-1]], chain[-1], chain, instance, True, False)
+            chain, vector_chain = get_vector(elbow_idx_list[-1], chain.shape[0]-1, chain, instance, True, False)
             vector_chain_list.append(vector_chain)
 
         elbow_list = list()
@@ -1114,27 +1114,26 @@ def get_elbows(chain):
     return elbow_idx_list
 
 
-def get_vector(p1, p2, chain, inst, crop1, crop2):
+def get_vector(idx_p1, idx_p2, chain, inst, crop1, crop2):
 
     margin = 0.03                       # //PARAM
 
     inst = inst[:,:3]
     chain_list = [row for row in chain]
 
-    for i, array in enumerate(chain_list):
-        if np.array_equal(array, p1):
-            idx_p1 = i
-            break
-
-    for i, array in enumerate(chain_list):
-        if np.array_equal(array, p2):
-            idx_p2 = i
-            break
+    p1 = chain[idx_p1]
+    p2 = chain[idx_p2]
 
     if crop1==True:
         idx_p1 +=1
     if crop2==True:
-        idx_p1 -=1    
+        idx_p2 -=1    
+
+    print(f'idx_p1 in get info is {idx_p1}')
+    print(f'idx_p2 in get info is {idx_p2}')
+
+    print(f'point1 OLD in get info is {p1}')
+    print(f'point2 OLD in get info is {p2}')
 
     chain_list_crop = chain[idx_p1:idx_p2+1]
 
@@ -1155,6 +1154,14 @@ def get_vector(p1, p2, chain, inst, crop1, crop2):
 
     chain = np.array(chain_list)
     vector = p2_new-p1_new
+
+
+    print("------")
+    print(f'vector in get info is {vector}')
+    print(f'point1 in get info is {p1_new}')
+    print(f'point2 in get info is {p2_new}')
+    print(f'chain_list in get info is {chain_list}')
+    print("------")
 
     return chain, vector
 

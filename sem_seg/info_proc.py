@@ -26,37 +26,31 @@ def points_to_img(points_list, c_info):
      #   0    1988   714   *     y    =   v  =  1988*y + 714*z 
      #   0     0      1          z        w  =  z 
 
-    points_list_2d = list()
+    points2 = list()
 
-    for points in points_list:
+    for point in points_list:
 
-        points2 = list()
+        xyz = np.array([[point[0]],
+                        [point[1]],
+                        [point[2]],
+                        [1]])
 
-        for point in points:
+        uvw = np.matmul(P_array, xyz)
 
-            xyz = np.array([[point[0]],
-                           [point[1]],
-                           [point[2]],
-                           [1]])
+        u = uvw[0][0]
+        v = uvw[1][0]
+        w = uvw[2][0]
 
-            uvw = np.matmul(P_array, xyz)
+        xdisp = int(u/w) # = (1988*x + 971*z) / z
+        ydisp = int(v/w) # = (1988*y + 714*z) / z
 
-            u = uvw[0][0]
-            v = uvw[1][0]
-            w = uvw[2][0]
+        xdisp = int(np.clip(xdisp, 1, width-1))
+        ydisp = int(np.clip(ydisp, 1, height-1))
 
-            xdisp = int(u/w) # = (1988*x + 971*z) / z
-            ydisp = int(v/w) # = (1988*y + 714*z) / z
+        xydisp = np.array((xdisp, ydisp))
+        points2.append(xydisp)
 
-            xdisp = int(np.clip(xdisp, 1, width-1))
-            ydisp = int(np.clip(ydisp, 1, height-1))
-
-            xydisp = np.array((xdisp, ydisp))
-            points2.append(xydisp)
-
-        points_list_2d.append(points2)
-
-    return points_list_2d
+    return points2
 
 
 def get_bb(info, pointcloud, margin, id, img, disp_msg, c_info):
@@ -69,7 +63,7 @@ def get_bb(info, pointcloud, margin, id, img, disp_msg, c_info):
     info_valves_list = info[2]
     inst_pipe_list = info[3]
     
-    expand_list = list()
+    expand_2d_list = list()
 
     for pipe_info in info_pipes_list: 
 
@@ -90,22 +84,25 @@ def get_bb(info, pointcloud, margin, id, img, disp_msg, c_info):
         center = point1 + (vector/2)
         point2 = center + (vector/2)
 
-        for i, array in enumerate(chain_list):
-            if np.array_equal(array, point1):
+        for i, array1 in enumerate(chain_list):
+            if np.allclose(array1, point1, 0, 0.0000001):
+                print(f'{point1} == {array1}')
                 idx_p1 = i
                 break
 
-        for i, array in enumerate(chain_list):
-            if np.array_equal(array, point2):
+        for i, array2 in enumerate(chain_list):
+            if np.allclose(array2, point2, 0, 0.0000001):
+                print(f'{point2} == {array2}')
                 idx_p2 = i
                 break
-
+    
         chain_list_crop = copy.deepcopy(chain_list)
         chain_list_crop = chain[idx_p1:idx_p2+1]
-        inst_near = points_within_distance(inst, chain_list_crop, 0.06+margin)
 
-        print(inst_near)
-        print(type(inst_near))
+        inst_near = points_within_distance(inst, chain_list_crop, 0.06+margin)
+        inst_near_list = list(inst_near)
+        inst_near_2d_list = points_to_img(inst_near_list, c_info)
+        inst_near_2d = np.array(inst_near_2d_list)
 
         vector_orth = np.array([-vector[1], vector[0], 0])
         vector_orth = vector_orth/np.linalg.norm(vector_orth)
@@ -113,8 +110,11 @@ def get_bb(info, pointcloud, margin, id, img, disp_msg, c_info):
 
         point3 = point1 + vector_orth
         
-        expand = [point1, point2, point3]  # TODO añadir inst crop aqui y analizarlo luego
-        expand_list.append(expand)
+        expand = [point1, point2, point3] 
+        expand_2d = points_to_img(expand, c_info)
+        expand_2d.append(inst_near_2d)
+        expand_2d_list.append(expand_2d)
+
 
         for i, elbow in enumerate(elbow_list):
             
@@ -136,15 +136,21 @@ def get_bb(info, pointcloud, margin, id, img, disp_msg, c_info):
 
             chain_list_crop = copy.deepcopy(chain_list)
             chain_list_crop = chain[idx_p1:idx_p2+1]
+
             inst_near = points_within_distance(inst, chain_list_crop, 0.06+margin)
+            inst_near_list = list(inst_near)
+            inst_near_2d_list = points_to_img(inst_near_list, c_info)
+            inst_near_2d = np.array(inst_near_2d_list)
 
             vector_orth = np.array([-vector[1], vector[0],0])
             vector_orth = vector_orth/np.linalg.norm(vector_orth)
             vector_orth = (0.06+margin) * vector_orth
             point3 = point1 + vector_orth
 
-            expand = [point1, point2, point3]   # TODO añadir inst crop aqui y analizarlo luego
-            expand_list.append(expand)
+            expand = [point1, point2, point3]
+            expand_2d = points_to_img(expand, c_info)
+            expand_2d.append(inst_near_2d)
+            expand_2d_list.append(expand_2d)
 
     for valve_info in info_valves_list:
 
@@ -160,11 +166,10 @@ def get_bb(info, pointcloud, margin, id, img, disp_msg, c_info):
         point3 = point1 + vector_orth
 
         expand = [point1, point2, point3] 
-        expand_list.append(expand)
+        expand_2d = points_to_img(expand, c_info)
+        expand_2d_list.append(expand_2d)
     
-    expand_list_2d = points_to_img(expand_list, c_info)
-
-    for expand_2d in expand_list_2d:
+    for expand_2d in expand_2d_list:
         expand_2d[2] = expand_2d[2] - expand_2d[0]
 
     # pc_ymin, pc_xmin, *_ = pointcloud.min(axis=0)
@@ -180,10 +185,10 @@ def get_bb(info, pointcloud, margin, id, img, disp_msg, c_info):
     disp_ymax, disp_xmax = disp_pos_np.max(axis=0)
     minmaxs = np.array([disp_xmin, disp_ymin, disp_xmax, disp_ymax])
 
-    polygon_list = create_polygons(expand_list_2d, minmaxs, img, c_info)
+    polygon_list = create_polygons(expand_2d_list, minmaxs, img, c_info)
 
     colors = ((255,0,0,),(0,255,0),(0,0,255))
-    lp= len(expand_list_2d)
+    lp= len(expand_2d_list)
 
     img_pil = Image.fromarray(img) 
 
@@ -365,7 +370,7 @@ def is_inside(p, box):
 def check_expand(expand, minmaxs, margin):
     border = False
     minx, miny, maxx, maxy = minmaxs
-    for point in expand[:-1]:
+    for point in expand[:-2]:    # descartamos instance_near y vector, nos quedamos solo con p1 p2
         if (point[0] < minx+margin) or (point[0] > maxx-margin) or (point[1] < miny+margin) or (point[1] > maxy-margin):
             border = True
             break
@@ -395,6 +400,9 @@ def check_near(point, col, dist, img, cthr, nthr):
     if n > nthr:
         end = False
         print("col check")
+
+    # TODO pasar instance pasada a disp, coger puntos que han pasado el check, añadirlos a la instance, volver a calcular vector ....
+
     return end
 
 
@@ -404,8 +412,6 @@ def get_color(expand, img):
     p1 = expand[0]
     p2 = expand[1]
     v12 = p2-p1 
-
-    # TODO pasar instance pasada a disp, coger puntos que han pasado el check, añadirlos a la instance, volver a calcular vector ....
 
     pixel_col_list = list()
 
