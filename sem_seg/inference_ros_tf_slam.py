@@ -315,7 +315,7 @@ class Pointcloud_Seg:
         for i, inst in enumerate(instances_ref_pipe_list): # for each pipe instance
 
             info_pipe = get_info.get_info(inst, models=0, method="skeleton") # get pipe instance info list( list( list(chain1, start1, end1, elbow_list1, vector_chain_list1), ...), list(connexions_points)) 
-            
+
             for j, pipe_info in enumerate(info_pipe[0]):                         # add corresponding inst i to all chains              
                 inst_list = list()
                 inst_list.append(i)

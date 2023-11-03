@@ -86,13 +86,11 @@ def get_bb(info, pointcloud, margin, id, img, disp_msg, c_info):
 
         for i, array1 in enumerate(chain_list):
             if np.allclose(array1, point1, 0, 0.0000001):
-                print(f'{point1} == {array1}')
                 idx_p1 = i
                 break
 
         for i, array2 in enumerate(chain_list):
             if np.allclose(array2, point2, 0, 0.0000001):
-                print(f'{point2} == {array2}')
                 idx_p2 = i
                 break
     
@@ -156,7 +154,7 @@ def get_bb(info, pointcloud, margin, id, img, disp_msg, c_info):
 
         center = valve_info[0][0:3]
         vector = valve_info[1][0:3]
-        inst = valve_info[3]
+        inst = valve_info[4]
         
         point1 = center - (vector/2)
         point2 = center + (vector/2)
@@ -246,11 +244,10 @@ def create_polygons(expand_list, minmaxs, img, c_info):
 
             vector1 = expand[1]-expand[0]
             vector1_unit = vector1/np.linalg.norm(vector1)
+            vector1_iter = vector1_unit * vstride
 
             vector2 = expand[0]-expand[1]
             vector2_unit = vector2/np.linalg.norm(vector2)
-
-            vector1_iter = vector1_unit * vstride
             vector2_iter = vector2_unit * vstride
 
             iter = 0
@@ -272,7 +269,9 @@ def create_polygons(expand_list, minmaxs, img, c_info):
                         break
                     else:
                         points_check = np.array(points_check_list)
-                        expand[1] = np.mean(points_check, axis=0)
+                        center= np.mean(points_check, axis=0)
+                        center[[0, 1]] = center[[1, 0]]
+                        expand[1] = center
                         vector1 = expand[1]-expand[0]
                         vector1_unit = vector1/np.linalg.norm(vector1)
                         vector1_iter = vector1_unit * vstride
@@ -297,7 +296,9 @@ def create_polygons(expand_list, minmaxs, img, c_info):
                         break
                     else:
                         points_check = np.array(points_check_list)
-                        expand[0] = np.mean(points_check, axis=0)
+                        center= np.mean(points_check, axis=0)
+                        center[[0, 1]] = center[[1, 0]]
+                        expand[0] = center
                         vector2 = expand[2]-expand[1]
                         vector2_unit = vector2/np.linalg.norm(vector2)
                         vector2_iter = vector2_unit * vstride
@@ -430,7 +431,7 @@ def check_near(point, col, dist, img, cthr, nthr):
                 points_check_list.append(np.array([row,col]))
     if n > nthr:
         end = False
-        print("col check")
+        #print("col check")
 
     return end, points_check_list
 

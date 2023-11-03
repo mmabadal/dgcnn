@@ -1129,12 +1129,6 @@ def get_vector(idx_p1, idx_p2, chain, inst, crop1, crop2):
     if crop2==True:
         idx_p2 -=1    
 
-    print(f'idx_p1 in get info is {idx_p1}')
-    print(f'idx_p2 in get info is {idx_p2}')
-
-    print(f'point1 OLD in get info is {p1}')
-    print(f'point2 OLD in get info is {p2}')
-
     chain_list_crop = chain[idx_p1:idx_p2+1]
 
     inst_near = points_within_distance(inst, chain_list_crop, 0.06+margin)
@@ -1154,14 +1148,6 @@ def get_vector(idx_p1, idx_p2, chain, inst, crop1, crop2):
 
     chain = np.array(chain_list)
     vector = p2_new-p1_new
-
-
-    print("------")
-    print(f'vector in get info is {vector}')
-    print(f'point1 in get info is {p1_new}')
-    print(f'point2 in get info is {p2_new}')
-    print(f'chain_list in get info is {chain_list}')
-    print("------")
 
     return chain, vector
 
