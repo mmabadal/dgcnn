@@ -156,9 +156,14 @@ def get_bb(info, pointcloud, margin, id, img, disp_msg, c_info):
 
         center = valve_info[0][0:3]
         vector = valve_info[1][0:3]
+        inst = valve_info[3]
         
         point1 = center - (vector/2)
         point2 = center + (vector/2)
+
+        inst_list = list(inst)
+        inst_2d_list = points_to_img(inst_list, c_info)
+        inst_2d = np.array(inst_2d_list)
 
         vector_orth = np.array([-vector[1], vector[0],0])
         vector_orth = vector_orth/np.linalg.norm(vector_orth)
@@ -167,8 +172,9 @@ def get_bb(info, pointcloud, margin, id, img, disp_msg, c_info):
 
         expand = [point1, point2, point3] 
         expand_2d = points_to_img(expand, c_info)
+        expand_2d.append(inst_2d)
         expand_2d_list.append(expand_2d)
-    
+
     for expand_2d in expand_2d_list:
         expand_2d[2] = expand_2d[2] - expand_2d[0]
 
@@ -236,9 +242,13 @@ def create_polygons(expand_list, minmaxs, img, c_info):
             #print("---- expand accepted ----")
             col = get_color(expand, img)
 
+            inst = expand[3]
+
             vector1 = expand[1]-expand[0]
             vector1_unit = vector1/np.linalg.norm(vector1)
-            vector2_unit = vector1_unit*-1
+
+            vector2 = expand[0]-expand[1]
+            vector2_unit = vector2/np.linalg.norm(vector2)
 
             vector1_iter = vector1_unit * vstride
             vector2_iter = vector2_unit * vstride
@@ -251,16 +261,22 @@ def create_polygons(expand_list, minmaxs, img, c_info):
                 point = (expand[1] + iter * vector1_iter).astype(int)
                 p_list.append(point)
                 if point[0] < 0 or point[0] > imshape[0] or point[1] < 0 or point[1] > imshape[1]:
-                    p_end1 = p_list[-2] # el ultimo que tuvo tuberia antes de salirse
+                    p_end2 = p_list[-2] # el ultimo que tuvo tuberia antes de salirse
                     #print("out")
                     break
                 else:
-                    end = check_near(point, col, dist, img, cthr, nthr)
+                    end, points_check_list = check_near(point, col, dist, img, cthr, nthr)
                     if end == True:
                         #print("col check fail")
-                        p_end1 = p_list[-2]
+                        p_end2 = p_list[-2]
                         break
-                    #print("col check ok")
+                    else:
+                        points_check = np.array(points_check_list)
+                        expand[1] = np.mean(points_check, axis=0)
+                        vector1 = expand[1]-expand[0]
+                        vector1_unit = vector1/np.linalg.norm(vector1)
+                        vector1_iter = vector1_unit * vstride
+                        #print("col check ok")   
 
             iter = 0
             p_list = list()
@@ -270,25 +286,37 @@ def create_polygons(expand_list, minmaxs, img, c_info):
                 point = (expand[0] + iter * vector2_iter).astype(int)
                 p_list.append(point)
                 if point[0] < 0 or point[0] > imshape[0] or point[1] < 0 or point[1] > imshape[1]:
-                    p_end2 = p_list[-2] # el ultimo que tuvo tuberia antes de salirse
+                    p_end1 = p_list[-2] # el ultimo que tuvo tuberia antes de salirse
                     #print("out")
                     break
                 else:
-                    end = check_near(point, col, dist, img, cthr, nthr)
+                    end, points_check_list = check_near(point, col, dist, img, cthr, nthr)
                     if end == True:
                         #print("col check fail")
-                        p_end2 = p_list[-2]
+                        p_end1 = p_list[-2]
                         break
-                    #print("col check ok")
+                    else:
+                        points_check = np.array(points_check_list)
+                        expand[0] = np.mean(points_check, axis=0)
+                        vector2 = expand[2]-expand[1]
+                        vector2_unit = vector2/np.linalg.norm(vector2)
+                        vector2_iter = vector2_unit * vstride
+                        #print("col check ok")     
 
         else:
             #print("---- expand discarted ----")  
             #print(minmaxs)
             #print(expand)
-            p_end1 = expand[1]
-            p_end2 = expand[0]
+            p_end1 = expand[0]
+            p_end2 = expand[1]
 
-        vector_orth = expand[2]
+        # TODO volver a calcualr vector y vector orth
+        vector_orth_size = np.linalg.norm(expand[2])
+        vector = p_end2-p_end1
+        vector_unit = vector/np.linalg.norm(vector)
+        vector_orth_unit = np.array([-vector_unit[1], vector_unit[0]])
+        vector_orth = vector_orth_unit * vector_orth_size
+
         p1 = (p_end1 + ((vector_orth/2))).astype(int)
         p2 = (p_end1 - ((vector_orth/2))).astype(int)
         p3 = (p_end2 + ((vector_orth/2))).astype(int)
@@ -378,6 +406,8 @@ def check_expand(expand, minmaxs, margin):
 
 
 def check_near(point, col, dist, img, cthr, nthr):
+
+    points_check_list = list()
     color_rgb = col
     color_lab = color.rgb2lab([[[color_rgb[0] / 255, color_rgb[1] / 255, color_rgb[2] / 255]]])
     end = True 
@@ -397,13 +427,12 @@ def check_near(point, col, dist, img, cthr, nthr):
             color_dist = color.deltaE_cie76(color_lab, pixel_lab)
             if color_dist < cthr:
                 n += 1 
+                points_check_list.append(np.array([row,col]))
     if n > nthr:
         end = False
         print("col check")
 
-    # TODO pasar instance pasada a disp, coger puntos que han pasado el check, añadirlos a la instance, volver a calcular vector ....
-
-    return end
+    return end, points_check_list
 
 
 def get_color(expand, img):
