@@ -646,7 +646,7 @@ class Pointcloud_Seg:
         tr_ned_down = np.matmul(tr_ned_downbase, tr_downbase_down)
         tr_ned_left = np.matmul(tr_ned_down, tr_down_left)
 
-        return tr_ned_left
+        return tr_ned_baselink # tr_ned_left   -  Change for lanty
     
 
     def update_positions(self):
@@ -713,7 +713,7 @@ class Pointcloud_Seg:
                                     [info_array[i,1]],
                                     [info_array[i,2]],
                                     [1]])
-                    xyz_trans_rot = np.matmul(tr_ned_left, xyz)
+                    xyz_trans_rot = np.matmul(tr_ned_baselink, xyz) # np.matmul(tr_ned_left, xyz)   -  Change for lanty
                     info_array_world[i,0:3] = [xyz_trans_rot[0], xyz_trans_rot[1], xyz_trans_rot[2]]
 
                 path_out_world_info = os.path.join(self.path_out, name + "_info_world_2.ply")   # _2 for test purposes
