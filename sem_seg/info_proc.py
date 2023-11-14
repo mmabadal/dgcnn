@@ -191,19 +191,19 @@ def get_bb(info, pointcloud, margin, id, img, disp_msg, c_info):
 
     polygon_list = create_polygons(expand_2d_list, minmaxs, img, c_info)
 
-    colors = ((255,0,0,),(0,255,0),(0,0,255))
-    lp= len(expand_2d_list)
+    # colors = ((255,0,0,),(0,255,0),(0,0,255))
+    # lp= len(expand_2d_list)
 
-    img_pil = Image.fromarray(img) 
+    # img_pil = Image.fromarray(img) 
 
-    for i, polygon in enumerate(polygon_list):
-        k = int(i/lp)
-        for point in polygon:
-            img_pil.putpixel((point[0], point[1]), colors[k])
-    img_pil.save("../out/img/" + str(id) + "_colour.png")
+    # for i, polygon in enumerate(polygon_list):
+    #     k = int(i/lp)
+    #     for point in polygon:
+    #         img_pil.putpixel((point[0], point[1]), colors[k])
+    # img_pil.save("../out/img/" + str(id) + "_colour.png")
 
-    for box in polygon_list:
-        for point in enumerate(box):
+    for polygon in polygon_list:
+        for i, point in enumerate(polygon):
             p.x = point[0]
             p.y = point[1]
             p.z = 0
