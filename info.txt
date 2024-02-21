@@ -1,0 +1,5 @@
+valve: center_point, vector(size, orientation), id_max_fitting, id_pipes_near
+
+pipe: skeleton, elbows, vectors(size, orientation)
+
+connection: center_point, id_pipes_near
