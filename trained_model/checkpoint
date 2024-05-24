@@ -1,2 +1,0 @@
-model_checkpoint_path: "/home/miguel/Desktop/dgcnn/sem_seg/RUNS/PIPES2/sparus_xiroi/cross/128_11_1/model.ckpt"
-all_model_checkpoint_paths: "/home/miguel/Desktop/dgcnn/sem_seg/RUNS/PIPES2/sparus_xiroi/cross/128_11_1/model.ckpt"

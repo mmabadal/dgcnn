@@ -91,7 +91,7 @@ class Pointcloud_Seg:
         self.min_p_v = 30 # 40 80 140   # minimum number of points to consider a blob as a valve    //PARAM
 
         # self.train_path = "RUNS/4_128_11_c9" # path to train
-        self.train_path = "../trained_model" # path to train
+        self.train_path = "../trained_models/12" # path to train
         self.model_path = os.path.join(self.train_path, "model.ckpt")         # path to model         //PARAM
         self.path_cls =  os.path.join(self.train_path, "cls.txt")             # path to clases info   //PARAM
         self.classes, self.labels, self.label2color = indoor3d_util.get_info_classes(self.path_cls) # get classes info
