@@ -1341,6 +1341,7 @@ if __name__ == "__main__":
 
             for i in set(instances_valve[:,7]):
                 inst = instances_valve[instances_valve[:,7] == i]
+
                 xyz_central = np.mean(inst, axis=0)[0:3]
                 centrals_list.append(xyz_central)
                 inst[:, 0:3] -= xyz_central                # move instance to origin
