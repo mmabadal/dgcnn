@@ -58,7 +58,7 @@ class Pointcloud_Seg:
         self.desired_points = int(6000/(128/self.points_sub))  # n of points to wich the received pc will be downsampled    //PARAM
 
         # get valve matching targets
-        self.targets_path = "/home/miguel/Desktop/PIPES2/dgcnn/valve_targets"      # //PARAM
+        self.targets_path = "/home/bomiquel/catkin_ws/src/dgcnn/valve_targets"      # //PARAM
         self.targets_list = list()
         for file_name in natsorted(os.listdir(self.targets_path)):
             target_path = os.path.join(self.targets_path, file_name)
@@ -98,23 +98,25 @@ class Pointcloud_Seg:
         self.min_p_p = 60               # minimum number of points to consider a blob as a pipe     //PARAM
         self.min_p_v = 30 # 40 80 140   # minimum number of points to consider a blob as a valve    //PARAM
 
-        self.model_path = "/home/miguel/Desktop/PIPES2/dgcnn/sem_seg/RUNS/sparus_xiroi/test/128_11_1/model.ckpt"          # path to model         //PARAM
-        self.path_cls = "/home/miguel/Desktop/PIPES2/dgcnn/sem_seg/RUNS/sparus_xiroi/test/128_11_1/cls.txt"               # path to clases info   //PARAM
+        self.model_path = "/home/bomiquel/catkin_ws/src/dgcnn/trained_models/12/model.ckpt"          # path to model         //PARAM
+        self.path_cls = "/home/bomiquel/catkin_ws/src/dgcnn/trained_models/12/cls.txt"               # path to clases info   //PARAM
         self.classes, self.labels, self.label2color = indoor3d_util.get_info_classes(self.path_cls) # get classes info
 
         self.init = False
         self.new_pc = False
 
         # set subscribers
-        pc_sub = message_filters.Subscriber('/stereo_down/scaled_x2/points2_filtered', PointCloud2)     # //PARAM
-        #pc_sub = message_filters.Subscriber('/stereo_down/scaled_x2/points2', PointCloud2)             # //PARAM
+        #pc_sub = message_filters.Subscriber('/stereo_ch3/scaled_x2/points2_filtered', PointCloud2)     # //PARAM
+        #pc_sub = message_filters.Subscriber('/stereo_ch3/scaled_x2/points2', PointCloud2)             # //PARAM
+        # pc_sub = message_filters.Subscriber('/stereo_ch3/points2', PointCloud2) 
+        pc_sub = message_filters.Subscriber('/stereo_ch3/scaled_x4/points2', PointCloud2)             # //PARAM
         pc_sub.registerCallback(self.cb_pc)
 
         # Set class image publishers
-        self.pub_pc_base = rospy.Publisher("/stereo_down/scaled_x2/points2_base", PointCloud2, queue_size=4)
-        self.pub_pc_seg = rospy.Publisher("/stereo_down/scaled_x2/points2_seg", PointCloud2, queue_size=4)
-        self.pub_pc_inst = rospy.Publisher("/stereo_down/scaled_x2/points2_inst", PointCloud2, queue_size=4)
-        self.pub_pc_info = rospy.Publisher("/stereo_down/scaled_x2/points2_info", PointCloud2, queue_size=4)
+        self.pub_pc_base = rospy.Publisher("/stereo_ch3/scaled_x4/points2_base", PointCloud2, queue_size=4)
+        self.pub_pc_seg = rospy.Publisher("/stereo_ch3/scaled_x4/points2_seg", PointCloud2, queue_size=4)
+        self.pub_pc_inst = rospy.Publisher("/stereo_ch3/scaled_x4/points2_inst", PointCloud2, queue_size=4)
+        self.pub_pc_info = rospy.Publisher("/stereo_ch3/scaled_x4/points2_info", PointCloud2, queue_size=4)
 
         # Set segmentation timer
         rospy.Timer(rospy.Duration(self.period), self.run)
@@ -295,12 +297,8 @@ class Pointcloud_Seg:
         k_pipe = 0
 
         for i, inst in enumerate(instances_ref_pipe_list): # for each pipe instance
-            # transform instance to o3d pointcloud
-            inst_o3d = o3d.geometry.PointCloud()
-            inst_o3d.points = o3d.utility.Vector3dVector(inst[:,0:3])
-            inst_o3d.colors = o3d.utility.Vector3dVector(inst[:,3:6]/255)
 
-            info_pipe = get_info.get_info(inst_o3d, models=0, method="skeleton") # get pipe instance info list( list( list(chain1, start1, end1, elbow_list1, vector_chain_list1), ...), list(connexions_points)) 
+            info_pipe = get_info.get_info(inst, models=0, method="skeleton") # get pipe instance info list( list( list(chain1, start1, end1, elbow_list1, vector_chain_list1), ...), list(connexions_points)) 
             
             for j, pipe_info in enumerate(info_pipe[0]):                         # stack pipes info
                 inst_list = list()
@@ -504,29 +502,29 @@ class Pointcloud_Seg:
 
 
         # print time info mean
-        rospy.loginfo('[%s]: INFO TIMES MEAN:', self.name)	
-        print("")
-        rospy.loginfo('[%s]: Pc processing took %.2f seconds. Split into:', self.name, (self.T_total.secs + self.T_total.nsecs*1e-9)/self.n_pc)
-        rospy.loginfo('[%s]: Reading -------- %.2f seconds (%i%%)', self.name, (self.T_read.secs + self.T_read.nsecs*1e-9)/self.n_pc, (self.T_read/self.T_total)*100)
-        rospy.loginfo('[%s]: Blocks --------- %.2f seconds (%i%%)', self.name, (self.T_blocks.secs + self.T_blocks.nsecs*1e-9)/self.n_pc, (self.T_blocks/self.T_total)*100)
-        rospy.loginfo('[%s]: Inference ------ %.2f seconds (%i%%)', self.name, (self.T_inferference.secs + self.T_inferference.nsecs*1e-9)/self.n_pc, (self.T_inferference/self.T_total)*100)
-        rospy.loginfo('[%s]: Instances ------ %.2f seconds (%i%%)', self.name, (self.T_instaces.secs + self.T_instaces.nsecs*1e-9)/self.n_pc, (self.T_instaces/self.T_total)*100)
-        rospy.loginfo('[%s]:  - Valve - %.2f seconds (%i%%)',       self.name, (self.T_instaces_valve.secs + self.T_instaces_valve.nsecs*1e-9)/self.n_pc, (self.T_instaces_valve/self.T_total)*100)
-        rospy.loginfo('[%s]:  - Pipe -- %.2f seconds (%i%%)',       self.name, (self.T_instaces_pipe.secs + self.T_instaces_pipe.nsecs*1e-9)/self.n_pc, (self.T_instaces_pipe/self.T_total)*100)
-        rospy.loginfo('[%s]: Info ----------- %.2f seconds (%i%%)', self.name, (self.T_info.secs + self.T_info.nsecs*1e-9)/self.n_pc, (self.T_info/self.T_total)*100)
-        rospy.loginfo('[%s]:  - Valve - %.2f seconds (%i%%)',       self.name, (self.T_info_valve.secs + self.T_info_valve.nsecs*1e-9)/self.n_pc, (self.T_info_valve/self.T_total)*100)
-        rospy.loginfo('[%s]:  - Pipe -- %.2f seconds (%i%%)',       self.name, (self.T_info_pipe.secs + self.T_info_pipe.nsecs*1e-9)/self.n_pc, (self.T_info_pipe/self.T_total)*100)
-        rospy.loginfo('[%s]: Refine --------- %.2f seconds (%i%%)', self.name, (self.T_ref.secs + self.T_ref.nsecs*1e-9)/self.n_pc, (self.T_ref/self.T_total)*100)
-        rospy.loginfo('[%s]:  - Valve - %.2f seconds (%i%%)',       self.name, (self.T_ref_valve.secs + self.T_ref_valve.nsecs*1e-9)/self.n_pc, (self.T_ref_valve/self.T_total)*100)
-        rospy.loginfo('[%s]:  - Pipe -- %.2f seconds (%i%%)',       self.name, (self.T_ref_pipe.secs + self.T_ref_pipe.nsecs*1e-9)/self.n_pc, (self.T_ref_pipe/self.T_total)*100)
-        rospy.loginfo('[%s]: Publish -------- %.2f seconds (%i%%)', self.name, (self.T_publish.secs + self.T_publish.nsecs*1e-9)/self.n_pc, (self.T_publish/self.T_total)*100)
+        # rospy.loginfo('[%s]: INFO TIMES MEAN:', self.name)	
+        # print("")
+        # rospy.loginfo('[%s]: Pc processing took %.2f seconds. Split into:', self.name, (self.T_total.secs + self.T_total.nsecs*1e-9)/self.n_pc)
+        # rospy.loginfo('[%s]: Reading -------- %.2f seconds (%i%%)', self.name, (self.T_read.secs + self.T_read.nsecs*1e-9)/self.n_pc, (self.T_read/self.T_total)*100)
+        # rospy.loginfo('[%s]: Blocks --------- %.2f seconds (%i%%)', self.name, (self.T_blocks.secs + self.T_blocks.nsecs*1e-9)/self.n_pc, (self.T_blocks/self.T_total)*100)
+        # rospy.loginfo('[%s]: Inference ------ %.2f seconds (%i%%)', self.name, (self.T_inferference.secs + self.T_inferference.nsecs*1e-9)/self.n_pc, (self.T_inferference/self.T_total)*100)
+        # rospy.loginfo('[%s]: Instances ------ %.2f seconds (%i%%)', self.name, (self.T_instaces.secs + self.T_instaces.nsecs*1e-9)/self.n_pc, (self.T_instaces/self.T_total)*100)
+        # rospy.loginfo('[%s]:  - Valve - %.2f seconds (%i%%)',       self.name, (self.T_instaces_valve.secs + self.T_instaces_valve.nsecs*1e-9)/self.n_pc, (self.T_instaces_valve/self.T_total)*100)
+        # rospy.loginfo('[%s]:  - Pipe -- %.2f seconds (%i%%)',       self.name, (self.T_instaces_pipe.secs + self.T_instaces_pipe.nsecs*1e-9)/self.n_pc, (self.T_instaces_pipe/self.T_total)*100)
+        # rospy.loginfo('[%s]: Info ----------- %.2f seconds (%i%%)', self.name, (self.T_info.secs + self.T_info.nsecs*1e-9)/self.n_pc, (self.T_info/self.T_total)*100)
+        # rospy.loginfo('[%s]:  - Valve - %.2f seconds (%i%%)',       self.name, (self.T_info_valve.secs + self.T_info_valve.nsecs*1e-9)/self.n_pc, (self.T_info_valve/self.T_total)*100)
+        # rospy.loginfo('[%s]:  - Pipe -- %.2f seconds (%i%%)',       self.name, (self.T_info_pipe.secs + self.T_info_pipe.nsecs*1e-9)/self.n_pc, (self.T_info_pipe/self.T_total)*100)
+        # rospy.loginfo('[%s]: Refine --------- %.2f seconds (%i%%)', self.name, (self.T_ref.secs + self.T_ref.nsecs*1e-9)/self.n_pc, (self.T_ref/self.T_total)*100)
+        # rospy.loginfo('[%s]:  - Valve - %.2f seconds (%i%%)',       self.name, (self.T_ref_valve.secs + self.T_ref_valve.nsecs*1e-9)/self.n_pc, (self.T_ref_valve/self.T_total)*100)
+        # rospy.loginfo('[%s]:  - Pipe -- %.2f seconds (%i%%)',       self.name, (self.T_ref_pipe.secs + self.T_ref_pipe.nsecs*1e-9)/self.n_pc, (self.T_ref_pipe/self.T_total)*100)
+        # rospy.loginfo('[%s]: Publish -------- %.2f seconds (%i%%)', self.name, (self.T_publish.secs + self.T_publish.nsecs*1e-9)/self.n_pc, (self.T_publish/self.T_total)*100)
 
-        print(" ")
-        print(" ")
-        print("--------------------------------------------------------------------------------------------------")
-        print("--------------------------------------------------------------------------------------------------")
-        print(" ")
-        print(" ")
+        # print(" ")
+        # print(" ")
+        # print("--------------------------------------------------------------------------------------------------")
+        # print("--------------------------------------------------------------------------------------------------")
+        # print(" ")
+        # print(" ")
 
 
 

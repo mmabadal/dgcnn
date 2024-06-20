@@ -296,12 +296,8 @@ class Pointcloud_Seg:
         k_pipe = 0
 
         for i, inst in enumerate(instances_ref_pipe_list): # for each pipe instance
-            # transform instance to o3d pointcloud
-            inst_o3d = o3d.geometry.PointCloud()
-            inst_o3d.points = o3d.utility.Vector3dVector(inst[:,0:3])
-            inst_o3d.colors = o3d.utility.Vector3dVector(inst[:,3:6]/255)
 
-            info_pipe = get_info.get_info(inst_o3d, models=0, method="skeleton") # get pipe instance info list( list( list(chain1, start1, end1, elbow_list1, vector_chain_list1), ...), list(connexions_points)) 
+            info_pipe = get_info.get_info(inst, models=0, method="skeleton") # get pipe instance info list( list( list(chain1, start1, end1, elbow_list1, vector_chain_list1), ...), list(connexions_points)) 
             
             for j, pipe_info in enumerate(info_pipe[0]):                         # stack pipes info
                 inst_list = list()

@@ -242,6 +242,8 @@ def info_to_array(info):
             near_pipes_list.append(near_pipe)
         near_pipes = np.array(near_pipes_list)
 
+        if near_pipes.size == 0:
+            near_pipes = np.array([99, 99, 99])
 
         connexion = np.vstack((central,near_pipes))
 
