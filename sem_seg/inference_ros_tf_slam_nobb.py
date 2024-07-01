@@ -602,60 +602,37 @@ class Pointcloud_Seg:
 
         t_ned_baselink = [self.odom.pose.pose.position.x, self.odom.pose.pose.position.y, self.odom.pose.pose.position.z]
         q_ned_baselink = [self.odom.pose.pose.orientation.x, self.odom.pose.pose.orientation.y, self.odom.pose.pose.orientation.z, self.odom.pose.pose.orientation.w]
-    
-        tq_baselink_stick = np.array([0.4, 0.0, 0.8, 0.0, 0.0, 0.0, 1.0])
-        t_baselink_stick = tq_baselink_stick[:3]
-        q_baselink_stick = tq_baselink_stick[3:]
+        
+        tq_baselink_stereodown = np.array([0.57, -0.062, 0.505, 0.0, 0.0, 0.0, 1.0])
+        t_baselink_stereodown = tq_baselink_stereodown[:3]
+        q_baselink_stereodown = tq_baselink_stereodown[3:]
 
-        tq_stick_downbase = np.array([0.0, 0.0, 0.0, 0.4999998414659176, 0.49960183664463365, 0.4999998414659176, 0.5003981633553665])
-        t_stick_downbase = tq_stick_downbase[:3]
-        q_stick_downbase = tq_stick_downbase[3:]
-
-        tq_downbase_down = np.array([0.0, 0.0, 0.0, -0.706825181105366, 0.0, 0.0, 0.7073882691671998])
-        t_downbase_down = tq_downbase_down[:3]
-        q_downbase_down = tq_downbase_down[3:]
-
-        tq_down_left = np.array([-0.06, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0])
-        t_down_left = tq_down_left[:3]
-        q_down_left = tq_down_left[3:]
+        tq_stereodown_leftoptical = np.array([0.0, 0.0, 0.0, 0.0, 0.706825181105366, 0.7073882691671998, 1.0])
+        t_stereodown_leftoptical = tq_stereodown_leftoptical[:3]
+        q_stereodown_leftoptical = tq_stereodown_leftoptical[3:]
 
         tr_ned_baselink = self.get_tr(t_ned_baselink, q_ned_baselink)
-        tr_baselink_stick = self.get_tr(t_baselink_stick, q_baselink_stick)
-        tr_stick_downbase = self.get_tr(t_stick_downbase, q_stick_downbase)
-        tr_downbase_down  = self.get_tr(t_downbase_down, q_downbase_down)
-        tr_down_left = self.get_tr(t_down_left, q_down_left)
+        tr_baselink_stereodown = self.get_tr(t_baselink_stereodown, q_baselink_stereodown)
+        tr_stereodown_leftoptical = self.get_tr(t_stereodown_leftoptical, q_stereodown_leftoptical)
 
-        tr_ned_stick = np.matmul(tr_ned_baselink, tr_baselink_stick)
-        tr_ned_downbase = np.matmul(tr_ned_stick, tr_stick_downbase)
-        tr_ned_down = np.matmul(tr_ned_downbase, tr_downbase_down)
-        tr_ned_left = np.matmul(tr_ned_down, tr_down_left)
+        tr_ned_stereodown = np.matmul(tr_ned_baselink, tr_baselink_stereodown)
+        tr_ned_leftoptical = np.matmul(tr_ned_stereodown, tr_stereodown_leftoptical)
 
-        return tr_ned_baselink # tr_ned_left   -  Change for lanty
+        return tr_ned_leftoptical
     
 
     def update_positions(self):
 
-        tq_baselink_stick = np.array([0.4, 0.0, 0.8, 0.0, 0.0, 0.0, 1.0])
-        t_baselink_stick = tq_baselink_stick[:3]
-        q_baselink_stick = tq_baselink_stick[3:]
+        tq_baselink_stereodown = np.array([0.57, -0.062, 0.505, 0.0, 0.0, 0.0, 1.0])
+        t_baselink_stereodown = tq_baselink_stereodown[:3]
+        q_baselink_stereodown = tq_baselink_stereodown[3:]
 
-        tq_stick_downbase = np.array([0.0, 0.0, 0.0, 0.4999998414659176, 0.49960183664463365, 0.4999998414659176, 0.5003981633553665])
-        t_stick_downbase = tq_stick_downbase[:3]
-        q_stick_downbase = tq_stick_downbase[3:]
+        tq_stereodown_leftoptical = np.array([0.0, 0.0, 0.0, 0.0, 0.706825181105366, 0.7073882691671998, 1.0])
+        t_stereodown_leftoptical = tq_stereodown_leftoptical[:3]
+        q_stereodown_leftoptical = tq_stereodown_leftoptical[3:]
 
-        tq_downbase_down = np.array([0.0, 0.0, 0.0, -0.706825181105366, 0.0, 0.0, 0.7073882691671998])
-        t_downbase_down = tq_downbase_down[:3]
-        q_downbase_down = tq_downbase_down[3:]
-
-        tq_down_left = np.array([-0.06, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0])
-        t_down_left = tq_down_left[:3]
-        q_down_left = tq_down_left[3:]
-
-        tr_baselink_stick = self.get_tr(t_baselink_stick, q_baselink_stick)
-        tr_stick_downbase = self.get_tr(t_stick_downbase, q_stick_downbase)
-        tr_downbase_down  = self.get_tr(t_downbase_down, q_downbase_down)
-        tr_down_left = self.get_tr(t_down_left, q_down_left)
-
+        tr_baselink_stereodown = self.get_tr(t_baselink_stereodown, q_baselink_stereodown)
+        tr_stereodown_leftoptical = self.get_tr(t_stereodown_leftoptical, q_stereodown_leftoptical)
 
         file_tq = open(self.path_graph, 'r')
         lines = file_tq.readlines()[1:]
@@ -667,10 +644,8 @@ class Pointcloud_Seg:
             
             tr_ned_baselink = self.get_tr(t_ned_baselink, q_ned_baselink)
 
-            tr_ned_stick = np.matmul(tr_ned_baselink, tr_baselink_stick)
-            tr_ned_downbase = np.matmul(tr_ned_stick, tr_stick_downbase)
-            tr_ned_down = np.matmul(tr_ned_downbase, tr_downbase_down)
-            tr_ned_left = np.matmul(tr_ned_down, tr_down_left)
+            tr_ned_stereodown = np.matmul(tr_ned_baselink, tr_baselink_stereodown)
+            tr_ned_leftoptical = np.matmul(tr_ned_stereodown, tr_stereodown_leftoptical)
 
             ts_float = info[0]
 
@@ -697,7 +672,7 @@ class Pointcloud_Seg:
                                     [info_array[i,1]],
                                     [info_array[i,2]],
                                     [1]])
-                    xyz_trans_rot = np.matmul(tr_ned_baselink, xyz) # np.matmul(tr_ned_left, xyz)   -  Change for lanty
+                    xyz_trans_rot = np.matmul(tr_ned_leftoptical, xyz) # np.matmul(tr_ned_baselink, xyz)   -  Change for lanty
                     info_array_world[i,0:3] = [xyz_trans_rot[0], xyz_trans_rot[1], xyz_trans_rot[2]]
 
                 path_out_world_info = os.path.join(self.path_out, name + "_info_world_2.ply")   # _2 for test purposes
