@@ -101,7 +101,7 @@ class Pointcloud_Seg:
         self.out = True
         self.print = True
         self.time = True
-        self.path = rospy.get_param('/lanty/slamon/working_directory', "../out")
+        self.path = rospy.get_param('/lanty2/slamon/working_directory', "../out")
         self.path_out = os.path.join(self.path, "pipes")
         self.path_graph = os.path.join(self.path, "graph_vertices.txt")
 
@@ -115,25 +115,25 @@ class Pointcloud_Seg:
         self.infobbs = info_bbs()
 
         # set subscribers
-        im_sub = message_filters.Subscriber('/lanty/slamon/keyframe', Image)         # //PARAM
-        disp_sub = message_filters.Subscriber('/lanty/slamon/keyframe_disparity', DisparityImage)         # //PARAM
-        pc_sub = message_filters.Subscriber('/lanty/slamon/keyframe_points2', PointCloud2)         # //PARAM
-        odom_sub = message_filters.Subscriber('/lanty/slamon/graph_robot_odometry', Odometry)      # //PARAM
+        im_sub = message_filters.Subscriber('/lanty2/slamon/keyframe', Image)         # //PARAM
+        disp_sub = message_filters.Subscriber('/lanty2/slamon/keyframe_disparity', DisparityImage)         # //PARAM
+        pc_sub = message_filters.Subscriber('/lanty2/slamon/keyframe_points2', PointCloud2)         # //PARAM
+        odom_sub = message_filters.Subscriber('/lanty2/slamon/graph_robot_odometry', Odometry)      # //PARAM
         info_sub = message_filters.Subscriber('/stereo_ch3/scaled_x4/left/camera_info', CameraInfo)
 
         ts_pc_odom = message_filters.ApproximateTimeSynchronizer([im_sub, disp_sub,pc_sub, odom_sub, info_sub], queue_size=10, slop=0.001)
         ts_pc_odom.registerCallback(self.cb_pc)
 
-        loop_sub = message_filters.Subscriber('/lanty/slamon/loop_closings_num', Int32)
+        loop_sub = message_filters.Subscriber('/lanty2/slamon/loop_closings_num', Int32)
         loop_sub.registerCallback(self.cb_loop)
 
         # Set class image publishers
-        self.pub_pc_base = rospy.Publisher("/lanty/slamon/points2_base", PointCloud2, queue_size=4)
-        self.pub_pc_seg = rospy.Publisher("/lanty/slamon/points2_seg", PointCloud2, queue_size=4)
-        self.pub_pc_inst = rospy.Publisher("/lanty/slamon/points2_inst", PointCloud2, queue_size=4)
-        self.pub_pc_info = rospy.Publisher("/lanty/slamon/points2_info", PointCloud2, queue_size=4)
-        self.pub_pc_info_world = rospy.Publisher("/lanty/slamon/points2_info_world", PointCloud2, queue_size=4)
-        self.pub_info_bbs = rospy.Publisher('/lanty/slamon/info_bbs', info_bbs, queue_size=4)
+        self.pub_pc_base = rospy.Publisher("/lanty2/slamon/points2_base", PointCloud2, queue_size=4)
+        self.pub_pc_seg = rospy.Publisher("/lanty2/slamon/points2_seg", PointCloud2, queue_size=4)
+        self.pub_pc_inst = rospy.Publisher("/lanty2/slamon/points2_inst", PointCloud2, queue_size=4)
+        self.pub_pc_info = rospy.Publisher("/lanty2/slamon/points2_info", PointCloud2, queue_size=4)
+        self.pub_pc_info_world = rospy.Publisher("/lanty2/slamon/points2_info_world", PointCloud2, queue_size=4)
+        self.pub_info_bbs = rospy.Publisher('/lanty2/slamon/info_bbs', info_bbs, queue_size=4)
 
         # Set segmentation timer
 
