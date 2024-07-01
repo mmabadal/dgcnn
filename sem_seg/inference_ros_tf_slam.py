@@ -46,7 +46,7 @@ class Pointcloud_Seg:
         self.block_sub = 0.1        #   0.1               //PARAM
         self.stride_sub = 0.1       #   0.1               //PARAM
         self.gpu_index = 0          #                     //PARAM
-        self.desired_points = int(6000/(128/self.points_sub))  # n of points to wich the received pc will be downsampled    //PARAM
+        self.desired_points = int(20000/(128/self.points_sub))  # n of points to wich the received pc will be downsampled    //PARAM
 
         # get valve matching targets
         self.targets_path = "../valve_targets"      # //PARAM
@@ -83,12 +83,12 @@ class Pointcloud_Seg:
         13: [255, 100, 0]
         }
 
-        self.rad_p = 0.04               # max distance for pipe growing                             //PARAM
+        self.rad_p = 0.05               # max distance for pipe growing                             //PARAM
         self.rad_v = 0.04               # max distance for valve growing                            //PARAM
         self.dim_p = 3                  # compute 2D (2) or 3D (3) distance for pipe growing        //PARAM
         self.dim_v = 2                  # compute 2D (2) or 3D (3) distance for valve growing       //PARAM
-        self.min_p_p = 60               # minimum number of points to consider a blob as a pipe     //PARAM
-        self.min_p_v = 30 # 40 80 140   # minimum number of points to consider a blob as a valve    //PARAM
+        self.min_p_p = 80               # minimum number of points to consider a blob as a pipe     //PARAM
+        self.min_p_v = 40 # 40 80 140   # minimum number of points to consider a blob as a valve    //PARAM
 
         # self.train_path = "RUNS/4_128_11_c9" # path to train
         self.train_path = "../trained_models/12" # path to train

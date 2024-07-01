@@ -9,7 +9,6 @@ import numpy as np
 import scipy as scp
 import open3d as o3d
 from natsort import natsorted
-import matplotlib.pyplot as plt
 from scipy.spatial import distance
 from plyfile import PlyData, PlyElement
 from mpl_toolkits.mplot3d import Axes3D
@@ -380,20 +379,7 @@ def match(source, target):
 
     return best_matching, (360/steps)*(best_idx)
 
-
-def print_chain(chain, maxs = np.array([])):
-
-    if maxs.size == 0:
-        maxs = np.amax(chain, axis=0)  # get voxel maxs
-
-    matrix = np.zeros((maxs[1]+1, maxs[2]+1), dtype=int)
-    for i, v in enumerate(chain):
-        matrix[v[0],v[1]] = 1
-
-    plt.imshow(matrix)
-    plt.show()
-
-    
+ 
 def get_connectivity(array):
 
     chains = list()
@@ -677,59 +663,22 @@ def get_info_skeleton(instance, close):
 
     xyz_max = np.amax(voxels_np, axis=0)                                                        # get voxel maxs
 
-    if print_opt == True:
-        voxels_matrix = np.zeros(xyz_max+1, dtype=int)                                            
-        for i, v in enumerate(voxels_np):
-            voxels_matrix[v[0],v[1],v[2]] = 1
-        z,x,y = voxels_matrix.nonzero()
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
-        ax.set_xlim3d(0, 100)
-        ax.set_ylim3d(0, 100)
-        ax.set_zlim3d(-20, 20)
-        ax.scatter(x, y, z, zdir='z', c= 'red')
-        fig.suptitle('3D VOXELS', fontsize=12)
-        plt.show()
-
     voxels_matrix_2d = np.zeros((xyz_max[1]+1, xyz_max[2]+1), dtype=int)                        # voxels to 2D matrix
     for i, v in enumerate(voxels_np):
         voxels_matrix_2d[v[1],v[2]] = 1
 
     #voxels_matrix_2d =  np.rot90(voxels_matrix_2d, k=1, axes=(1,0)) # for figure prints only, it breaks chain generation
 
-    if print_opt == True:
-        plt.imshow(voxels_matrix_2d)
-        plt.show()
-
     closing_dist = close                                                                                                           # distance to perform closing //PARAM
     voxels_matrix_2d_proc = scp.ndimage.binary_closing(voxels_matrix_2d, structure=np.ones((closing_dist,closing_dist)))       # closing
-    
-    if print_opt == True:
-        plt.imshow(voxels_matrix_2d_proc)
-        plt.show()
 
     opening_dist = 2                                                                                                           # distance to perform opening //PARAM
     voxels_matrix_2d_proc = scp.ndimage.binary_opening(voxels_matrix_2d_proc, structure=np.ones((opening_dist,opening_dist)))  # opening
 
-    if print_opt == True:
-        plt.imshow(voxels_matrix_2d_proc)  
-        plt.show()
-
     skeleton = skeletonize(voxels_matrix_2d_proc)           # obtain skeleton of 2d closed opened matrix
     skeleton = skeleton.astype(int)
 
-    if print_opt == True:
-        fig = plt.figure()
-        #fig.suptitle('SKELETON', fontsize=12)
-        plt.imshow(skeleton)
-        plt.show()
-
     chains, connexions = get_connectivity(skeleton)     # get skeleton conectivity -> chains and connexions
-
-    if print_opt == True:
-        print("CHAINS ORIGINALS")
-        for chain in chains:
-            print_chain(chain, xyz_max)
 
     # delete short chains
     chain_del_list = list()
@@ -739,26 +688,7 @@ def get_info_skeleton(instance, close):
     for i in sorted(chain_del_list, reverse=True):  # delete chains
         del chains[i]                               
 
-    if print_opt == True:
-        print("CHAINS SMALL DELETED")
-        for chain in chains:
-            print_chain(chain, xyz_max)
-
     connexions, chains = get_info_connexions(connexions, chains)    # get info from connexions, also refines chains
-
-    if print_opt == True:
-        print("CHAINS INFO")
-
-        for chain in chains:
-            print_chain(chain, xyz_max)
-
-        print("OVERVIEW")
-        chainoverview = chains[0]
-        for i, chain in enumerate(chains):
-            if i != 0:
-                chainoverview = np.vstack((chainoverview, chain))
-        print_chain(chainoverview, xyz_max)
-
 
     # project to nearest real voxel, as we performed a closing, information voxels may not really exist
     connexions_proj = list()

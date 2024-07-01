@@ -182,7 +182,7 @@ if __name__=='__main__':
                     if data_label_full.shape[0]> 2000: # 200000 check pointcloud points, a good PC has ~ 480k points  -> 200K for unfiltered PC, 2k for filtered PC
 
                         # subsample data_label_full to match ros subscription
-                        desired_points = int(6000/(128/points_sub)) # 5000
+                        desired_points = int(20000/(128/points_sub)) # 5000
                         idx_full_sub = np.random.choice(data_label_full.shape[0], desired_points, replace=False)
                         data_label_full_sub = data_label_full[idx_full_sub, 0:6]
 
@@ -227,12 +227,12 @@ if __name__=='__main__':
                         }
 
                         # init get_instances parameters
-                        rad_p = 0.04               # max distance for pipe growing                             //PARAM
+                        rad_p = 0.05               # max distance for pipe growing                             //PARAM
                         rad_v = 0.04               # max distance for valve growing                            //PARAM
                         dim_p = 3                  # compute 2D (2) or 3D (3) distance for pipe growing        //PARAM
                         dim_v = 2                  # compute 2D (2) or 3D (3) distance for valve growing       //PARAM
-                        min_p_p = 50               # minimum number of points to consider a blob as a pipe     //PARAM
-                        min_p_v = 30 # 40 80 140   # minimum number of points to consider a blob as a valve    //PARAM
+                        min_p_p = 80               # minimum number of points to consider a blob as a pipe     //PARAM
+                        min_p_v = 40 # 40 80 140   # minimum number of points to consider a blob as a valve    //PARAM
 
                         pred_sub_pipe = pred_sub[pred_sub[:,6] == [labels["pipe"]]]       # get points predicted as pipe
                         pred_sub_valve = pred_sub[pred_sub[:,6] == [labels["valve"]]]     # get points predicted as valve

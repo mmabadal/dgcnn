@@ -34,10 +34,10 @@ class Pointcloud_Seg:
         self.block_sub = 0.1        #                   //PARAM
         self.stride_sub = 0.1       #                   //PARAM
         self.gpu_index = 0          #                   //PARAM
-        self.desired_points = int(6000/(128/self.points_sub))  # n of points to wich the received pc will be downsampled    //PARAM
+        self.desired_points = int(20000/(128/self.points_sub))  # n of points to wich the received pc will be downsampled    //PARAM
 
         # get valve matching targets
-        self.targets_path = "/home/bomiquel/catkin_ws/src/dgcnn/valve_targets"      # //PARAM
+        self.targets_path = "../valve_targets"      # //PARAM
         self.targets_list = list()
         for file_name in natsorted(os.listdir(self.targets_path)):
             target_path = os.path.join(self.targets_path, file_name)
@@ -70,15 +70,15 @@ class Pointcloud_Seg:
         13: [0, 255, 100],
         13: [255, 100, 0]
         }
-        self.rad_p = 0.04               # max distance for pipe growing                             //PARAM
+        self.rad_p = 0.05               # max distance for pipe growing                             //PARAM
         self.rad_v = 0.04               # max distance for valve growing                            //PARAM
         self.dim_p = 3                  # compute 2D (2) or 3D (3) distance for pipe growing        //PARAM
         self.dim_v = 2                  # compute 2D (2) or 3D (3) distance for valve growing       //PARAM
-        self.min_p_p = 60               # minimum number of points to consider a blob as a pipe     //PARAM
-        self.min_p_v = 30 # 40 80 140   # minimum number of points to consider a blob as a valve    //PARAM
+        self.min_p_p = 80               # minimum number of points to consider a blob as a pipe     //PARAM
+        self.min_p_v = 40 # 40 80 140   # minimum number of points to consider a blob as a valve    //PARAM
 
-        self.model_path = "/home/bomiquel/catkin_ws/src/dgcnn/trained_models/12/model.ckpt"          # path to model         //PARAM
-        self.path_cls = "/home/bomiquel/catkin_ws/src/dgcnn/trained_models/12/cls.txt"               # path to clases info   //PARAM
+        self.model_path = "../trained_models/12/model.ckpt"          # path to model         //PARAM
+        self.path_cls = "../trained_models/12/cls.txt"               # path to clases info   //PARAM
         self.classes, self.labels, self.label2color = indoor3d_util.get_info_classes(self.path_cls) # get classes info
 
         self.init = False

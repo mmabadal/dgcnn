@@ -36,10 +36,10 @@ class Pointcloud_Seg:
         self.block_sub = 0.1        #                   //PARAM
         self.stride_sub = 0.1       #                   //PARAM
         self.gpu_index = 0          #                   //PARAM
-        self.desired_points = int(6000/(128/self.points_sub))  # n of points to wich the received pc will be downsampled    //PARAM
+        self.desired_points = int(20000/(128/self.points_sub))  # n of points to wich the received pc will be downsampled    //PARAM
 
         # get valve matching targets
-        self.targets_path = "/home/miguel/Desktop/PIPES2/dgcnn/valve_targets"      # //PARAM
+        self.targets_path = "../valve_targets"      # //PARAM
         self.targets_list = list()
         for file_name in natsorted(os.listdir(self.targets_path)):
             target_path = os.path.join(self.targets_path, file_name)
@@ -72,15 +72,15 @@ class Pointcloud_Seg:
         13: [0, 255, 100],
         13: [255, 100, 0]
         }
-        self.rad_p = 0.04               # max distance for pipe growing                             //PARAM
+        self.rad_p = 0.05               # max distance for pipe growing                             //PARAM
         self.rad_v = 0.04               # max distance for valve growing                            //PARAM
         self.dim_p = 3                  # compute 2D (2) or 3D (3) distance for pipe growing        //PARAM
         self.dim_v = 2                  # compute 2D (2) or 3D (3) distance for valve growing       //PARAM
-        self.min_p_p = 50               # minimum number of points to consider a blob as a pipe     //PARAM
-        self.min_p_v = 30 # 40 80 140   # minimum number of points to consider a blob as a valve    //PARAM
+        self.min_p_p = 80               # minimum number of points to consider a blob as a pipe     //PARAM
+        self.min_p_v = 40 # 40 80 140   # minimum number of points to consider a blob as a valve    //PARAM
 
-        self.model_path = "/home/miguel/Desktop/PIPES2/dgcnn/sem_seg/RUNS/sparus_xiroi/test/128_11_1/model.ckpt"          # path to model         //PARAM
-        self.path_cls = "/home/miguel/Desktop/PIPES2/dgcnn/sem_seg/RUNS/sparus_xiroi/test/128_11_1/cls.txt"               # path to clases info   //PARAM
+        self.model_path = "../trained_models/12/model.ckpt"          # path to model         //PARAM
+        self.path_cls = "../trained_models/12/cls.txt"               # path to clases info   //PARAM
         self.classes, self.labels, self.label2color = indoor3d_util.get_info_classes(self.path_cls) # get classes info
 
         # listener
@@ -101,17 +101,17 @@ class Pointcloud_Seg:
         self.new_pc = False
 
         # set subscribers
-        pc_sub = message_filters.Subscriber('/stereo_down/scaled_x2/points2_filtered', PointCloud2)     # //PARAM
-        #pc_sub = message_filters.Subscriber('/stereo_down/scaled_x2/points2', PointCloud2)             # //PARAM
+        pc_sub = message_filters.Subscriber('/stereo_ch3/scaled_x4/points2_filtered', PointCloud2)     # //PARAM
+        #pc_sub = message_filters.Subscriber('/stereo_ch3/scaled_x2/points2', PointCloud2)             # //PARAM
         pc_sub.registerCallback(self.cb_pc)
 
         # Set class image publishers
-        self.pub_pc_base = rospy.Publisher("/stereo_down/scaled_x2/points2_base", PointCloud2, queue_size=4)
-        self.pub_pc_seg = rospy.Publisher("/stereo_down/scaled_x2/points2_seg", PointCloud2, queue_size=4)
-        self.pub_pc_inst = rospy.Publisher("/stereo_down/scaled_x2/points2_inst", PointCloud2, queue_size=4)
-        self.pub_pc_info = rospy.Publisher("/stereo_down/scaled_x2/points2_info", PointCloud2, queue_size=4)
-        self.pub_pc_info_world = rospy.Publisher("/stereo_down/scaled_x2/points2_info_world", PointCloud2, queue_size=4)
-        self.pub_pc_info_map = rospy.Publisher("/stereo_down/scaled_x2/points2_info_map", PointCloud2, queue_size=4)
+        self.pub_pc_base = rospy.Publisher("/stereo_ch3/scaled_x2/points2_base", PointCloud2, queue_size=4)
+        self.pub_pc_seg = rospy.Publisher("/stereo_ch3/scaled_x2/points2_seg", PointCloud2, queue_size=4)
+        self.pub_pc_inst = rospy.Publisher("/stereo_ch3/scaled_x2/points2_inst", PointCloud2, queue_size=4)
+        self.pub_pc_info = rospy.Publisher("/stereo_ch3/scaled_x2/points2_info", PointCloud2, queue_size=4)
+        self.pub_pc_info_world = rospy.Publisher("/stereo_ch3/scaled_x2/points2_info_world", PointCloud2, queue_size=4)
+        self.pub_pc_info_map = rospy.Publisher("/stereo_ch3/scaled_x2/points2_info_map", PointCloud2, queue_size=4)
 
         # Set segmentation timer
         rospy.Timer(rospy.Duration(self.period), self.run)
@@ -179,7 +179,7 @@ class Pointcloud_Seg:
             rospy.loginfo('[%s]: Not enough input points', self.name)
             return
 
-        left_frame_id = "turbot/stereo_down/left_optical"
+        left_frame_id = "girona500/stereo_ch3/left_optical"
         world_frame_id = "world_ned" 
         left2worldned = self.get_transform(world_frame_id, left_frame_id, header.stamp)
 
@@ -397,7 +397,7 @@ class Pointcloud_Seg:
                         path_out_world_info_np = os.path.join("/home/miguel/Desktop/PIPES2/out_ros_world", str(header.stamp)+"_info.npy") # save array of info3 to world used
                         np.save(path_out_world_info_np, info_array_world)
 
-                header.frame_id = "turbot/stereo_down/left_optical"
+                header.frame_id = "girona500/stereo_ch3/left_optical"
 
         t10 = rospy.Time.now()
 
