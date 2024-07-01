@@ -258,8 +258,8 @@ class Pointcloud_Seg:
             descarted_points = np.vstack(instances_ref_valve_list[i])                           # notate points to discard
             if len(stolen_list[i])>0:                                                           # if there were stolen points
                 stolen_idx = list(np.vstack(stolen_list[i])[:,0].astype(int))                   # get stolen idx
-                stolen_cls = np.vstack(stolen_list[i])[:,1].astype(int)                         # get stolen class
-                stolen_cls = stolen_cls.reshape(stolen_cls.shape[0],1)                          # reshape stolen class
+                stolen_cls = np.vstack(stolen_list[i])[:,1].astype(int)                        # get stolen class
+                stolen_cls = stolen_cls.reshape(stolen_cls.shape[0],1)                         # reshape stolen class
                 stolen_points = descarted_points[stolen_idx, :-2]                               # recover stolen points
                 stolen_points = np.concatenate((stolen_points,stolen_cls),axis=1)               # concatenate stolen points and stolen class
                 pred_sub_pipe_ref = np.concatenate((pred_sub_pipe_ref,stolen_points),axis=0)    # add points and class pipe prediction points
@@ -360,27 +360,6 @@ class Pointcloud_Seg:
                     for i in range(pred_sub_world.shape[0]):
                         color = self.label2color[pred_sub_world[i,6]]
                         fout_pred.write('v %f %f %f %d %d %d\n' % (pred_sub_world[i,0], pred_sub_world[i,1], pred_sub_world[i,2], color[0], color[1], color[2]))
-
-                if self.info_map_key == True:
-
-                    # info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list = conversion_utils.array_to_info(info_array_world)
-                    # info_world = [info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list]
-
-                    # self.info_map = map_utils.get_info_map(self.info_map, info_world)
-
-                    # if self.count == self.count_target:
-                    #     self.count = 0
-                    #     self.info_map = map_utils.clean_map(self.info_map, self.count_thr)
-                    
-                    # info_map_array = conversion_utils.info_to_array(info_map)
-                    # pc_info_map = self.array2pc_info(header, info_map_array)
-                    # self.pub_pc_info_map.publish(pc_info_map)
-
-                    out2 = False
-                    if out2 == True:
-                        z = 1 # SAVE INFO MAP
-                        path_out_world_info_np = os.path.join("/home/miguel/Desktop/PIPES2/out_ros_world", str(header.stamp)+"_info.npy") # save array of info3 to world used
-                        np.save(path_out_world_info_np, info_array_world)
 
                 header.frame_id = "turbot/stereo_down/left_optical"
 

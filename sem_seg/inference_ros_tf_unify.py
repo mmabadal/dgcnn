@@ -87,7 +87,7 @@ class Pointcloud_Seg:
         self.listener = tf.TransformListener()
 
         # inits info map
-        self.info_map_key = True
+        self.info_map_key = False   # TODO DEBUG???
         self.info_pipes_list_map = list()
         self.info_connexions_list_map = list()
         self.info_valves_list_map = list()
@@ -269,10 +269,10 @@ class Pointcloud_Seg:
         for i in descart_valves_list:
             print("Valve descarted")
             descarted_points = np.vstack(instances_ref_valve_list[i])                           # notate points to discard
-            if len(stolen_list[i])>0:                                                                  # if there were stolen points
-                stolen_idx = list(np.vstack(stolen_list[i])[:,0].astype(int))                       # get stolen idx
-                stolen_cls = np.vstack(stolen_list[i])[:,1].astype(int)                             # get stolen class
-                stolen_cls = stolen_cls.reshape(stolen_cls.shape[0],1)                              # reshape stolen class
+            if len(stolen_list[i])>0:                                                           # if there were stolen points
+                stolen_idx = list(np.vstack(stolen_list[i])[:,0].astype(int))                   # get stolen idx
+                stolen_cls = np.vstack(stolen_list[i])[:,1].astype(int)                        # get stolen class
+                stolen_cls = stolen_cls.reshape(stolen_cls.shape[0],1)                         # reshape stolen class
                 stolen_points = descarted_points[stolen_idx, :-2]                               # recover stolen points
                 stolen_points = np.concatenate((stolen_points,stolen_cls),axis=1)               # concatenate stolen points and stolen class
                 pred_sub_pipe_ref = np.concatenate((pred_sub_pipe_ref,stolen_points),axis=0)    # add points and class pipe prediction points
@@ -378,18 +378,18 @@ class Pointcloud_Seg:
 
                 if self.info_map_key == True:
 
-                    # info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list = conversion_utils.array_to_info(info_array_world)
-                    # info_world = [info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list]
+                    info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list = conversion_utils.array_to_info(info_array_world)
+                    info_world = [info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list]
 
-                    # self.info_map = map_utils.get_info_map(self.info_map, info_world)
+                    self.info_map = map_utils.get_info_map(self.info_map, info_world)
 
-                    # if self.count == self.count_target:
-                    #     self.count = 0
-                    #     self.info_map = map_utils.clean_map(self.info_map, self.count_thr)
+                    if self.count == self.count_target:
+                        self.count = 0
+                        self.info_map = map_utils.clean_map(self.info_map, self.count_thr)
                     
-                    # info_map_array = conversion_utils.info_to_array(info_map)
-                    # pc_info_map = self.array2pc_info(header, info_map_array)
-                    # self.pub_pc_info_map.publish(pc_info_map)
+                    info_map_array = conversion_utils.info_to_array(info_map)
+                    pc_info_map = self.array2pc_info(header, info_map_array)
+                    self.pub_pc_info_map.publish(pc_info_map)
 
                     out2 = False
                     if out2 == True:

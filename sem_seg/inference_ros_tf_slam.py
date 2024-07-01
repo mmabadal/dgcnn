@@ -678,8 +678,8 @@ class Pointcloud_Seg:
         for line in lines:
 
             info = [float(x) for x in line.split(',')]
-            t_ned_baselink = info[2:5]
-            q_ned_baselink = info[5:]
+            t_ned_baselink = info[1:4]
+            q_ned_baselink = info[4:]
             
             tr_ned_baselink = self.get_tr(t_ned_baselink, q_ned_baselink)
 

@@ -26,27 +26,6 @@ class Pointcloud_Seg:
     def __init__(self, name):
         self.name = name
 
-        # T times
-        now = rospy.Time.now()
-        tzero = now-now
-
-        self.n_pc = 0
-        self.T_read = tzero
-        self.T_blocks = tzero
-        self.T_inferference = tzero
-
-        self.T_instaces_valve = tzero
-        self.T_instaces_pipe = tzero
-
-        self.T_info_valve = tzero
-        self.T_info_pipe = tzero
-
-        self.T_ref_valve = tzero
-        self.T_ref_pipe = tzero
-
-        self.T_publish =  tzero
-        self.T_total = tzero
-
         # Params inference
         self.fps = 1.0                # target fps        //PARAM
         self.period = 1.0/self.fps    # target period     //PARAM
@@ -270,10 +249,10 @@ class Pointcloud_Seg:
         for i in descart_valves_list:
             print("Valve descarted")
             descarted_points = np.vstack(instances_ref_valve_list[i])                           # notate points to discard
-            if len(stolen_list[i])>0:                                                                  # if there were stolen points
-                stolen_idx = list(np.vstack(stolen_list[i])[:,0].astype(int))                       # get stolen idx
-                stolen_cls = np.vstack(stolen_list[i])[:,1].astype(int)                             # get stolen class
-                stolen_cls = stolen_cls.reshape(stolen_cls.shape[0],1)                              # reshape stolen class
+            if len(stolen_list[i])>0:                                                           # if there were stolen points
+                stolen_idx = list(np.vstack(stolen_list[i])[:,0].astype(int))                   # get stolen idx
+                stolen_cls = np.vstack(stolen_list[i])[:,1].astype(int)                        # get stolen class
+                stolen_cls = stolen_cls.reshape(stolen_cls.shape[0],1)                         # reshape stolen class
                 stolen_points = descarted_points[stolen_idx, :-2]                               # recover stolen points
                 stolen_points = np.concatenate((stolen_points,stolen_cls),axis=1)               # concatenate stolen points and stolen class
                 pred_sub_pipe_ref = np.concatenate((pred_sub_pipe_ref,stolen_points),axis=0)    # add points and class pipe prediction points
@@ -473,59 +452,6 @@ class Pointcloud_Seg:
         print("--------------------------------------------------------------------------------------------------")
         print(" ")
         print(" ")
-
-
-
-
-
-        self.T_read = self.T_read + time_read
-        self.T_blocks = self.T_blocks + time_blocks
-        self.T_inferference = self.T_inferference + time_inferference
-
-        self.T_instaces_valve = self.T_instaces_valve + time_instaces_valve
-        self.T_instaces_pipe = self.T_instaces_pipe + time_instaces_pipe
-        self.T_instaces = self.T_instaces_valve + self.T_instaces_pipe
-
-        self.T_info_valve = self.T_info_valve + time_info_valve
-        self.T_info_pipe = self.T_info_pipe + time_info_pipe
-        self.T_info = self.T_info_valve + self.T_info_pipe
-
-        self.T_ref_valve = self.T_ref_valve + time_ref_valve
-        self.T_ref_pipe = self.T_ref_pipe + time_ref_pipe
-        self.T_ref = self.T_ref_valve + self.T_ref_pipe
-
-        self.T_publish =  self.T_publish + time_publish
-        self.T_total = self.T_total + time_total
-
-        self.n_pc = self.n_pc + 1
-
-
-
-        # print time info mean
-        # rospy.loginfo('[%s]: INFO TIMES MEAN:', self.name)	
-        # print("")
-        # rospy.loginfo('[%s]: Pc processing took %.2f seconds. Split into:', self.name, (self.T_total.secs + self.T_total.nsecs*1e-9)/self.n_pc)
-        # rospy.loginfo('[%s]: Reading -------- %.2f seconds (%i%%)', self.name, (self.T_read.secs + self.T_read.nsecs*1e-9)/self.n_pc, (self.T_read/self.T_total)*100)
-        # rospy.loginfo('[%s]: Blocks --------- %.2f seconds (%i%%)', self.name, (self.T_blocks.secs + self.T_blocks.nsecs*1e-9)/self.n_pc, (self.T_blocks/self.T_total)*100)
-        # rospy.loginfo('[%s]: Inference ------ %.2f seconds (%i%%)', self.name, (self.T_inferference.secs + self.T_inferference.nsecs*1e-9)/self.n_pc, (self.T_inferference/self.T_total)*100)
-        # rospy.loginfo('[%s]: Instances ------ %.2f seconds (%i%%)', self.name, (self.T_instaces.secs + self.T_instaces.nsecs*1e-9)/self.n_pc, (self.T_instaces/self.T_total)*100)
-        # rospy.loginfo('[%s]:  - Valve - %.2f seconds (%i%%)',       self.name, (self.T_instaces_valve.secs + self.T_instaces_valve.nsecs*1e-9)/self.n_pc, (self.T_instaces_valve/self.T_total)*100)
-        # rospy.loginfo('[%s]:  - Pipe -- %.2f seconds (%i%%)',       self.name, (self.T_instaces_pipe.secs + self.T_instaces_pipe.nsecs*1e-9)/self.n_pc, (self.T_instaces_pipe/self.T_total)*100)
-        # rospy.loginfo('[%s]: Info ----------- %.2f seconds (%i%%)', self.name, (self.T_info.secs + self.T_info.nsecs*1e-9)/self.n_pc, (self.T_info/self.T_total)*100)
-        # rospy.loginfo('[%s]:  - Valve - %.2f seconds (%i%%)',       self.name, (self.T_info_valve.secs + self.T_info_valve.nsecs*1e-9)/self.n_pc, (self.T_info_valve/self.T_total)*100)
-        # rospy.loginfo('[%s]:  - Pipe -- %.2f seconds (%i%%)',       self.name, (self.T_info_pipe.secs + self.T_info_pipe.nsecs*1e-9)/self.n_pc, (self.T_info_pipe/self.T_total)*100)
-        # rospy.loginfo('[%s]: Refine --------- %.2f seconds (%i%%)', self.name, (self.T_ref.secs + self.T_ref.nsecs*1e-9)/self.n_pc, (self.T_ref/self.T_total)*100)
-        # rospy.loginfo('[%s]:  - Valve - %.2f seconds (%i%%)',       self.name, (self.T_ref_valve.secs + self.T_ref_valve.nsecs*1e-9)/self.n_pc, (self.T_ref_valve/self.T_total)*100)
-        # rospy.loginfo('[%s]:  - Pipe -- %.2f seconds (%i%%)',       self.name, (self.T_ref_pipe.secs + self.T_ref_pipe.nsecs*1e-9)/self.n_pc, (self.T_ref_pipe/self.T_total)*100)
-        # rospy.loginfo('[%s]: Publish -------- %.2f seconds (%i%%)', self.name, (self.T_publish.secs + self.T_publish.nsecs*1e-9)/self.n_pc, (self.T_publish/self.T_total)*100)
-
-        # print(" ")
-        # print(" ")
-        # print("--------------------------------------------------------------------------------------------------")
-        # print("--------------------------------------------------------------------------------------------------")
-        # print(" ")
-        # print(" ")
-
 
 
     def pc2array(self, ros_pc):
