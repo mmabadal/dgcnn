@@ -607,7 +607,7 @@ class Pointcloud_Seg:
         t_baselink_stereodown = tq_baselink_stereodown[:3]
         q_baselink_stereodown = tq_baselink_stereodown[3:]
 
-        tq_stereodown_leftoptical = np.array([0.0, 0.0, 0.0, 0.0, 0.706825181105366, 0.7073882691671998, 1.0])
+        tq_stereodown_leftoptical = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.706825181105366, 0.7073882691671998])
         t_stereodown_leftoptical = tq_stereodown_leftoptical[:3]
         q_stereodown_leftoptical = tq_stereodown_leftoptical[3:]
 
@@ -627,7 +627,7 @@ class Pointcloud_Seg:
         t_baselink_stereodown = tq_baselink_stereodown[:3]
         q_baselink_stereodown = tq_baselink_stereodown[3:]
 
-        tq_stereodown_leftoptical = np.array([0.0, 0.0, 0.0, 0.0, 0.706825181105366, 0.7073882691671998, 1.0])
+        tq_stereodown_leftoptical = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.706825181105366, 0.7073882691671998])
         t_stereodown_leftoptical = tq_stereodown_leftoptical[:3]
         q_stereodown_leftoptical = tq_stereodown_leftoptical[3:]
 
