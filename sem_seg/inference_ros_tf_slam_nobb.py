@@ -405,8 +405,7 @@ class Pointcloud_Seg:
                 time_dif = abs(ts_float-header_float)
                 if time_dif < 0.1:
                     id = idx+1
-                    print(f"keyframe id of pointcloud with header {header_float} is: {id}")
-                    path_out_txt = os.path.join(self.path,'keypoint_correspondences.txt')
+                    path_out_txt = os.path.join(self.path,'keyframe_correspondences.txt')
                     with open(path_out_txt, 'a+') as file:
                         file.write(f"keyframe id of pointcloud with header {header_float} is: {id}\n")
                     break
@@ -627,13 +626,15 @@ class Pointcloud_Seg:
         tr_stereodown_leftoptical = self.get_tr(t_stereodown_leftoptical, q_stereodown_leftoptical)
 
         file_tq = open(self.path_graph, 'r')
+
         lines = file_tq.readlines()[1:]
-        for line in lines:
+
+        for idx, line in enumerate(lines):
 
             info = [float(x) for x in line.split(',')]
             t_ned_baselink = info[1:4]
             q_ned_baselink = info[4:]
-            
+        
             tr_ned_baselink = self.get_tr(t_ned_baselink, q_ned_baselink)
 
             tr_ned_stereodown = np.matmul(tr_ned_baselink, tr_baselink_stereodown)
@@ -650,7 +651,10 @@ class Pointcloud_Seg:
                 #print(f"time_dif: {time_dif}")
 
                 if time_dif < 0.1:
-                    #print("im in!")
+                    id = idx+1
+                    path_out_txt = os.path.join(self.path,'keyframe_correspondences_loop_' + str(self.loop) + '.txt')
+                    with open(path_out_txt, 'a+') as file:
+                        file.write(f"keyframe id of pointcloud with header {header_float} is: {id}\n")
                     break
 
             file_pc = os.path.join(self.path_out, name + '_info.npy')
