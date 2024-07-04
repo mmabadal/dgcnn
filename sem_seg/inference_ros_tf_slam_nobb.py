@@ -397,26 +397,18 @@ class Pointcloud_Seg:
             # TODO: CHECK restar tiempos y check de que no haya pasado más de 0,1 segundos
             file_id = open(self.path_graph, 'r')
             lines = file_id.readlines()[1:]
-            #print(f"Raw pc header: {header}")
             for idx, line in enumerate(lines):
                 info = [x for x in line.split(',')]
-
                 ts = info[0]
-                #print(f"Raw txt header: {ts}") 
-
                 ts_float = float(ts)
-                #print(f"Modified txt header float: {ts_float}")  
-
                 header_float = header.stamp.secs + header.stamp.nsecs*1e-9
-                #print(f"Modified pc header float: {header_float}")
-
                 time_dif = abs(ts_float-header_float)
-                #print(f"time_dif: {time_dif}")
-
                 if time_dif < 0.1:
-                    #print("im in!")
-                    id = idx-1
+                    id = idx+1
                     print(f"keyframe id of pointcloud with header {header_float} is: {id}")
+                    path_out_txt = os.path.join(self.path_out,'keypoint_correspondences.txt')
+                    with open(path_out_txt, 'a+') as file:
+                        file.write(f"keyframe id of pointcloud with header {header_float} is: {id}")
                     break
             
         # publishers
