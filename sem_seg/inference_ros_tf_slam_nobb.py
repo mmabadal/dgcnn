@@ -406,9 +406,9 @@ class Pointcloud_Seg:
                 if time_dif < 0.1:
                     id = idx+1
                     print(f"keyframe id of pointcloud with header {header_float} is: {id}")
-                    path_out_txt = os.path.join(self.path_out,'keypoint_correspondences.txt')
+                    path_out_txt = os.path.join(self.path,'keypoint_correspondences.txt')
                     with open(path_out_txt, 'a+') as file:
-                        file.write(f"keyframe id of pointcloud with header {header_float} is: {id}")
+                        file.write(f"keyframe id of pointcloud with header {header_float} is: {id}\n")
                     break
             
         # publishers
