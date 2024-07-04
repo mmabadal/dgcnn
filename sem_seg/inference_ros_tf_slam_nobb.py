@@ -398,7 +398,7 @@ class Pointcloud_Seg:
             file_id = open(self.path_graph, 'r')
             lines = file_id.readlines()[1:]
             #print(f"Raw pc header: {header}")
-            for line in lines:
+            for idx, line in enumerate(lines):
                 info = [x for x in line.split(',')]
 
                 ts = info[0]
@@ -415,8 +415,8 @@ class Pointcloud_Seg:
 
                 if time_dif < 0.1:
                     #print("im in!")
-                    id = info[1]
-                    print(f"id: {id}")
+                    id = idx-1
+                    print(f"keyframe id of pointcloud with header {header_float} is: {id}")
                     break
             
         # publishers
