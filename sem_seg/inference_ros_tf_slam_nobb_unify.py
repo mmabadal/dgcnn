@@ -83,6 +83,16 @@ class Pointcloud_Seg:
         13: [255, 100, 0]
         }
 
+
+        info_pipes_map_list = list()
+        info_connexions_map_list = list()
+        info_valves_map_list = list()
+        info_inst_pipe_map_list = list()
+        self.info_map = [info_pipes_map_list, info_connexions_map_list, info_valves_map_list, info_inst_pipe_map_list]
+        self.map_count = 0
+        self.map_count_target = 5       # each count_target, if has been a loop closing, (start from 0 and) use all info_slam.npy, if not, keep
+        self.map_count_thr = 1          # current info map and add info_world.npy on top of it (or do nothing)    `---> or with loop count > thr
+
         self.rad_p = 0.05               # max distance for pipe growing                             //PARAM
         self.rad_v = 0.04               # max distance for valve growing                            //PARAM
         self.dim_p = 3                  # compute 2D (2) or 3D (3) distance for pipe growing        //PARAM

@@ -75,7 +75,7 @@ def get_info_map(info_map, info_world):
 
         else:
             del_list = del_list + merge_list
-            skeleton_list = list()
+            skeleton_list = list()                                      # se hace con skeletons y no con inst pq ins es todo, skeleton es cada tuberia
             skeleton_list.append(info_pipes_world_list[i][0])
             count = 0
 
@@ -83,13 +83,13 @@ def get_info_map(info_map, info_world):
                 skeleton_list.append(info_pipes_map_list[pipe_idx][0]) 
                 count = count + info_pipes_map_list[pipe_idx][4]
                 
-            new_skeleton = np.vstack(skeleton_list)
+            skeleton_stack = np.vstack(skeleton_list)
             count = count +1
 
-            new_inst_l = copy.deepcopy(new_skeleton)
-            new_inst_r = copy.deepcopy(new_skeleton)
-            new_inst_t = copy.deepcopy(new_skeleton)
-            new_inst_b = copy.deepcopy(new_skeleton)
+            new_inst_l = copy.deepcopy(skeleton_stack)
+            new_inst_r = copy.deepcopy(skeleton_stack)
+            new_inst_t = copy.deepcopy(skeleton_stack)
+            new_inst_b = copy.deepcopy(skeleton_stack)
 
             for j in range(new_inst_l.shape[0]):
                 new_inst_l[j,0] = new_inst_l[j,0]-0.032
@@ -101,7 +101,7 @@ def get_info_map(info_map, info_world):
                 new_inst_b[j,1] = new_inst_b[j,1]-0.032
             # TODO si alguna vez se pierde se pueden meter otros 4 a 0.02, casi no afecta a tiempo
 
-            new_inst = np.vstack((new_skeleton, new_inst_l, new_inst_r, new_inst_t, new_inst_b))
+            new_inst = np.vstack((skeleton_stack, new_inst_l, new_inst_r, new_inst_t, new_inst_b))
 
             # transform instance to o3d pointcloud
             new_inst_o3d = o3d.geometry.PointCloud()
@@ -111,8 +111,8 @@ def get_info_map(info_map, info_world):
             new_pipe = info_pipe_map[0][0]
 
             # proj skeleton - untested
-            old_skeleton = copy.deepcopy(new_skeleton)  # new_skeleton now is old_skeleton, since the new one comes from the info of new_inst
-            new_skeleton = new_pipe[0]                  # new_skeleton now is the one obtained from new_inst
+            old_skeleton = copy.deepcopy(skeleton_stack) 
+            new_skeleton = new_pipe[0]
 
             proj_skeleton = get_info.proj_points(new_skeleton, old_skeleton, 0.4, 3)    # project skeleton
             new_pipe[0] = proj_skeleton                               
