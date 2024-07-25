@@ -400,26 +400,17 @@ class Pointcloud_Seg:
             # TODO: CHECK restar tiempos y check de que no haya pasado más de 0,1 segundos
             file_id = open(self.path_graph, 'r')
             lines = file_id.readlines()[1:]
-            #print(f"Raw pc header: {header}")
-            for line in lines:
+            for idx, line in enumerate(lines):
                 info = [x for x in line.split(',')]
-
                 ts = info[0]
-                #print(f"Raw txt header: {ts}") 
-
                 ts_float = float(ts)
-                #print(f"Modified txt header float: {ts_float}")  
-
                 header_float = header.stamp.secs + header.stamp.nsecs*1e-9
-                #print(f"Modified pc header float: {header_float}")
-
                 time_dif = abs(ts_float-header_float)
-                #print(f"time_dif: {time_dif}")
-
                 if time_dif < 0.1:
-                    #print("im in!")
-                    id = info[1]
-                    print(f"id: {id}")
+                    id = idx+1
+                    path_out_txt = os.path.join(self.path,'keyframe_correspondences.txt')
+                    with open(path_out_txt, 'a+') as file:
+                        file.write(f"keyframe id of pointcloud with header {header_float} is: {id}\n")
                     break
             
         # publishers
@@ -638,13 +629,15 @@ class Pointcloud_Seg:
         tr_stereodown_leftoptical = self.get_tr(t_stereodown_leftoptical, q_stereodown_leftoptical)
 
         file_tq = open(self.path_graph, 'r')
+
         lines = file_tq.readlines()[1:]
-        for line in lines:
+
+        for idx, line in enumerate(lines):
 
             info = [float(x) for x in line.split(',')]
             t_ned_baselink = info[1:4]
             q_ned_baselink = info[4:]
-            
+        
             tr_ned_baselink = self.get_tr(t_ned_baselink, q_ned_baselink)
 
             tr_ned_stereodown = np.matmul(tr_ned_baselink, tr_baselink_stereodown)
@@ -661,7 +654,10 @@ class Pointcloud_Seg:
                 #print(f"time_dif: {time_dif}")
 
                 if time_dif < 0.1:
-                    #print("im in!")
+                    id = idx+1
+                    path_out_txt = os.path.join(self.path,'keyframe_correspondences_loop_' + str(self.loop) + '.txt')
+                    with open(path_out_txt, 'a+') as file:
+                        file.write(f"keyframe id of pointcloud with header {header_float} is: {id}\n")
                     break
 
             file_pc = os.path.join(self.path_out, name + '_info.npy')
