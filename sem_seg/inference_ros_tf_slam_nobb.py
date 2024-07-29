@@ -648,7 +648,7 @@ class Pointcloud_Seg:
             files = os.listdir(self.path_out)
             for file in files:
                 name = file.split('_')[0]
-                header_float = float(name[:10] + '.' + name[10:])
+                header_float = float(name[:9] + '.' + name[10:])
 
                 time_dif = abs(ts_float-header_float)
                 #print(f"time_dif: {time_dif}")
