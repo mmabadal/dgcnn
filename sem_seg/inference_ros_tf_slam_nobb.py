@@ -648,7 +648,7 @@ class Pointcloud_Seg:
             files = os.listdir(self.path_out)
             for file in files:
                 name = file.split('_')[0]
-                header_float = float(name[:9] + '.' + name[10:])
+                header_float = float(name[:10] + '.' + name[10:])
 
                 time_dif = abs(ts_float-header_float)
                 #print(f"time_dif: {time_dif}")
@@ -674,7 +674,7 @@ class Pointcloud_Seg:
                     xyz_trans_rot = np.matmul(tr_ned_leftoptical, xyz) # np.matmul(tr_ned_baselink, xyz)   -  Change for lanty
                     info_array_slam[i,0:3] = [xyz_trans_rot[0], xyz_trans_rot[1], xyz_trans_rot[2]]
 
-                path_out_info_npy_slam = os.path.join(self.path_out, str(header_float) + "_info_slam.npy")
+                path_out_info_npy_slam = os.path.join(self.path_out, name + "_info_slam.npy")
                 np.save(path_out_info_npy_slam, info_array)  
 
                 path_out_slam_info = os.path.join(self.path_out, name + "_info_slam.ply")
