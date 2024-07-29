@@ -675,7 +675,7 @@ class Pointcloud_Seg:
                     info_array_slam[i,0:3] = [xyz_trans_rot[0], xyz_trans_rot[1], xyz_trans_rot[2]]
 
                 path_out_info_npy_slam = os.path.join(self.path_out, name + "_info_slam.npy")
-                np.save(path_out_info_npy_slam, info_array)  
+                np.save(path_out_info_npy_slam, info_array_slam)  
 
                 path_out_slam_info = os.path.join(self.path_out, name + "_info_slam.ply")
                 info_pipes_slam_list, info_connexions_slam_list, info_valves_slam_list, info_inst_pipe_slam_list = conversion_utils.array_to_info(info_array_slam)
