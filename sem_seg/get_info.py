@@ -1169,7 +1169,7 @@ def proj_points(base_points, new_points, max_d, d_type):
             dist = get_distance(new_point,base_point,d_type)
             dist_list.append(dist)
         min_dist = min(dist_list)                              # get closest value
-        min_dist_idx = dist_list.index(min(dist_list))[0]      # get closest idx
+        min_dist_idx = dist_list.index(min(dist_list))      # get closest idx
         if min_dist < max_d:
             new_points[i] = base_points[min_dist_idx]
     return new_points

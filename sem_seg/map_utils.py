@@ -75,7 +75,7 @@ def get_info_map(info_map, info_world):
 
         else:
             del_list = del_list + merge_list
-            skeleton_list = list()                                      # se hace con skeletons y no con inst pq ins es todo, skeleton es cada tuberia
+            skeleton_list = list()                                      # se hace con skeletons y no con inst pq inst es todo, skeleton es cada tuberia
             skeleton_list.append(info_pipes_world_list[i][0])
             count = 0
 
@@ -104,17 +104,17 @@ def get_info_map(info_map, info_world):
             new_inst = np.vstack((skeleton_stack, new_inst_l, new_inst_r, new_inst_t, new_inst_b))
 
             # transform instance to o3d pointcloud
-            new_inst_o3d = o3d.geometry.PointCloud()
-            new_inst_o3d.points = o3d.utility.Vector3dVector(new_inst[:,0:3])
+            # new_inst_o3d = o3d.geometry.PointCloud()
+            # new_inst_o3d.points = o3d.utility.Vector3dVector(new_inst[:,0:3])
 
-            info_pipe_map = get_info.get_info(new_inst_o3d, models=0, method="skeleton", close = 8) # get pipe instance info list( list( list(chain1, start1, end1, elbow_list1, vector_chain_list1), ...), list(connexions_points)) 
+            info_pipe_map = get_info.get_info(new_inst, models=0, method="skeleton", close = 8) # get pipe instance info list( list( list(chain1, start1, end1, elbow_list1, vector_chain_list1), ...), list(connexions_points)) 
             new_pipe = info_pipe_map[0][0]
 
             # proj skeleton - untested
             old_skeleton = copy.deepcopy(skeleton_stack) 
             new_skeleton = new_pipe[0]
 
-            proj_skeleton = get_info.proj_points(new_skeleton, old_skeleton, 0.4, 3)    # project skeleton
+            proj_skeleton = get_info.proj_points(old_skeleton, new_skeleton, 0.4, 3)    # project skeleton
             new_pipe[0] = proj_skeleton                               
             # ------------------------
 
@@ -280,7 +280,7 @@ if __name__ == "__main__":
         info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list = conversion_utils.array_to_info(info_array_world)
 
         for i in range(len(info_valves_world_list)):
-            info_valves_world_list[i].append([info_valves_world_list[i][2]])
+            info_valves_world_list[i].append([info_valves_world_list[i][2]])  # TODO se me ha olvidado pq se hace esto, se le añade la info 2 al final..
 
         info_world = [info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list]
 
