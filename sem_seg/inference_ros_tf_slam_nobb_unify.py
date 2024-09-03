@@ -20,7 +20,7 @@ from scipy.spatial.transform import Rotation as Rot
 import message_filters
 
 from std_msgs.msg import Int32
-
+from std_msgs.msg import Header
 from dgcnn.msg import info_bbs
 
 from nav_msgs.msg import Odometry
@@ -83,16 +83,6 @@ class Pointcloud_Seg:
         13: [255, 100, 0]
         }
 
-
-        info_pipes_map_list = list()
-        info_connexions_map_list = list()
-        info_valves_map_list = list()
-        info_inst_pipe_map_list = list()
-        self.info_map = [info_pipes_map_list, info_connexions_map_list, info_valves_map_list, info_inst_pipe_map_list]
-        self.map_count = 0
-        self.map_count_target = 5       # each count_target, if has been a loop closing, (start from 0 and) use all info_slam.npy, if not, keep
-        self.map_count_thr = 1          # current info map and add info_world.npy on top of it (or do nothing)    `---> or with loop count > thr
-
         self.rad_p = 0.05               # max distance for pipe growing                             //PARAM
         self.rad_v = 0.04               # max distance for valve growing                            //PARAM
         self.dim_p = 3                  # compute 2D (2) or 3D (3) distance for pipe growing        //PARAM
@@ -140,6 +130,8 @@ class Pointcloud_Seg:
         self.pub_pc_inst = rospy.Publisher("/girona500/map_slamon/points2_inst", PointCloud2, queue_size=4)
         self.pub_pc_info = rospy.Publisher("/girona500/map_slamon/points2_info", PointCloud2, queue_size=4)
         self.pub_pc_info_world = rospy.Publisher("/girona500/map_slamon/points2_info_world", PointCloud2, queue_size=4)
+        self.pub_pc_info_slam_map = rospy.Publisher("/girona500/map_slamon/points2_info_slam_map", PointCloud2, queue_size=4)
+        self.pub_pc_info_slam_map_clean = rospy.Publisher("/girona500/map_slamon/points2_info_slam_map_clean", PointCloud2, queue_size=4)
 
         # Set segmentation timer
 
@@ -157,6 +149,7 @@ class Pointcloud_Seg:
         if loop.data != self.loop:
             self.loop = loop.data
             self.update_positions()
+            self.get_map()
 
 
     def set_model(self):
@@ -684,14 +677,66 @@ class Pointcloud_Seg:
                     xyz_trans_rot = np.matmul(tr_ned_leftoptical, xyz) # np.matmul(tr_ned_baselink, xyz)   -  Change for lanty
                     info_array_slam[i,0:3] = [xyz_trans_rot[0], xyz_trans_rot[1], xyz_trans_rot[2]]
 
-                path_out_info_npy_slam = os.path.join(self.path_out, str(header.stamp) + "_info_slam.npy")
-                np.save(path_out_info_npy_slam, info_array)  
+                path_out_info_npy_slam = os.path.join(self.path_out, name + "_info_slam.npy")
+                np.save(path_out_info_npy_slam, info_array_slam)  
 
                 path_out_slam_info = os.path.join(self.path_out, name + "_info_slam.ply")
                 info_pipes_slam_list, info_connexions_slam_list, info_valves_slam_list, info_inst_pipe_slam_list = conversion_utils.array_to_info(info_array_slam)
                 info_slam = [info_pipes_slam_list, info_connexions_slam_list, info_valves_slam_list, info_inst_pipe_slam_list]
                 conversion_utils.info_to_ply(info_slam, path_out_slam_info)
         file_tq.close()
+
+
+    def get_map(self):
+
+        info_pipes_slam_map_list = list()
+        info_connexions_slam_map_list = list()
+        info_valves_slam_map_list = list()
+        info_inst_pipe_slam_map_list = list()
+        info_slam_map = [info_pipes_slam_map_list, info_connexions_slam_map_list, info_valves_slam_map_list, info_inst_pipe_slam_map_list]
+        map_count = 0
+        map_count_target = 5       # each count_target, if has been a loop closing, (start from 0 and) use all info_slam.npy, if not, keep
+        map_count_thr = 1          # current info map and add info_world.npy on top of it (or do nothing)    `---> or with loop count > thr
+   
+        for file in natsorted(os.listdir(self.path_out)):
+
+            if "_info_slam.npy" in file:
+
+                name = file.split('_')[0]
+                header_float = float(name[:10] + '.' + name[10:])
+
+                h = Header()
+                h.seq = map_count
+                h.stamp = rospy.Time(header_float)
+                h.frame_id = "world_ned"
+
+                map_count += 1
+
+                file_path = os.path.join(self.path_out, file)
+                info_array_slam = np.load(file_path)
+                info_pipes_slam_list, info_connexions_slam_list, info_valves_slam_list, info_inst_pipe_slam_list = conversion_utils.array_to_info(info_array_slam)
+
+                for i in range(len(info_valves_slam_list)):
+                    info_valves_slam_list[i].append([info_valves_slam_list[i][2]])  # TODO se me ha olvidado pq se hace esto, se le añade la info 2 al final..
+
+                info_slam = [info_pipes_slam_list, info_connexions_slam_list, info_valves_slam_list, info_inst_pipe_slam_list]
+
+                info_slam_map = map_utils.get_info_map(info_slam_map, info_slam)
+                path_out_slam_map = os.path.join(self.path_out, name+"_map.ply")
+                conversion_utils.info_to_ply(info_slam_map, path_out_slam_map)
+
+                info_slam_map_array = conversion_utils.info_to_array(info_slam_map)
+                pc_info_slam_map = self.array2pc_info(h, info_slam_map_array)
+                self.pub_pc_info_slam_map.publish(pc_info_slam_map)
+
+                if map_count%map_count_target==0:
+                    info_slam_map_clean = map_utils.clean_map(info_slam_map, map_count_thr)
+                    path_out_slam_map_clean = os.path.join(self.path_out, name+"_map_clean.ply")
+                    conversion_utils.info_to_ply(info_slam_map_clean, path_out_slam_map_clean)
+
+                    info_slam_map_clean_array = conversion_utils.info_to_array(info_slam_map_clean)
+                    pc_info_slam_map_clean = self.array2pc_info(h, info_slam_map_clean_array)
+                    self.pub_pc_info_slam_map_clean.publish(pc_info_slam_map_clean)
 
 
     def quaternion_multiply(self, q0, q1):
