@@ -1,6 +1,7 @@
 import os
 import copy
 import numpy as np
+import conversion_utils
 from scipy.spatial.transform import Rotation as Rot
 
 
@@ -71,8 +72,15 @@ for idx, line in enumerate(lines):
             xyz_trans_rot = np.matmul(tr_ned_leftoptical, xyz) # np.matmul(tr_ned_baselink, xyz)   -  Change for lanty
             info_array_slam[i,0:3] = [xyz_trans_rot[0], xyz_trans_rot[1], xyz_trans_rot[2]]
 
-        path_out_info_npy_slam = os.path.join(path_out, name + "_info_slam.npy")
-        np.save(path_out_info_npy_slam, info_array_slam)  
+        path_out_info_slam_npy = os.path.join(path_out, name + "_info_slam.npy")
+        path_out_info_slam_ply = os.path.join(path_out, name + "_info_slam.ply")
+        
+        np.save(path_out_info_slam_npy, info_array_slam)  
+
+        info_pipes_slam_list, info_connexions_slam_list, info_valves_slam_list, info_inst_pipe_slam_list = conversion_utils.array_to_info(info_array_slam)
+        info_pipes_slam = [info_pipes_slam_list, info_connexions_slam_list, info_valves_slam_list, info_inst_pipe_slam_list]
+        conversion_utils.info_to_ply(info_pipes_slam, path_out_info_slam_ply)
+
 
 
 file_tq.close()
