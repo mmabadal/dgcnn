@@ -13,7 +13,8 @@ def get_tr(t, q):
     trans_rot[0:3, 0:3] = rot_mat
     return(trans_rot)
 
-
+path_out_txt = "/home/miguel/Desktop/data/conboser/experiment_1/output/test_corr"
+path_in = "/home/miguel/Desktop/data/conboser/experiment_1/output/pipes"
 path_out = "/home/miguel/Desktop/data/conboser/experiment_1/output/pipes"
 path_graph = "/home/miguel/Desktop/data/conboser/experiment_1/output/keyframes_poses.txt"
 
@@ -36,6 +37,7 @@ lines = file_tq.readlines()[1:]
 for idx, line in enumerate(lines):
 
     info = [float(x) for x in line.split(',')]
+
     t_ned_baselink = info[1:4]
     q_ned_baselink = info[4:]
 
@@ -46,7 +48,10 @@ for idx, line in enumerate(lines):
 
     ts_float = info[0]
 
-    files = os.listdir(path_out)
+    files = os.listdir(path_in)
+
+    found = False
+
     for file in files:
         name = file.split('_')[0]
         header_float = float(name[:10] + '.' + name[10:])
@@ -55,13 +60,18 @@ for idx, line in enumerate(lines):
         #print(f"time_dif: {time_dif}")
 
         if time_dif < 0.1:
+            found = True
             id = idx+1
+            path_out_txt2 = os.path.join(path_out_txt,'keyframe_correspondences.txt')
+            with open(path_out_txt2, 'a+') as file:
+                file.write(f"keyframe id of pointcloud with header {header_float} is: {id} with ts {str(ts_float)} with diff {str(time_dif)}\n")
             break
 
-    file_pc = os.path.join(path_out, name + '_info.npy')
 
-    if os.path.exists(file_pc):
+    if found:
+        file_pc = os.path.join(path_in, name + '_info.npy')
         info_array = np.load(file_pc)
+        
 
         info_array_slam = info_array.copy()
         for i in range(info_array.shape[0]):
@@ -74,7 +84,6 @@ for idx, line in enumerate(lines):
 
         path_out_info_slam_npy = os.path.join(path_out, name + "_info_slam.npy")
         path_out_info_slam_ply = os.path.join(path_out, name + "_info_slam.ply")
-        
         np.save(path_out_info_slam_npy, info_array_slam)  
 
         info_pipes_slam_list, info_connexions_slam_list, info_valves_slam_list, info_inst_pipe_slam_list = conversion_utils.array_to_info(info_array_slam)

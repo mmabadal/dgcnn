@@ -666,6 +666,9 @@ class Pointcloud_Seg:
             ts_float = info[0]
 
             files = os.listdir(self.path_out)
+
+            found = False
+
             for file in files:
                 name = file.split('_')[0]
                 header_float = float(name[:10] + '.' + name[10:])
@@ -674,12 +677,14 @@ class Pointcloud_Seg:
                 #print(f"time_dif: {time_dif}")
 
                 if time_dif < 0.1:
+                    found = True
                     #print("im in!")
                     break
 
-            file_pc = os.path.join(self.path_out, name + '_info.npy')
+            if found:
 
-            if os.path.exists(file_pc):
+                file_pc = os.path.join(self.path_out, name + '_info.npy')
+
                 info_array = np.load(file_pc)
 
                 info_array_world = info_array.copy()
