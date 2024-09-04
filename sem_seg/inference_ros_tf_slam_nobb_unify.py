@@ -131,7 +131,6 @@ class Pointcloud_Seg:
         self.pub_pc_info = rospy.Publisher("/girona500/map_slamon/points2_info", PointCloud2, queue_size=4)
         self.pub_pc_info_world = rospy.Publisher("/girona500/map_slamon/points2_info_world", PointCloud2, queue_size=4)
         self.pub_pc_info_slam_map = rospy.Publisher("/girona500/map_slamon/points2_info_slam_map", PointCloud2, queue_size=4)
-        self.pub_pc_info_slam_map_clean = rospy.Publisher("/girona500/map_slamon/points2_info_slam_map_clean", PointCloud2, queue_size=4)
 
         # Set segmentation timer
 
@@ -721,23 +720,16 @@ class Pointcloud_Seg:
 
                 info_slam = [info_pipes_slam_list, info_connexions_slam_list, info_valves_slam_list, info_inst_pipe_slam_list]
 
-                info_slam_map = map_utils.get_info_map(info_slam_map, info_slam)
-                path_out_slam_map = os.path.join(self.path_out, name+"_map.ply")
-                conversion_utils.info_to_ply(info_slam_map, path_out_slam_map)
-
-                info_slam_map_array = conversion_utils.info_to_array(info_slam_map)
-                pc_info_slam_map = self.array2pc_info(h, info_slam_map_array)
-                self.pub_pc_info_slam_map.publish(pc_info_slam_map)
-
                 if map_count%map_count_target==0:
-                    info_slam_map_clean = map_utils.clean_map(info_slam_map, map_count_thr)
-                    path_out_slam_map_clean = os.path.join(self.path_out, name+"_map_clean.ply")
-                    conversion_utils.info_to_ply(info_slam_map_clean, path_out_slam_map_clean)
+                    info_slam_map = map_utils.clean_map(info_slam_map, map_count_thr)
+                    
+        info_slam_map = map_utils.get_info_map(info_slam_map, info_slam)
+        path_out_slam_map = os.path.join(self.path_out, name+"_map.ply")
+        conversion_utils.info_to_ply(info_slam_map, path_out_slam_map)
 
-                    info_slam_map_clean_array = conversion_utils.info_to_array(info_slam_map_clean)
-                    pc_info_slam_map_clean = self.array2pc_info(h, info_slam_map_clean_array)
-                    self.pub_pc_info_slam_map_clean.publish(pc_info_slam_map_clean)
-
+        info_slam_map_array = conversion_utils.info_to_array(info_slam_map)
+        pc_info_slam_map = self.array2pc_info(h, info_slam_map_array)
+        self.pub_pc_info_slam_map.publish(pc_info_slam_map)
 
     def quaternion_multiply(self, q0, q1):
         x0, y0, z0, w0 = q0
