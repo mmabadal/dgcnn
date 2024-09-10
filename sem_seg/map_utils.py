@@ -45,7 +45,7 @@ def check_near(arr1, arr2, dist):
 def get_info_map(info_map, info_world):
 
     info_pipes_map_list = info_map[0]
-    info_connnexions_map_list = info_map[1]
+    info_connexions_map_list = info_map[1]
     info_valves_map_list = info_map[2]
     pipe_inst_map_list = info_map[3]
 
@@ -129,31 +129,31 @@ def get_info_map(info_map, info_world):
     for i, info_connexion_world in enumerate(info_connnexions_world_list):
         merged = False
 
-        for j, info_connexion_map in enumerate(info_connnexions_map_list):
+        for j, info_connexion_map in enumerate(info_connexions_map_list):
             dist = get_instances.get_distance(info_connexion_world[0], info_connexion_map[0], 2) 
             if dist < 0.15:  # las valvulas tienen una longitud de 0.18
-                info_connnexions_map_list[j][0] = (info_connnexions_map_list[j][0] + info_connexion_world[0])/2
-                info_connnexions_map_list[j][2] = info_connnexions_map_list[j][2]+1         # count +1
+                info_connexions_map_list[j][0] = (info_connexions_map_list[j][0] + info_connexion_world[0])/2
+                info_connexions_map_list[j][2] = info_connexions_map_list[j][2]+1         # count +1
                 merged = True
                 break
 
         if merged == False:
             count_c = 1     # count 1
             info_connexion_world.append(count_c)
-            info_connnexions_map_list.append(info_connexion_world)
+            info_connexions_map_list.append(info_connexion_world)
 
-    for i, info_connexion_map in enumerate(info_connnexions_map_list):        # for each connexion
+    for i, info_connexion_map in enumerate(info_connexions_map_list):        # for each connexion
 
         near_pipes_list = list()
         for j, info_pipe_map in enumerate(info_pipes_map_list):                     # get near pipes
-            c_p = info_connnexions_map_list[i][0]                                   # central point
+            c_p = info_connexions_map_list[i][0]                                   # central point
             d_to_start = get_instances.get_distance(c_p, info_pipe_map[0][0], 3)    # get distance from valve central point to pipe start
             d_to_end = get_instances.get_distance(c_p, info_pipe_map[0][-1], 3)     # get distance from valve central point to pipe end
             if d_to_start <= 0.05 or d_to_end <= 0.05:                              # if distance < thr             //PARAM
                 near_pipes_list.append(j)                                           # append pipe as near
                 break  
 
-        info_connnexions_map_list[i][1] = near_pipes_list                           # replace near pipes to valve info [central_point, near_pipes]
+        info_connexions_map_list[i][1] = near_pipes_list                           # replace near pipes to valve info [central_point, near_pipes]
 
     for i, info_valve_world in enumerate(info_valves_world_list):
         merged = False
