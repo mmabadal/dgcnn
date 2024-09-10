@@ -669,24 +669,25 @@ class Pointcloud_Seg:
 
             if found:
                 file_pc = os.path.join(self.path_out, name + '_info.npy')
-                info_array = np.load(file_pc)
+                if os.path.exists(file_pc):
+                    info_array = np.load(file_pc)
 
-                info_array_slam = info_array.copy()
-                for i in range(info_array.shape[0]):
-                    xyz = np.array([[info_array[i,0]],
-                                    [info_array[i,1]],
-                                    [info_array[i,2]],
-                                    [1]])
-                    xyz_trans_rot = np.matmul(tr_ned_leftoptical, xyz) # np.matmul(tr_ned_baselink, xyz)   -  Change for lanty
-                    info_array_slam[i,0:3] = [xyz_trans_rot[0], xyz_trans_rot[1], xyz_trans_rot[2]]
+                    info_array_slam = info_array.copy()
+                    for i in range(info_array.shape[0]):
+                        xyz = np.array([[info_array[i,0]],
+                                        [info_array[i,1]],
+                                        [info_array[i,2]],
+                                        [1]])
+                        xyz_trans_rot = np.matmul(tr_ned_leftoptical, xyz) # np.matmul(tr_ned_baselink, xyz)   -  Change for lanty
+                        info_array_slam[i,0:3] = [xyz_trans_rot[0], xyz_trans_rot[1], xyz_trans_rot[2]]
 
-                path_out_info_npy_slam = os.path.join(self.path_out, name + "_info_slam.npy")
-                np.save(path_out_info_npy_slam, info_array_slam)  
+                    path_out_info_npy_slam = os.path.join(self.path_out, name + "_info_slam.npy")
+                    np.save(path_out_info_npy_slam, info_array_slam)  
 
-                path_out_slam_info = os.path.join(self.path_out, name + "_info_slam.ply")
-                info_pipes_slam_list, info_connexions_slam_list, info_valves_slam_list, info_inst_pipe_slam_list = conversion_utils.array_to_info(info_array_slam)
-                info_slam = [info_pipes_slam_list, info_connexions_slam_list, info_valves_slam_list, info_inst_pipe_slam_list]
-                conversion_utils.info_to_ply(info_slam, path_out_slam_info)
+                    path_out_slam_info = os.path.join(self.path_out, name + "_info_slam.ply")
+                    info_pipes_slam_list, info_connexions_slam_list, info_valves_slam_list, info_inst_pipe_slam_list = conversion_utils.array_to_info(info_array_slam)
+                    info_slam = [info_pipes_slam_list, info_connexions_slam_list, info_valves_slam_list, info_inst_pipe_slam_list]
+                    conversion_utils.info_to_ply(info_slam, path_out_slam_info)
         file_tq.close()
 
 
