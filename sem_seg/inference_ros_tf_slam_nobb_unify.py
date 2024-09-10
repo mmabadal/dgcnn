@@ -701,10 +701,10 @@ class Pointcloud_Seg:
         map_count = 0
         map_count_target = 5       # each count_target, if has been a loop closing, (start from 0 and) use all info_slam.npy, if not, keep
         map_count_thr = 1          # current info map and add info_world.npy on top of it (or do nothing)    `---> or with loop count > thr
-   
-        for file in natsorted(os.listdir(self.path_out)):
 
-            print("Generating MAP")
+        #print("Generating MAP")
+
+        for file in natsorted(os.listdir(self.path_out)):
 
             if "_info_slam.npy" in file:
 
@@ -720,7 +720,7 @@ class Pointcloud_Seg:
 
                 file_path = os.path.join(self.path_out, file)
 
-                print("im going to add to map: " + file_path)
+                #print("im going to add to map: " + file_path)
 
                 info_array_slam = np.load(file_path)
                 info_pipes_slam_list, info_connexions_slam_list, info_valves_slam_list, info_inst_pipe_slam_list = conversion_utils.array_to_info(info_array_slam)
@@ -729,11 +729,11 @@ class Pointcloud_Seg:
                     info_valves_slam_list[i].append([info_valves_slam_list[i][2]])  # TODO se me ha olvidado pq se hace esto, se le añade la info 2 al final..
 
                 info_slam = [info_pipes_slam_list, info_connexions_slam_list, info_valves_slam_list, info_inst_pipe_slam_list]
+                info_slam_map = map_utils.get_info_map(info_slam_map, info_slam)
 
                 if map_count%map_count_target==0:
                     info_slam_map = map_utils.clean_map(info_slam_map, map_count_thr)
                     
-        info_slam_map = map_utils.get_info_map(info_slam_map, info_slam)
         path_out_slam_map = os.path.join(self.path_out, name+"_map.ply")
         conversion_utils.info_to_ply(info_slam_map, path_out_slam_map)
 
