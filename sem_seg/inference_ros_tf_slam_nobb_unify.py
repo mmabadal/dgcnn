@@ -704,6 +704,8 @@ class Pointcloud_Seg:
    
         for file in natsorted(os.listdir(self.path_out)):
 
+            print("Generating MAP")
+
             if "_info_slam.npy" in file:
 
                 name = file.split('_')[0]
@@ -717,6 +719,9 @@ class Pointcloud_Seg:
                 map_count += 1
 
                 file_path = os.path.join(self.path_out, file)
+
+                print("im going to add to map: " + file_path)
+
                 info_array_slam = np.load(file_path)
                 info_pipes_slam_list, info_connexions_slam_list, info_valves_slam_list, info_inst_pipe_slam_list = conversion_utils.array_to_info(info_array_slam)
 
