@@ -102,7 +102,7 @@ def get_info_map(info_map, info_world):
             # TODO si alguna vez se pierde se pueden meter otros 4 a 0.02, casi no afecta a tiempo
 
             new_inst = np.vstack((skeleton_stack, new_inst_l, new_inst_r, new_inst_t, new_inst_b))
-
+            new_inst = np.hstack((new_inst,new_inst))  # TODO ver pq solo carga 3 cols, esto lo souciona?? cutre
             print("NEW INST SHAPE: " + str(new_inst.shape))
 
             # transform instance to o3d pointcloud
