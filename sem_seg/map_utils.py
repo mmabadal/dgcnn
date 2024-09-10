@@ -103,6 +103,8 @@ def get_info_map(info_map, info_world):
 
             new_inst = np.vstack((skeleton_stack, new_inst_l, new_inst_r, new_inst_t, new_inst_b))
 
+            print("NEW INST SHAPE: " + str(new_inst.shape))
+
             # transform instance to o3d pointcloud
             # new_inst_o3d = o3d.geometry.PointCloud()
             # new_inst_o3d.points = o3d.utility.Vector3dVector(new_inst[:,0:3])
