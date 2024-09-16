@@ -111,6 +111,7 @@ class Pointcloud_Seg:
 
         # self.init = False
         self.new_pc = False
+        self.lock = False
 
         self.infobbs = info_bbs()
 
@@ -144,11 +145,19 @@ class Pointcloud_Seg:
         self.new_pc = True
 
     def cb_loop(self, loop):
-        #print("loop is: " + str(self.loop))
         if loop.data != self.loop:
-            self.loop = loop.data
-            self.update_positions()
-            self.get_map()
+            print("loop is: " + str(self.loop))
+        if not self.lock:
+            self.lock = True
+            if loop.data != self.loop:
+                print("processing loop is: " + str(self.loop))
+                self.loop = loop.data
+                print("updating positions")
+                self.update_positions()
+                print("generating map")
+                self.get_map()
+            self.lock = False
+
 
 
     def set_model(self):
@@ -729,8 +738,8 @@ class Pointcloud_Seg:
                     info_valves_slam_list[i].append([info_valves_slam_list[i][2]])  # TODO se me ha olvidado pq se hace esto, se le añade la info 2 al final..
 
                 info_slam = [info_pipes_slam_list, info_connexions_slam_list, info_valves_slam_list, info_inst_pipe_slam_list]
-                print("INFO SLAM")
-                print(info_slam)
+                # print("INFO SLAM")
+                # print(info_slam)
                 info_slam_map = map_utils.get_info_map(info_slam_map, info_slam)
 
                 if map_count%map_count_target==0:

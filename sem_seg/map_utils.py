@@ -120,7 +120,7 @@ def get_info_map(info_map, info_world):
             new_pipe[0] = proj_skeleton                               
             # ------------------------
 
-            new_pipe.append(0)               # TODO holder for belong inst, remove from everywhere??
+            new_pipe.append([0])               # TODO holder for belong inst, remove from everywhere??
             new_pipe.append(count)
             info_pipes_map_list.append(new_pipe)
 
