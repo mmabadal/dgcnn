@@ -660,8 +660,8 @@ class Pointcloud_Seg:
 
             found = False
 
-            for file in files:
-                name = file.split('_')[0]
+            for file_name in files:
+                name = file_name.split('_')[0]
                 header_float = float(name[:10] + '.' + name[10:])
 
                 time_dif = abs(ts_float-header_float)
@@ -711,13 +711,11 @@ class Pointcloud_Seg:
         map_count_target = 5       # each count_target, if has been a loop closing, (start from 0 and) use all info_slam.npy, if not, keep
         map_count_thr = 1          # current info map and add info_world.npy on top of it (or do nothing)    `---> or with loop count > thr
 
-        print("Generating MAP")
-
-        for file in natsorted(os.listdir(self.path_out)):
+        for file_name in natsorted(os.listdir(self.path_out)):
 
             if "_info_slam.npy" in file:
 
-                name = file.split('_')[0]
+                name = file_name.split('_')[0]
                 header_float = float(name[:10] + '.' + name[10:])
 
                 h = Header()
@@ -727,7 +725,7 @@ class Pointcloud_Seg:
 
                 map_count += 1
 
-                file_path = os.path.join(self.path_out, file)
+                file_path = os.path.join(self.path_out, file_name)
 
                 print("im going to add to map: " + file_path)
 
