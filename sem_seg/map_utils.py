@@ -268,52 +268,54 @@ if __name__ == "__main__":
 
     for file in natsorted(os.listdir(path_in)):
 
-        n_infos = n_infos + 1
+        if "_info_slam.npy" in file:
 
-        print("working on: " + file)
+            n_infos = n_infos + 1
 
-        file_name, _ = os.path.splitext(file)
-        count += 1
-        count2 += 1
+            print("working on: " + file)
 
-        file_path = os.path.join(path_in, file)
-        info_array_world = np.load(file_path)
+            file_name, _ = os.path.splitext(file)
+            count += 1
+            count2 += 1
 
-        info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list = conversion_utils.array_to_info(info_array_world)
+            file_path = os.path.join(path_in, file)
+            info_array_world = np.load(file_path)
 
-        for i in range(len(info_valves_world_list)):
-            info_valves_world_list[i].append([info_valves_world_list[i][2]])  # TODO se me ha olvidado pq se hace esto, se le añade la info 2 al final..
+            info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list = conversion_utils.array_to_info(info_array_world)
 
-        info_world = [info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list]
+            for i in range(len(info_valves_world_list)):
+                info_valves_world_list[i].append([info_valves_world_list[i][2]])  # TODO se me ha olvidado pq se hace esto, se le anade la info 2 al final..
 
-        a = time.time()
-        info_map = get_info_map(info_map, info_world)
-        b = time.time()
-        c = b-a
-        
-        total_time = total_time+c
-        average_time = T_time/count2
+            info_world = [info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list]
 
-        print("time: " + str(c))
-        print("average time: " + str(average_time))
+            a = time.time()
+            info_map = get_info_map(info_map, info_world)
+            b = time.time()
+            c = b-a
+            
+            total_time = total_time+c
+            average_time = T_time/count2
 
-        path_out_map = os.path.join(path_out, file_name+"_map.ply")
-        conversion_utils.info_to_ply(info_map, path_out_map)
+            print("time: " + str(c))
+            print("average time: " + str(average_time))
 
-        if count == count_target:
-            count = 0
-            info_map = clean_map(info_map, count_thr)
+            path_out_map = os.path.join(path_out, file_name+"_map.ply")
+            conversion_utils.info_to_ply(info_map, path_out_map)
 
-            path_out_map_clean = os.path.join(path_out, file_name+"_map_clean.ply")
-            conversion_utils.info_to_ply(info_map, path_out_map_clean)
+            if count == count_target:
+                count = 0
+                info_map = clean_map(info_map, count_thr)
+
+                path_out_map_clean = os.path.join(path_out, file_name+"_map_clean.ply")
+                conversion_utils.info_to_ply(info_map, path_out_map_clean)
 
 
-        mean_time = total_time/n_infos
+            mean_time = total_time/n_infos
 
-        print(" ")
-        print("------------------------------")
-        print(" ")
-        
+            print(" ")
+            print("------------------------------")
+            print(" ")
+            
 
     print("mean_time: " + str(mean_time))
 
