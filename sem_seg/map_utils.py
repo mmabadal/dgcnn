@@ -161,12 +161,13 @@ def get_info_map(info_map, info_world):
         merged = False
 
         for j, info_valve_map in enumerate(info_valves_map_list):
+            print(info_valves_map_list)
+            print("----")
             dist = get_instances.get_distance(info_valve_world[0], info_valve_map[0], 2) 
             if dist < 0.15: # las valvulas tienen una longitud de 0.18
                 info_valves_map_list[j][0] = (info_valves_map_list[j][0] + info_valve_world[0])/2
                 info_valves_map_list[j][4].append(info_valve_world[2])
                 info_valves_map_list[j][5] = info_valves_map_list[j][5]+1 # count +1
-
                 two = sum(i <= 1 for i in info_valves_map_list[j][4])
                 three = sum(i >= 2 for i in info_valves_map_list[j][4])
                 new_type = 0
@@ -175,6 +176,8 @@ def get_info_map(info_map, info_world):
                 info_valves_map_list[j][2] = new_type
 
                 merged = True
+                print(info_valves_map_list)
+
                 break
         
         if merged == False:
@@ -283,8 +286,10 @@ if __name__ == "__main__":
 
             info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list = conversion_utils.array_to_info(info_array_world)
 
-            for i in range(len(info_valves_world_list)):
-                info_valves_world_list[i].append([info_valves_world_list[i][2]])  # TODO se me ha olvidado pq se hace esto, se le anade la info 2 al final..
+            for i in range(len(info_valves_world_list)):                            # create a list of valve types, so when valver are merged, the final 
+                info_valves_world_list[i].append([info_valves_world_list[i][2]])    # type is the most common one in this list
+
+
 
             info_world = [info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list]
 

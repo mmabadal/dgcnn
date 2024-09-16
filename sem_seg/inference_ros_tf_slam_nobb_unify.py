@@ -732,8 +732,8 @@ class Pointcloud_Seg:
                 info_array_slam = np.load(file_path)
                 info_pipes_slam_list, info_connexions_slam_list, info_valves_slam_list, info_inst_pipe_slam_list = conversion_utils.array_to_info(info_array_slam)
 
-                for i in range(len(info_valves_slam_list)):
-                    info_valves_slam_list[i].append([info_valves_slam_list[i][2]])  # TODO se me ha olvidado pq se hace esto, se le añade la info 2 al final..
+                for i in range(len(info_valves_slam_list)):                         # create a list of valve types, so when valver are merged, the final 
+                    info_valves_slam_list[i].append([info_valves_slam_list[i][2]])  # type is the most common one in this list
 
                 info_slam = [info_pipes_slam_list, info_connexions_slam_list, info_valves_slam_list, info_inst_pipe_slam_list]
                 # print("INFO SLAM")
