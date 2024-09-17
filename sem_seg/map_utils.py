@@ -102,7 +102,7 @@ def get_info_map(info_map, info_world):
             # TODO si alguna vez se pierde se pueden meter otros 4 a 0.02, casi no afecta a tiempo
 
             new_inst = np.vstack((skeleton_stack, new_inst_l, new_inst_r, new_inst_t, new_inst_b))
-            new_inst = np.hstack((new_inst,new_inst))  # TODO ver pq solo carga 3 cols, esto lo souciona?? cutre
+            new_inst = np.hstack((new_inst,new_inst))  # add fake colors
             print("NEW INST SHAPE: " + str(new_inst.shape))
 
             # transform instance to o3d pointcloud
@@ -166,12 +166,12 @@ def get_info_map(info_map, info_world):
             dist = get_instances.get_distance(info_valve_world[0], info_valve_map[0], 2) 
             if dist < 0.15: # las valvulas tienen una longitud de 0.18
                 info_valves_map_list[j][0] = (info_valves_map_list[j][0] + info_valve_world[0])/2
-                info_valves_map_list[j][4].append(info_valve_world[2])
+                info_valves_map_list[j][4].append(info_valve_world[2])    # add valve type to valve type list
                 info_valves_map_list[j][5] = info_valves_map_list[j][5]+1 # count +1
-                two = sum(i <= 1 for i in info_valves_map_list[j][4])
-                three = sum(i >= 2 for i in info_valves_map_list[j][4])
+                two = sum(i <= 1 for i in info_valves_map_list[j][4])     # get number of times valve is identified as two way
+                three = sum(i >= 2 for i in info_valves_map_list[j][4])   # get number of times valve is identified as three way
                 new_type = 0
-                if two<three:
+                if two<three:  # new type = type with most votes
                     new_type = 2
                 info_valves_map_list[j][2] = new_type
 
