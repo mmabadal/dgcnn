@@ -21,7 +21,6 @@ import message_filters
 
 from std_msgs.msg import Int32
 
-from dgcnn.msg import info_bbs
 
 from nav_msgs.msg import Odometry
 
@@ -112,7 +111,6 @@ class Pointcloud_Seg:
         # self.init = False
         self.new_pc = False
 
-        self.infobbs = info_bbs()
 
         # set subscribers
         pc_sub = message_filters.Subscriber('/girona500/map_slamon/keycloud', PointCloud2)         # //PARAM

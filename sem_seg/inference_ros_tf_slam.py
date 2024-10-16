@@ -21,7 +21,6 @@ import message_filters
 
 from std_msgs.msg import Int32
 
-from dgcnn.msg import info_bbs
 
 from nav_msgs.msg import Odometry
 
@@ -112,7 +111,6 @@ class Pointcloud_Seg:
         # self.init = False
         self.new_pc = False
 
-        self.infobbs = info_bbs()
 
         # set subscribers
         im_sub = message_filters.Subscriber('/lanty2/slamon/keyframe', Image)         # //PARAM
@@ -133,7 +131,6 @@ class Pointcloud_Seg:
         self.pub_pc_inst = rospy.Publisher("/lanty2/slamon/points2_inst", PointCloud2, queue_size=4)
         self.pub_pc_info = rospy.Publisher("/lanty2/slamon/points2_info", PointCloud2, queue_size=4)
         self.pub_pc_info_world = rospy.Publisher("/lanty2/slamon/points2_info_world", PointCloud2, queue_size=4)
-        self.pub_info_bbs = rospy.Publisher('/lanty2/slamon/info_bbs', info_bbs, queue_size=4)
 
         # Set segmentation timer
 
@@ -428,9 +425,7 @@ class Pointcloud_Seg:
             
             img_np = np.array(np.frombuffer(self.img.data, dtype=np.uint8).reshape(self.img.height, self.img.width,3))
             img_np = img_np[...,::-1]
-            self.infobbs = info_proc.get_bb(info_list, pred_sub, 0.03, id, img_np, self.disp, self.c_info)
-            self.infobbs.header = header
-            self.infobbs.frame_id = int(id)
+
 
         # publishers
         n_v = len(instances_ref_valve_list)
@@ -474,9 +469,6 @@ class Pointcloud_Seg:
         self.pub_pc_seg.publish(pc_seg)
         self.pub_pc_inst.publish(pc_inst)
         
-        if len(info_pipes_list2)>0 or len(info_valves_list2)>0:
-            self.pub_info_bbs.publish(self.infobbs)
-
 
     def pc2array(self, ros_pc):
         gen = pc2.read_points(ros_pc, skip_nans=True)   # ROS pointcloud into generator
