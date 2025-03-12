@@ -743,9 +743,10 @@ class Pointcloud_Seg:
         path_out_slam_map = os.path.join(self.path_out, name+"_map.ply")
         conversion_utils.info_to_ply(info_slam_map, path_out_slam_map)
         
-        info_slam_map_array = conversion_utils.info_to_array(info_slam_map)
-        pc_info_slam_map = self.array2pc_info(h, info_slam_map_array)
-        self.pub_pc_info_slam_map.publish(pc_info_slam_map)
+        if len(info_slam_map[0])!=0 or len(info_slam_map[0])!=0 or len(info_slam_map[0])!=0 or len(info_slam_map[0])!=0:
+            info_slam_map_array = conversion_utils.info_to_array(info_slam_map)
+            pc_info_slam_map = self.array2pc_info(h, info_slam_map_array)
+            self.pub_pc_info_slam_map.publish(pc_info_slam_map)
 
     def quaternion_multiply(self, q0, q1):
         x0, y0, z0, w0 = q0
