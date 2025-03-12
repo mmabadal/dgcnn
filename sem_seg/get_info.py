@@ -1076,8 +1076,9 @@ def get_vector(idx_p1, idx_p2, chain, inst, crop1, crop2):
     chain_list[idx_p1] = p1_new
     chain_list[idx_p2] = p2_new
 
-    chain = np.array(chain_list)
-    vector = p2_new-p1_new
+    # chain = np.array(chain_list)
+    # vector = p2_new-p1_new
+    vector = p2-p1
 
     return chain, vector
 
