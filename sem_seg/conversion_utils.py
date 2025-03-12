@@ -242,15 +242,12 @@ def info_to_array(info):
             near_pipes_list.append(near_pipe)
         near_pipes = np.array(near_pipes_list)
 
-        if near_pipes.size == 0:
-            near_pipes = np.array([99, 99, 99])
-
-        connexion = np.vstack((central,near_pipes))
-
-        connexion = np.insert(connexion, 8, values=2, axis=1)     # insert class 2 - connexion
-        connexion = np.insert(connexion, 9, values=inst, axis=1)  # insert inst
-        info_list.append(connexion)
-        inst += 1
+        if near_pipes.size != 0:
+            connexion = np.vstack((central,near_pipes))
+            connexion = np.insert(connexion, 8, values=2, axis=1)     # insert class 2 - connexion
+            connexion = np.insert(connexion, 9, values=inst, axis=1)  # insert inst
+            info_list.append(connexion)
+            inst += 1
 
     info_array = np.array(info_list)
     info_array = np.vstack(info_array)
