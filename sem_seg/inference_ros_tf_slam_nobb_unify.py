@@ -100,7 +100,7 @@ class Pointcloud_Seg:
         self.out = True
         self.print = True
         self.time = True
-        self.path = rospy.get_param('/girona500/slamon/working_path', "../out")
+        self.path = rospy.get_param('/lanty/slamon/working_path', "../out")
         self.path_out = os.path.join(self.path, "pipes")
         self.path_graph = os.path.join(self.path, "keyframes_poses.txt")
 
@@ -113,22 +113,22 @@ class Pointcloud_Seg:
         self.lock = False
 
         # set subscribers
-        pc_sub = message_filters.Subscriber('/girona500/map_slamon/keycloud', PointCloud2)         # //PARAM
-        odom_sub = message_filters.Subscriber('/girona500/map_slamon/robot_map', Odometry)      # //PARAM
+        pc_sub = message_filters.Subscriber('/lanty/slamon_map/keycloud', PointCloud2)         # //PARAM
+        odom_sub = message_filters.Subscriber('/lanty/slamon_map/robot_map', Odometry)      # //PARAM
 
         ts_pc_odom = message_filters.ApproximateTimeSynchronizer([pc_sub, odom_sub], queue_size=10, slop=0.001)
         ts_pc_odom.registerCallback(self.cb_pc)
 
-        loop_sub = message_filters.Subscriber('/girona500/map_slamon/loop_closure_num', Int32)
+        loop_sub = message_filters.Subscriber('/lanty/slamon_map/loop_closure_num', Int32)
         loop_sub.registerCallback(self.cb_loop)
 
         # Set class image publishers
-        self.pub_pc_base = rospy.Publisher("/girona500/map_slamon/points2_base", PointCloud2, queue_size=4)
-        self.pub_pc_seg = rospy.Publisher("/girona500/map_slamon/points2_seg", PointCloud2, queue_size=4)
-        self.pub_pc_inst = rospy.Publisher("/girona500/map_slamon/points2_inst", PointCloud2, queue_size=4)
-        self.pub_pc_info = rospy.Publisher("/girona500/map_slamon/points2_info", PointCloud2, queue_size=4)
-        self.pub_pc_info_world = rospy.Publisher("/girona500/map_slamon/points2_info_world", PointCloud2, queue_size=4)
-        self.pub_pc_info_slam_map = rospy.Publisher("/girona500/map_slamon/points2_info_slam_map", PointCloud2, queue_size=4)
+        self.pub_pc_base = rospy.Publisher("/lanty/slamon_map/points2_base", PointCloud2, queue_size=4)
+        self.pub_pc_seg = rospy.Publisher("/lanty/slamon_map/points2_seg", PointCloud2, queue_size=4)
+        self.pub_pc_inst = rospy.Publisher("/lanty/slamon_map/points2_inst", PointCloud2, queue_size=4)
+        self.pub_pc_info = rospy.Publisher("/lanty/slamon_map/points2_info", PointCloud2, queue_size=4)
+        self.pub_pc_info_world = rospy.Publisher("/lanty/slamon_map/points2_info_world", PointCloud2, queue_size=4)
+        self.pub_pc_info_slam_map = rospy.Publisher("/lanty/slamon_map/points2_info_slam_map", PointCloud2, queue_size=4)
 
         # Set segmentation timer
 
@@ -643,8 +643,8 @@ class Pointcloud_Seg:
         for idx, line in enumerate(lines):
 
             info = [float(x) for x in line.split(',')]
-            t_ned_baselink = info[1:4]
-            q_ned_baselink = info[4:]
+            t_ned_baselink = info[2:5]
+            q_ned_baselink = info[5:]
         
             tr_ned_baselink = self.get_tr(t_ned_baselink, q_ned_baselink)
 
@@ -710,7 +710,7 @@ class Pointcloud_Seg:
 
         for file_name in natsorted(os.listdir(self.path_out)):
 
-            if "_info_slam.npy" in file:
+            if "_info_slam.npy" in file_name:
 
                 name = file_name.split('_')[0]
                 header_float = float(name[:10] + '.' + name[10:])
@@ -742,7 +742,7 @@ class Pointcloud_Seg:
                     
         path_out_slam_map = os.path.join(self.path_out, name+"_map.ply")
         conversion_utils.info_to_ply(info_slam_map, path_out_slam_map)
-
+        
         info_slam_map_array = conversion_utils.info_to_array(info_slam_map)
         pc_info_slam_map = self.array2pc_info(h, info_slam_map_array)
         self.pub_pc_info_slam_map.publish(pc_info_slam_map)
