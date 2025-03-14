@@ -82,8 +82,8 @@ for idx, line in enumerate(lines):
             xyz_trans_rot = np.matmul(tr_ned_leftoptical, xyz) # np.matmul(tr_ned_baselink, xyz)   -  Change for lanty
             info_array_slam[i,0:3] = [xyz_trans_rot[0], xyz_trans_rot[1], xyz_trans_rot[2]]
 
-        path_out_info_slam_npy = os.path.join(path_out, name + "_info_slam.npy")
-        path_out_info_slam_ply = os.path.join(path_out, name + "_info_slam.ply")
+        path_out_info_slam_npy = os.path.join(path_out, name + "_info_map.npy")
+        path_out_info_slam_ply = os.path.join(path_out, name + "_info_map.ply")
         np.save(path_out_info_slam_npy, info_array_slam)  
 
         info_pipes_slam_list, info_connexions_slam_list, info_valves_slam_list, info_inst_pipe_slam_list = conversion_utils.array_to_info(info_array_slam)

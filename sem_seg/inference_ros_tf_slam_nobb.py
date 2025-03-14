@@ -353,12 +353,12 @@ class Pointcloud_Seg:
                 path_out_info_npy = os.path.join(self.path_out, str(header.stamp) + "_info.npy")
                 np.save(path_out_info_npy, info_array)
 
-                path_out_info_npy_world = os.path.join(self.path_out, str(header.stamp) + "_info_world.npy")
+                path_out_info_npy_world = os.path.join(self.path_out, str(header.stamp) + "_info_odom.npy")
                 np.save(path_out_info_npy_world, info_array_world)
 
                 conversion_utils.info_to_ply(info_list, path_out_info_ply)
               
-                path_out_world_info = os.path.join(self.path_out, str(header.stamp)+"_info_world.ply")
+                path_out_world_info = os.path.join(self.path_out, str(header.stamp)+"_info_odom.ply")
                 info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list = conversion_utils.array_to_info(info_array_world)
                 info_world = [info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list]
                 conversion_utils.info_to_ply(info_world, path_out_world_info)
@@ -383,8 +383,8 @@ class Pointcloud_Seg:
                     fout_pred.write('v %f %f %f %d %d %d\n' % (pred_sub[i,0], pred_sub[i,1], pred_sub[i,2], color[0], color[1], color[2]))
                 
 
-                path_out_world_base = os.path.join(self.path_out, str(header.stamp)+"_base_world.obj")
-                path_out_world_pred = os.path.join(self.path_out, str(header.stamp)+"_pred_world.obj")
+                path_out_world_base = os.path.join(self.path_out, str(header.stamp)+"_base_odom.obj")
+                path_out_world_pred = os.path.join(self.path_out, str(header.stamp)+"_pred_odom.obj")
                 fout_base = open(path_out_world_base, 'w')
                 fout_pred = open(path_out_world_pred, 'w')
                 for i in range(pred_sub_world.shape[0]):
@@ -676,10 +676,10 @@ class Pointcloud_Seg:
                     xyz_trans_rot = np.matmul(tr_ned_leftoptical, xyz) # np.matmul(tr_ned_baselink, xyz)   -  Change for lanty
                     info_array_slam[i,0:3] = [xyz_trans_rot[0], xyz_trans_rot[1], xyz_trans_rot[2]]
 
-                path_out_info_npy_slam = os.path.join(self.path_out, name + "_info_slam.npy")
+                path_out_info_npy_slam = os.path.join(self.path_out, name + "_info_map.npy")
                 np.save(path_out_info_npy_slam, info_array_slam)  
 
-                path_out_slam_info = os.path.join(self.path_out, name + "_info_slam.ply")
+                path_out_slam_info = os.path.join(self.path_out, name + "_info_map.ply")
                 info_pipes_slam_list, info_connexions_slam_list, info_valves_slam_list, info_inst_pipe_slam_list = conversion_utils.array_to_info(info_array_slam)
                 info_slam = [info_pipes_slam_list, info_connexions_slam_list, info_valves_slam_list, info_inst_pipe_slam_list]
                 conversion_utils.info_to_ply(info_slam, path_out_slam_info)
