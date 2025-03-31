@@ -855,7 +855,7 @@ def refine_valves(valves_info, pipes_info):
     return valves_info
     
 
-def unify_chains(chains_info, connexions_info):
+def unify_chains(chains_info, connexions_info, unify_dist=0.15):
 
     chains_info2 = copy.deepcopy(chains_info)
     unified = True              # unify key
@@ -881,15 +881,15 @@ def unify_chains(chains_info, connexions_info):
                         de1s2 = get_distance(end1, start2, 3)
                         de1e2 = get_distance(end1, end2, 3)
 
-                        closer = min([ds1s2, ds1e2, de1s2, de1e2])                                              # get closest value
-                        closer_idx = [ds1s2, ds1e2, de1s2, de1e2].index(min([ds1s2, ds1e2, de1s2, de1e2]))      # get closest idx
+                        closest = min([ds1s2, ds1e2, de1s2, de1e2])                                              # get closest value
+                        closest_idx = [ds1s2, ds1e2, de1s2, de1e2].index(min([ds1s2, ds1e2, de1s2, de1e2]))      # get closest idx
 
-                        if closer < 0.15:                                         # if closer < thr # //PARAM
+                        if closest < unify_dist:                                         # if closest < thr # //PARAM
                             
                             connexion_near = False                                # set connexion near key
                             
                             # evaluate if there is a connexion near depending on which are the closes points between chains
-                            if closer_idx == 0:                                 
+                            if closest_idx == 0:                                 
                                 for connexion_info in connexions_info:            # for all conenexions
                                     connexion = connexion_info[0]
                                     d1 = get_distance(start1, connexion, 3)       # get distance to chain1
@@ -897,7 +897,7 @@ def unify_chains(chains_info, connexions_info):
                                     if d1 < 0.15 or d2 < 0.15:                    # if any distance < thr   # //PARAM
                                         connexion_near = True                     # mark that there is a connexion near
 
-                            elif closer_idx ==1:
+                            elif closest_idx ==1:
                                 for connexion_info in connexions_info:
                                     connexion = connexion_info[0]
                                     d1 = get_distance(start1, connexion, 3)
@@ -905,7 +905,7 @@ def unify_chains(chains_info, connexions_info):
                                     if d1 < 0.15 or d2 < 0.15:                                  # //PARAM
                                         connexion_near = True
 
-                            elif closer_idx ==2:
+                            elif closest_idx ==2:
                                 for connexion_info in connexions_info:
                                     connexion = connexion_info[0]
                                     d1 = get_distance(end1, connexion, 3)
@@ -923,13 +923,13 @@ def unify_chains(chains_info, connexions_info):
 
                             if connexion_near == False:      # if there ar no connexion near the chains
                                 # get corresponding vectors depending on which are the closes points between chains
-                                if closer_idx == 0:
+                                if closest_idx == 0:
                                     vector1 = chain1_info[2][0]
                                     vector2 = chain2_info[2][0]
-                                elif closer_idx ==1:
+                                elif closest_idx ==1:
                                     vector1 = chain1_info[2][0]
                                     vector2 = chain2_info[2][-1]
-                                elif closer_idx ==2:
+                                elif closest_idx ==2:
                                     vector1 = chain1_info[2][-1]
                                     vector2 = chain2_info[2][0]
                                 else:
@@ -947,12 +947,12 @@ def unify_chains(chains_info, connexions_info):
                                     # unify chains depending on which are the closes points between chains
                                     points1 = chain1_info[0]
                                     points2 = chain2_info[0]
-                                    if closer_idx == 0:
+                                    if closest_idx == 0:
                                         points2 = np.flipud(points2)
                                         new_chain = np.vstack((points2, points1))
-                                    elif closer_idx ==1:
+                                    elif closest_idx ==1:
                                         new_chain = np.vstack((points2, points1))
-                                    elif closer_idx ==2:
+                                    elif closest_idx ==2:
                                         new_chain = np.vstack((points1, points2))
                                     else:
                                         points2 = np.flipud(points2)

@@ -260,9 +260,14 @@ class Pointcloud_Seg:
             n_idx_pred_sub_down = int(pred_sub.shape[0] * down)  
             idx_pred_sub_down = np.random.choice(pred_sub.shape[0], n_idx_pred_sub_down, replace=False)
             pred_sub = pred_sub[idx_pred_sub_down, 0:7] 
-        
+
+        # pred_sub[pred_sub[:, 6] == self.labels["valve"], 6] = self.labels["pipe"]   # TODO GIRONA ALL VALVES TO PIPES
+
         pred_sub_pipe = pred_sub[pred_sub[:,6] == [self.labels["pipe"]]]       # get points predicted as pipe
         pred_sub_valve = pred_sub[pred_sub[:,6] == [self.labels["valve"]]]     # get points predicted as valve
+
+
+
 
         # get valve instances
         instances_ref_valve_list, pred_sub_pipe_ref, stolen_list  = get_instances.get_instances(pred_sub_valve, self.dim_v, self.rad_v, self.min_p_v, ref=True, ref_data = pred_sub_pipe, ref_rad = 0.1)    # //PARAM
@@ -331,7 +336,7 @@ class Pointcloud_Seg:
 
         info_pipes_list_copy = copy.deepcopy(info_pipes_list) 
         info_connexions_list_copy = copy.deepcopy(info_connexions_list)
-        info_pipes_list2, info_connexions_list2 = get_info.unify_chains(info_pipes_list_copy, info_connexions_list_copy)  
+        info_pipes_list2, info_connexions_list2 = get_info.unify_chains(info_pipes_list_copy, info_connexions_list_copy, 0.15)  # unify_dist = 0.15  TODO GIRONA ADJUST
 
         info_valves_list_copy = copy.deepcopy(info_valves_list)
         info_valves_list2 = get_info.refine_valves(info_valves_list_copy, info_pipes_list2) 
