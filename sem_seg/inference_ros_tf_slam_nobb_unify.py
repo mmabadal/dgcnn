@@ -90,20 +90,21 @@ class Pointcloud_Seg:
         self.min_p_v = 40 # 40 80 140   # minimum number of points to consider a blob as a valve    //PARAM
 
         # self.train_path = "RUNS/4_128_11_c9" # path to train
-        self.train_path = "../trained_models/12" # path to train
+        # self.train_path = "../trained_models/12" # path to train
+        self.train_path = "../trained_models/overfit"
         self.model_path = os.path.join(self.train_path, "model.ckpt")         # path to model         //PARAM
         self.path_cls =  os.path.join(self.train_path, "cls.txt")             # path to clases info   //PARAM
         self.classes, self.labels, self.label2color = indoor3d_util.get_info_classes(self.path_cls) # get classes info
+        robot_name = "sparus2"
 
         self.loop = 0
 
         self.out = True
         self.print = True
         self.time = True
-        self.path = rospy.get_param('/girona500/slamon/working_path', "../out")
+        self.path = rospy.get_param(f'/{robot_name}/slamon/working_path', "../out")
         self.path_out = os.path.join(self.path, "pipes")
         self.path_graph = os.path.join(self.path, "keyframes_poses.txt")
-
 
         if not os.path.exists(self.path_out):
             os.makedirs(self.path_out)
@@ -113,22 +114,22 @@ class Pointcloud_Seg:
         self.lock = False
 
         # set subscribers
-        pc_sub = message_filters.Subscriber('/girona500/slamon_map/keycloud', PointCloud2)         # //PARAM
-        odom_sub = message_filters.Subscriber('/girona500/slamon_map/robot_map', Odometry)      # //PARAM
+        pc_sub = message_filters.Subscriber(f'/{robot_name}/slamon_map/keycloud', PointCloud2)         # //PARAM
+        odom_sub = message_filters.Subscriber(f'/{robot_name}/slamon_map/robot_map', Odometry)      # //PARAM
 
-        ts_pc_odom = message_filters.ApproximateTimeSynchronizer([pc_sub, odom_sub], queue_size=10, slop=0.001)
+        ts_pc_odom = message_filters.ApproximateTimeSynchronizer([pc_sub, odom_sub], queue_size=100, slop=0.001)
         ts_pc_odom.registerCallback(self.cb_pc)
 
-        loop_sub = message_filters.Subscriber('/girona500/slamon_map/loop_closure_num', Int32)
+        loop_sub = message_filters.Subscriber(f'/{robot_name}/slamon_map/loop_closure_num', Int32)
         loop_sub.registerCallback(self.cb_loop)
 
         # Set class image publishers
-        self.pub_pc_base = rospy.Publisher("/girona500/slamon_map/points2_base", PointCloud2, queue_size=4)
-        self.pub_pc_seg = rospy.Publisher("/girona500/slamon_map/points2_seg", PointCloud2, queue_size=4)
-        self.pub_pc_inst = rospy.Publisher("/girona500/slamon_map/points2_inst", PointCloud2, queue_size=4)
-        self.pub_pc_info = rospy.Publisher("/girona500/slamon_map/points2_info", PointCloud2, queue_size=4)
-        self.pub_pc_info_world = rospy.Publisher("/girona500/slamon_map/points2_info_world", PointCloud2, queue_size=4)
-        self.pub_pc_info_slam_map = rospy.Publisher("/girona500/slamon_map/points2_info_slam_map", PointCloud2, queue_size=4)
+        self.pub_pc_base = rospy.Publisher(f"/{robot_name}/slamon_map/points2_base", PointCloud2, queue_size=4)
+        self.pub_pc_seg = rospy.Publisher(f"/{robot_name}/slamon_map/points2_seg", PointCloud2, queue_size=4)
+        self.pub_pc_inst = rospy.Publisher(f"/{robot_name}/slamon_map/points2_inst", PointCloud2, queue_size=4)
+        self.pub_pc_info = rospy.Publisher(f"/{robot_name}/slamon_map/points2_info", PointCloud2, queue_size=4)
+        self.pub_pc_info_world = rospy.Publisher(f"/{robot_name}/slamon_map/points2_info_world", PointCloud2, queue_size=4)
+        self.pub_pc_info_slam_map = rospy.Publisher(f"/{robot_name}/slamon_map/points2_info_slam_map", PointCloud2, queue_size=4)
 
         # Set segmentation timer
 
@@ -265,9 +266,6 @@ class Pointcloud_Seg:
 
         pred_sub_pipe = pred_sub[pred_sub[:,6] == [self.labels["pipe"]]]       # get points predicted as pipe
         pred_sub_valve = pred_sub[pred_sub[:,6] == [self.labels["valve"]]]     # get points predicted as valve
-
-
-
 
         # get valve instances
         instances_ref_valve_list, pred_sub_pipe_ref, stolen_list  = get_instances.get_instances(pred_sub_valve, self.dim_v, self.rad_v, self.min_p_v, ref=True, ref_data = pred_sub_pipe, ref_rad = 0.1)    # //PARAM
