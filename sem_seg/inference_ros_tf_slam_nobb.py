@@ -106,9 +106,13 @@ class Pointcloud_Seg:
         self.path_out = os.path.join(self.path, "pipes")
         self.path_graph = os.path.join(self.path, "keyframes_poses.txt")
 
-
         if not os.path.exists(self.path_out):
             os.makedirs(self.path_out)
+        else:
+            for filename in os.listdir(self.path_out):
+                file_path = os.path.join(self.path_out, filename)
+                if os.path.isfile(file_path):
+                    os.remove(file_path)
 
         # self.init = False
         self.new_pc = False
@@ -138,12 +142,8 @@ class Pointcloud_Seg:
         rospy.Timer(rospy.Duration(self.period), self.run)
 
     def cb_pc(self, pc, odom):
-        start = time.time()
         self.pc = pc
         self.odom = odom
-        end = time.time()
-        print("CB duration: " + str(end - start) + " seconds")
-
         self.new_pc = True
 
     def cb_loop(self, loop):

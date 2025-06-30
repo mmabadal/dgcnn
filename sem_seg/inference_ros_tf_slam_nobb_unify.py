@@ -108,6 +108,11 @@ class Pointcloud_Seg:
 
         if not os.path.exists(self.path_out):
             os.makedirs(self.path_out)
+        else:
+            for filename in os.listdir(self.path_out):
+                file_path = os.path.join(self.path_out, filename)
+                if os.path.isfile(file_path):
+                    os.remove(file_path)
 
         # self.init = False
         self.new_pc = False
