@@ -32,9 +32,6 @@ for file in natsorted(os.listdir(path_in)):
     elements = file.split('.')
     out_filename = os.path.join(path_out, elements[0]+'.npy')
 
+    path_anno = os.path.join(path_in, file, "annotations")
 
-    print(path_in)
-    print(out_filename)
-    print(path_cls)
-    print("aaaaaaaa")
-    indoor3d_util.collect_point_label(path_in, out_filename, path_cls, 'numpy')
+    indoor3d_util.collect_point_label(path_anno, out_filename, path_cls, 'numpy')

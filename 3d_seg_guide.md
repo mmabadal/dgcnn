@@ -26,7 +26,7 @@
 
 - marcar gt en ply 
 
-- ply_to_txt.py
+- ply_to_txt.py  (ply_to_txt_folders.py in Tools)
 
 - txt_to_npy.py
 
@@ -50,6 +50,7 @@ data
 
 # train and infer
 
+- deactivate conda for training
 - python3 train.py --path_data Desktop/data/train_val/ --cls 5 --log_dir RUNS/run_x --batch_size X  # con 32 no va
 
 - python inference.py --path_data /home/data/txt/ --path_out /home/test/out --path_cls RUNS/4/cls.txt --model_path RUNS/4/ --test_name test1 --points_sub 128 --targets_path ../valve_targets/
