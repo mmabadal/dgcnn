@@ -683,7 +683,7 @@ def get_info_skeleton(instance, close):
     # delete short chains
     chain_del_list = list()
     for i, chain in enumerate(chains):
-        if len(chain) < 8:                         # if chain len < thr //PARAM
+        if len(chain) < 12:                         # if chain len < thr //PARAM
             chain_del_list.append(i)                # mark to be deleted
     for i in sorted(chain_del_list, reverse=True):  # delete chains
         del chains[i]                               
