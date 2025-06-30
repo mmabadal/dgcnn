@@ -138,8 +138,12 @@ class Pointcloud_Seg:
         rospy.Timer(rospy.Duration(self.period), self.run)
 
     def cb_pc(self, pc, odom):
+        start = time.time()
         self.pc = pc
         self.odom = odom
+        end = time.time()
+        print("CB duration: " + str(end - start) + " seconds")
+
         self.new_pc = True
 
     def cb_loop(self, loop):
@@ -226,19 +230,25 @@ class Pointcloud_Seg:
         xyz_max = np.amax(pc_np, axis=0)[0:3]   # get pointcloud maxs
 
         # divide data into blocks of size "block" with an stride "stride", in each block select random "points_sub" points
+        start = time.time()
         data_sub, label_sub = indoor3d_util.room2blocks_plus_normalized_parsed(pc_np,  xyz_max, self.points_sub, block_size=self.block_sub, stride=self.stride_sub, random_sample=False, sample_num=None, sample_aug=1) # subsample PC for evaluation
-
+        end = time.time()
+        print("network data prerocessing: " + str(end - start) + " seconds")
         if data_sub.size == 0:      # return if room2blocks_plus_normalized_parsed has deleted all blocks
             rospy.loginfo('[%s]: No data after block-stride', self.name)
             return
 
+        start = time.time()
         with tfw.Graph().as_default():
             pred_sub = self.evaluate(data_sub, label_sub, xyz_max)  # evaluate PC
-
+        end = time.time()
+        print("network inference: " + str(end - start) + " seconds")
         if pred_sub.size == 0:      # return if no prediction
             rospy.loginfo('[%s]: No prediction', self.name)
             return
 
+
+        start = time.time()
         pred_sub = np.unique(pred_sub, axis=0)  # delete duplicates from room2blocks (if points in block < points_sub, it duplicates them)
 
         pred_sub[:, 0:3] += xyz_min             # recover original position
@@ -348,7 +358,8 @@ class Pointcloud_Seg:
             header.frame_id = "world_ned"
             pc_info_world = self.array2pc_info(header, info_array_world)
             self.pub_pc_info_world.publish(pc_info_world)
-
+            end = time.time()
+            print("info postprocessing: " + str(end - start) + " seconds")
             if self.out == True:   
 
                 path_out_info_ply = os.path.join(self.path_out, str(header.stamp) + "_info.ply")
@@ -458,6 +469,7 @@ class Pointcloud_Seg:
 
 
     def pc2array(self, ros_pc):
+        start = time.time()
         gen = pc2.read_points(ros_pc, skip_nans=True)   # ROS pointcloud into generator
         pc_np = np.array(list(gen))                     # generator to list to numpy
 
@@ -488,6 +500,8 @@ class Pointcloud_Seg:
             pc_np = np.delete(pc_np, 3, 1) 
             pc_np = np.concatenate((pc_np, rgb), axis=1)
 
+        end = time.time()
+        print("pc2array duration: " + str(end - start) + " seconds")
         return pc_np
 
 
