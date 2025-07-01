@@ -748,18 +748,16 @@ class Pointcloud_Seg:
         for file_name in natsorted(os.listdir(self.path_out)):
 
             if "_info_slam.npy" in file_name:
-                
+
                 map_count += 1
 
                 name = file_name.split('_')[0]
                 header_float = float(name[:10] + '.' + name[10:])
 
-
                 h = Header()
                 h.seq = map_count
                 h.stamp = rospy.Time(header_float)
                 h.frame_id = "world_ned"
-
 
                 file_path = os.path.join(self.path_out, file_name)
 
