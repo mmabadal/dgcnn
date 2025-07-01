@@ -98,7 +98,7 @@ def get_info_map(info_map, info_world):
 
             new_inst = np.vstack((skeleton_stack, new_inst_l1, new_inst_r1, new_inst_t1, new_inst_b1, new_inst_l2, new_inst_r2, new_inst_t2, new_inst_b2))
             new_inst = np.hstack((new_inst,new_inst))  # add fake colors
-            print("NEW INST SHAPE: " + str(new_inst.shape))
+            #print("NEW INST SHAPE: " + str(new_inst.shape))
 
             # transform instance to o3d pointcloud
             # new_inst_o3d = o3d.geometry.PointCloud()

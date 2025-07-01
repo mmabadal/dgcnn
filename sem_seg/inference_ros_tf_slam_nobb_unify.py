@@ -711,6 +711,9 @@ class Pointcloud_Seg:
 
 
             if found:
+
+                print("updating position of: " + file_name)
+
                 file_pc = os.path.join(self.path_out, name + '_info.npy')
                 if os.path.exists(file_pc):
                     info_array = np.load(file_pc)
@@ -761,7 +764,7 @@ class Pointcloud_Seg:
 
                 file_path = os.path.join(self.path_out, file_name)
 
-                print("im going to add to map: " + file_path)
+                print("adding to map: " + file_path)
 
                 info_array_slam = np.load(file_path)
                 info_pipes_slam_list, info_connexions_slam_list, info_valves_slam_list, info_inst_pipe_slam_list = conversion_utils.array_to_info(info_array_slam)
@@ -770,8 +773,6 @@ class Pointcloud_Seg:
                     info_valves_slam_list[i].append([info_valves_slam_list[i][2]])  # type is the most common one in this list
 
                 info_slam = [info_pipes_slam_list, info_connexions_slam_list, info_valves_slam_list, info_inst_pipe_slam_list]
-                # print("INFO SLAM")
-                # print(info_slam)
                 info_slam_map = map_utils.get_info_map(info_slam_map, info_slam)
 
                 if map_count%map_count_target==0:
