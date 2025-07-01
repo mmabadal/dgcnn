@@ -18,28 +18,12 @@ from mpl_toolkits.mplot3d import Axes3D
 
 
 def check_near(arr1, arr2, dist):
-
-    near = False
-    start1 = arr1[0]
-    end1 = arr1[-1]    
-    start2 = arr2[0]
-    end2 = arr2[-1]
-
-    for i in arr2:
-        d_start = get_instances.get_distance(i, start1, 3)
-        d_end = get_instances.get_distance(i, end1, 3)
-        if d_start < dist or d_end < dist:
-            near = True
-            break
-
-    for i in arr1:
-        d_start = get_instances.get_distance(i, start2, 3)
-        d_end = get_instances.get_distance(i, end2, 3)
-        if d_start < dist or d_end < dist:
-            near = True
-            break
-
-    return near
+    for point1 in arr1:
+        for point2 in arr2:
+            d = get_instances.get_distance(point1, point2, 2)
+            if d < dist:
+                return True
+    return False
 
 
 def get_info_map(info_map, info_world):
@@ -59,7 +43,7 @@ def get_info_map(info_map, info_world):
     for i, pipe_world in enumerate(info_pipes_world_list):
         merge_list = list()
         for j, pipe_map in enumerate(info_pipes_map_list):
-            near = check_near(pipe_map[0], pipe_world[0], 0.05)
+            near = check_near(pipe_map[0], pipe_world[0], 0.10)
             if near == True:
                 merge_list.append(j)
         merge_list_all.append(merge_list)
@@ -86,24 +70,35 @@ def get_info_map(info_map, info_world):
             skeleton_stack = np.vstack(skeleton_list)
             count = count +1
 
-            new_inst_l = copy.deepcopy(skeleton_stack)
-            new_inst_r = copy.deepcopy(skeleton_stack)
-            new_inst_t = copy.deepcopy(skeleton_stack)
-            new_inst_b = copy.deepcopy(skeleton_stack)
+            new_inst_l1 = copy.deepcopy(skeleton_stack)
+            new_inst_r1 = copy.deepcopy(skeleton_stack)
+            new_inst_t1 = copy.deepcopy(skeleton_stack)
+            new_inst_b1 = copy.deepcopy(skeleton_stack)            
+            new_inst_l2 = copy.deepcopy(skeleton_stack)
+            new_inst_r2 = copy.deepcopy(skeleton_stack)
+            new_inst_t2 = copy.deepcopy(skeleton_stack)
+            new_inst_b2 = copy.deepcopy(skeleton_stack)
 
-            for j in range(new_inst_l.shape[0]):
-                new_inst_l[j,0] = new_inst_l[j,0]-0.032
-            for j in range(new_inst_r.shape[0]):
-                new_inst_r[j,0] = new_inst_r[j,0]+0.032                   
-            for j in range(new_inst_t.shape[0]):
-                new_inst_t[j,1] = new_inst_t[j,1]+0.032
-            for j in range(new_inst_b.shape[0]):
-                new_inst_b[j,1] = new_inst_b[j,1]-0.032
-            # TODO si alguna vez se pierde se pueden meter otros 4 a 0.02, casi no afecta a tiempo
+            for j in range(new_inst_l1.shape[0]):
+                new_inst_l1[j,0] = new_inst_l1[j,0]-0.040
+            for j in range(new_inst_r1.shape[0]):
+                new_inst_r1[j,0] = new_inst_r1[j,0]+0.040                   
+            for j in range(new_inst_t1.shape[0]):
+                new_inst_t1[j,1] = new_inst_t1[j,1]+0.040
+            for j in range(new_inst_b1.shape[0]):
+                new_inst_b1[j,1] = new_inst_b1[j,1]-0.040
+            for j in range(new_inst_l2.shape[0]):
+                new_inst_l2[j,0] = new_inst_l2[j,0]-0.020
+            for j in range(new_inst_r2.shape[0]):
+                new_inst_r2[j,0] = new_inst_r2[j,0]+0.020                   
+            for j in range(new_inst_t2.shape[0]):
+                new_inst_t2[j,1] = new_inst_t2[j,1]+0.020
+            for j in range(new_inst_b2.shape[0]):
+                new_inst_b2[j,1] = new_inst_b2[j,1]-0.020
 
-            new_inst = np.vstack((skeleton_stack, new_inst_l, new_inst_r, new_inst_t, new_inst_b))
+            new_inst = np.vstack((skeleton_stack, new_inst_l1, new_inst_r1, new_inst_t1, new_inst_b1, new_inst_l2, new_inst_r2, new_inst_t2, new_inst_b2))
             new_inst = np.hstack((new_inst,new_inst))  # add fake colors
-            print("NEW INST SHAPE: " + str(new_inst.shape))
+            #print("NEW INST SHAPE: " + str(new_inst.shape))
 
             # transform instance to o3d pointcloud
             # new_inst_o3d = o3d.geometry.PointCloud()
