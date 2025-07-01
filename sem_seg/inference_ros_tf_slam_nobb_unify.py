@@ -16,6 +16,8 @@ import get_instances
 import conversion_utils
 from natsort import natsorted
 from scipy.spatial.transform import Rotation as Rot
+from dgcnn.msg import Chart
+import subprocess
 
 import message_filters
 
@@ -90,8 +92,8 @@ class Pointcloud_Seg:
         self.min_p_v = 40 # 40 80 140   # minimum number of points to consider a blob as a valve    //PARAM
 
         # self.train_path = "RUNS/4_128_11_c9" # path to train
-        # self.train_path = "../trained_models/12" # path to train
-        self.train_path = "../trained_models/overfit"
+        self.train_path = "../trained_models/12" # path to train
+        # self.train_path = "../trained_models/overfit"
         self.model_path = os.path.join(self.train_path, "model.ckpt")         # path to model         //PARAM
         self.path_cls =  os.path.join(self.train_path, "cls.txt")             # path to clases info   //PARAM
         self.classes, self.labels, self.label2color = indoor3d_util.get_info_classes(self.path_cls) # get classes info
@@ -122,11 +124,13 @@ class Pointcloud_Seg:
         pc_sub = message_filters.Subscriber(f'/{robot_name}/slamon_map/keycloud', PointCloud2)         # //PARAM
         odom_sub = message_filters.Subscriber(f'/{robot_name}/slamon_map/robot_map', Odometry)      # //PARAM
 
-        ts_pc_odom = message_filters.ApproximateTimeSynchronizer([pc_sub, odom_sub], queue_size=100, slop=0.001)
+        ts_pc_odom = message_filters.ApproximateTimeSynchronizer([pc_sub, odom_sub], queue_size=10, slop=0.001)
         ts_pc_odom.registerCallback(self.cb_pc)
 
-        loop_sub = message_filters.Subscriber(f'/{robot_name}/slamon_map/loop_closure_num', Int32)
-        loop_sub.registerCallback(self.cb_loop)
+        loop_sub = rospy.Subscriber(f'/{robot_name}/slamon_map/loop_closure_num', Int32, self.cb_loop)
+
+        chart_sub = rospy.Subscriber("/multi_robot_slamon_map/inter_robot_chart", Chart, self.cb_chart)
+        self.robot_id = rospy.get_param('/multi_robot_slamon/robot_id')
 
         # Set class image publishers
         self.pub_pc_base = rospy.Publisher(f"/{robot_name}/slamon_map/points2_base", PointCloud2, queue_size=4)
@@ -141,6 +145,31 @@ class Pointcloud_Seg:
         self.set_model()
 
         rospy.Timer(rospy.Duration(self.period), self.run)
+        
+    def cb_chart(self, chart):
+
+        rospy.loginfo("Received Chart msg")
+
+        if self.robot_id != chart.receiver:
+            rospy.loginfo("msg is not for me")
+            return
+
+        rospy.loginfo("msg is for me")
+        if not chart.keyframe_stamps:
+            rospy.loginfo("im asked to transfer pipe files")
+            path_local = "/home/user/pipe_files/"       # local folder path (note trailing slash for rsync)
+            path_remote = "/remote/path/pipe_files/"    # remote folder path
+            ip_remote = "192.168.1.20"                   # remote machine IP or hostname
+            user_remote = "username"                      # remote username
+
+            rsync_command = ["rsync","-avz","--progress",path_local,f"{user_remote}@{ip_remote}:{path_remote}"]
+            
+            try:
+                rospy.loginfo(f"Starting rsync from {path_local} to {user_remote}@{ip_remote}:{path_remote}")
+                subprocess.check_call(rsync_command)
+                rospy.loginfo("Rsync transfer completed successfully")
+            except subprocess.CalledProcessError as e:
+                rospy.logerr(f"Rsync failed: {e}")
 
     def cb_pc(self, pc, odom):
         self.pc = pc
@@ -413,21 +442,21 @@ class Pointcloud_Seg:
 
             header.frame_id = "camera_left"
 
-            # TODO: CHECK restar tiempos y check de que no haya pasado más de 0,1 segundos
-            file_id = open(self.path_graph, 'r')
-            lines = file_id.readlines()[1:]
-            for idx, line in enumerate(lines):
-                info = [x for x in line.split(',')]
-                ts = info[0]
-                ts_float = float(ts)
-                header_float = header.stamp.secs + header.stamp.nsecs*1e-9
-                time_dif = abs(ts_float-header_float)
-                if time_dif < 0.1:
-                    id = idx+1
-                    path_out_txt = os.path.join(self.path,'keyframe_correspondences.txt')
-                    with open(path_out_txt, 'a+') as file:
-                        file.write(f"keyframe id of pointcloud with header {header_float} is: {id}\n")
-                    break
+            # # TODO: CHECK restar tiempos y check de que no haya pasado más de 0,1 segundos
+            # file_id = open(self.path_graph, 'r')
+            # lines = file_id.readlines()[1:]
+            # for idx, line in enumerate(lines):
+            #     info = [x for x in line.split(',')]
+            #     ts = info[0]
+            #     ts_float = float(ts)
+            #     header_float = header.stamp.secs + header.stamp.nsecs*1e-9
+            #     time_dif = abs(ts_float-header_float)
+            #     if time_dif < 0.1:
+            #         id = idx+1
+            #         path_out_txt = os.path.join(self.path,'keyframe_correspondences.txt')
+            #         with open(path_out_txt, 'a+') as file:
+            #             file.write(f"keyframe id of pointcloud with header {header_float} is: {id}\n")
+            #         break
             
         # publishers
         n_v = len(instances_ref_valve_list)
@@ -695,10 +724,10 @@ class Pointcloud_Seg:
                         xyz_trans_rot = np.matmul(tr_ned_leftoptical, xyz) # np.matmul(tr_ned_baselink, xyz)   -  Change for lanty
                         info_array_slam[i,0:3] = [xyz_trans_rot[0], xyz_trans_rot[1], xyz_trans_rot[2]]
 
-                    path_out_info_npy_slam = os.path.join(self.path_out, name + "_info_map.npy")
+                    path_out_info_npy_slam = os.path.join(self.path_out, name + "_info_slam.npy")
                     np.save(path_out_info_npy_slam, info_array_slam)  
 
-                    path_out_slam_info = os.path.join(self.path_out, name + "_info_map.ply")
+                    path_out_slam_info = os.path.join(self.path_out, name + "_info_slam.ply")
                     info_pipes_slam_list, info_connexions_slam_list, info_valves_slam_list, info_inst_pipe_slam_list = conversion_utils.array_to_info(info_array_slam)
                     info_slam = [info_pipes_slam_list, info_connexions_slam_list, info_valves_slam_list, info_inst_pipe_slam_list]
                     conversion_utils.info_to_ply(info_slam, path_out_slam_info)
@@ -713,22 +742,24 @@ class Pointcloud_Seg:
         info_inst_pipe_slam_map_list = list()
         info_slam_map = [info_pipes_slam_map_list, info_connexions_slam_map_list, info_valves_slam_map_list, info_inst_pipe_slam_map_list]
         map_count = 0
-        map_count_target = 5       # each count_target, if has been a loop closing, (start from 0 and) use all info_map.npy, if not, keep
-        map_count_thr = 1          # current info map and add info_odom.npy on top of it (or do nothing)    `---> or with loop count > thr
+        map_count_target = 10       # each count_target clean map
+        map_count_thr = 1
 
         for file_name in natsorted(os.listdir(self.path_out)):
 
-            if "_info_map.npy" in file_name:
+            if "_info_slam.npy" in file_name:
+                
+                map_count += 1
 
                 name = file_name.split('_')[0]
                 header_float = float(name[:10] + '.' + name[10:])
+
 
                 h = Header()
                 h.seq = map_count
                 h.stamp = rospy.Time(header_float)
                 h.frame_id = "world_ned"
 
-                map_count += 1
 
                 file_path = os.path.join(self.path_out, file_name)
 

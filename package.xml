@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>dgcnn</name>
+  <version>0.0.1</version>
+  <description>Multi-Robot SLAM with DGCNN integration</description>
+
+  <maintainer email="miguel.martin@uib.es">Miguel Martin-Abadal</maintainer>
+  <author email="miguel.martin@uib.es">Miguel Martin-Abadal</author>
+
+  <license>BSD</license>
+
+  <!-- Build tool -->
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <!-- Build dependencies -->
+  <build_depend>roscpp</build_depend>
+  <build_depend>rospy</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>nav_msgs</build_depend>
+  <build_depend>cv_bridge</build_depend>
+  <build_depend>image_transport</build_depend>
+  <build_depend>image_geometry</build_depend>
+  <build_depend>message_filters</build_depend>
+  <build_depend>message_generation</build_depend>
+
+  <!-- Run-time dependencies -->
+  <exec_depend>roscpp</exec_depend>
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>cv_bridge</exec_depend>
+  <exec_depend>image_transport</exec_depend>
+  <exec_depend>image_geometry</exec_depend>
+  <exec_depend>message_filters</exec_depend>
+  <exec_depend>message_runtime</exec_depend>
+
+  <!-- Optional tools -->
+  <test_depend>rostest</test_depend>
+
+  <export>
+  </export>
+</package>

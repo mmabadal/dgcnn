@@ -119,7 +119,7 @@ class Pointcloud_Seg:
 
 
         # set subscribers
-        pc_sub = message_filters.Subscriber(f'/{robot_name}/slamon_map/keycloud', PointCloud2)           # //PARAM
+        pc_sub = message_filters.Subscriber(f'/{robot_name}/slamon_map/keycloud', PointCloud2)         # //PARAM
         odom_sub = message_filters.Subscriber(f'/{robot_name}/slamon_map/robot_map', Odometry)      # //PARAM
 
         ts_pc_odom = message_filters.ApproximateTimeSynchronizer([pc_sub, odom_sub], queue_size=10, slop=0.001)
