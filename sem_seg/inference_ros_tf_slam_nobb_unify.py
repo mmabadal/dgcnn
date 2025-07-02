@@ -97,16 +97,18 @@ class Pointcloud_Seg:
         self.model_path = os.path.join(self.train_path, "model.ckpt")         # path to model         //PARAM
         self.path_cls =  os.path.join(self.train_path, "cls.txt")             # path to clases info   //PARAM
         self.classes, self.labels, self.label2color = indoor3d_util.get_info_classes(self.path_cls) # get classes info
-        robot_name = "sparus2"
+        robot_name = "girona501"
+        slam_name = "multi_robot_slamon"
 
         self.loop = 0
 
         self.out = True
         self.print = True
         self.time = True
-        self.path = rospy.get_param(f'/{robot_name}/slamon/working_path', "../out")
+        self.robot_id = rospy.get_param(f"/{robot_name}/{slam_name}/robot_id", 0)
+        self.path = rospy.get_param(f"/{robot_name}/{slam_name}/working_path", "../out")
         self.path_out = os.path.join(self.path, "pipes")
-        self.path_graph = os.path.join(self.path, "keyframes_poses.txt")
+        self.path_graph = os.path.join(self.path, f"keyframes_poses_{self.robot_id}.txt")
 
         if not os.path.exists(self.path_out):
             os.makedirs(self.path_out)
@@ -121,24 +123,26 @@ class Pointcloud_Seg:
         self.lock = False
 
         # set subscribers
-        pc_sub = message_filters.Subscriber(f'/{robot_name}/slamon_map/keycloud', PointCloud2)         # //PARAM
-        odom_sub = message_filters.Subscriber(f'/{robot_name}/slamon_map/robot_map', Odometry)      # //PARAM
+        pc_sub = message_filters.Subscriber(f"/{robot_name}/{slam_name}_map/keycloud", PointCloud2)      # //PARAM
+        odom_sub = message_filters.Subscriber(f"/{robot_name}/{slam_name}_map/robot_map", Odometry)      # //PARAM
 
         ts_pc_odom = message_filters.ApproximateTimeSynchronizer([pc_sub, odom_sub], queue_size=10, slop=0.001)
         ts_pc_odom.registerCallback(self.cb_pc)
 
-        loop_sub = rospy.Subscriber(f'/{robot_name}/slamon_map/loop_closure_num', Int32, self.cb_loop)
+        if "multi_" in slam_name:
+            loop_sub = rospy.Subscriber(f"/{robot_name}/{slam_name}_map/intra_loop_closure_num", Int32, self.cb_loop)
+        else:
+            loop_sub = rospy.Subscriber(f"/{robot_name}/{slam_name}_map/loop_closure_num", Int32, self.cb_loop)
 
         chart_sub = rospy.Subscriber("/multi_robot_slamon_map/inter_robot_chart", Chart, self.cb_chart)
-        self.robot_id = rospy.get_param('/multi_robot_slamon/robot_id')
 
         # Set class image publishers
-        self.pub_pc_base = rospy.Publisher(f"/{robot_name}/slamon_map/points2_base", PointCloud2, queue_size=4)
-        self.pub_pc_seg = rospy.Publisher(f"/{robot_name}/slamon_map/points2_seg", PointCloud2, queue_size=4)
-        self.pub_pc_inst = rospy.Publisher(f"/{robot_name}/slamon_map/points2_inst", PointCloud2, queue_size=4)
-        self.pub_pc_info = rospy.Publisher(f"/{robot_name}/slamon_map/points2_info", PointCloud2, queue_size=4)
-        self.pub_pc_info_world = rospy.Publisher(f"/{robot_name}/slamon_map/points2_info_world", PointCloud2, queue_size=4)
-        self.pub_pc_info_slam_map = rospy.Publisher(f"/{robot_name}/slamon_map/points2_info_slam_map", PointCloud2, queue_size=4)
+        self.pub_pc_base = rospy.Publisher(f"/{robot_name}/{slam_name}_map/points2_base", PointCloud2, queue_size=4)
+        self.pub_pc_seg = rospy.Publisher(f"/{robot_name}/{slam_name}_map/points2_seg", PointCloud2, queue_size=4)
+        self.pub_pc_inst = rospy.Publisher(f"/{robot_name}/{slam_name}_map/points2_inst", PointCloud2, queue_size=4)
+        self.pub_pc_info = rospy.Publisher(f"/{robot_name}/{slam_name}_map/points2_info", PointCloud2, queue_size=4)
+        self.pub_pc_info_world = rospy.Publisher(f"/{robot_name}/{slam_name}_map/points2_info_world", PointCloud2, queue_size=4)
+        self.pub_pc_info_slam_map = rospy.Publisher(f"/{robot_name}/{slam_name}_map/points2_info_slam_map", PointCloud2, queue_size=4)
 
         # Set segmentation timer
 
