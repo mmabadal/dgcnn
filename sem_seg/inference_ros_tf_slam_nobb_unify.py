@@ -702,25 +702,23 @@ class Pointcloud_Seg:
             tr_ned_stereodown = np.matmul(tr_ned_baselink, tr_baselink_stereodown)
             tr_ned_leftoptical = np.matmul(tr_ned_stereodown, tr_stereodown_leftoptical)
 
-            txt_id = int(info[1])
+            txt_id = info[1]
 
             files = os.listdir(path_files)
 
             found = False
 
             for file_name in files:
-                file_id = int(file_name.split('_')[0])
-
-                if txt_id == file_id:
+                file_id = file_name.split('_')[0]
+                if int(txt_id) == int(file_id):
                     found = True
                     break
 
             if found:
 
-                print("updating position of: " + file_name)
-
-                file_pc = os.path.join(path_files, file_id + '_info.npy')
+                file_pc = os.path.join(path_files, str(file_id) + '_info.npy')
                 if os.path.exists(file_pc):
+                    print("updating position of: " + file_pc)
                     info_array = np.load(file_pc)
 
                     info_array_slam = info_array.copy()
@@ -732,10 +730,10 @@ class Pointcloud_Seg:
                         xyz_trans_rot = np.matmul(tr_ned_leftoptical, xyz) # np.matmul(tr_ned_baselink, xyz)   -  Change for lanty
                         info_array_slam[i,0:3] = [xyz_trans_rot[0], xyz_trans_rot[1], xyz_trans_rot[2]]
 
-                    path_out_info_npy_slam = os.path.join(path_files, file_id + "_info_slam.npy")
+                    path_out_info_npy_slam = os.path.join(path_files, str(file_id) + "_info_slam.npy")
                     np.save(path_out_info_npy_slam, info_array_slam)  
 
-                    path_out_slam_info = os.path.join(path_files, file_id + "_info_slam.ply")
+                    path_out_slam_info = os.path.join(path_files, str(file_id) + "_info_slam.ply")
                     info_pipes_slam_list, info_connexions_slam_list, info_valves_slam_list, info_inst_pipe_slam_list = conversion_utils.array_to_info(info_array_slam)
                     info_slam = [info_pipes_slam_list, info_connexions_slam_list, info_valves_slam_list, info_inst_pipe_slam_list]
                     conversion_utils.info_to_ply(info_slam, path_out_slam_info)
@@ -756,12 +754,12 @@ class Pointcloud_Seg:
                 map_count += 1
 
                 name = file_name.split('_')[0]
-                header_float = float(name[:10] + '.' + name[10:])
+                # header_float = float(name[:10] + '.' + name[10:])
 
-                h = Header()
-                h.seq = map_count
-                h.stamp = rospy.Time(header_float)
-                h.frame_id = "world_ned"
+                # h = Header()
+                # h.seq = map_count
+                # h.stamp = rospy.Time(header_float)
+                # h.frame_id = "world_ned"
 
                 file_path = os.path.join(path_files, file_name)
 
@@ -790,10 +788,10 @@ class Pointcloud_Seg:
         array_slam_map = conversion_utils.info_to_array(info_slam_map)
         np.save(path_out_slam_map, array_slam_map)  
         
-        if len(info_slam_map[0])!=0 or len(info_slam_map[0])!=0 or len(info_slam_map[0])!=0 or len(info_slam_map[0])!=0:
-            info_slam_map_array = conversion_utils.info_to_array(info_slam_map)
-            pc_info_slam_map = self.array2pc_info(h, info_slam_map_array)
-            self.pub_pc_info_slam_map.publish(pc_info_slam_map)
+        # if len(info_slam_map[0])!=0 or len(info_slam_map[0])!=0 or len(info_slam_map[0])!=0 or len(info_slam_map[0])!=0:
+        #     info_slam_map_array = conversion_utils.info_to_array(info_slam_map)
+        #     pc_info_slam_map = self.array2pc_info(h, info_slam_map_array)
+        #     self.pub_pc_info_slam_map.publish(pc_info_slam_map)
 
     def quaternion_multiply(self, q0, q1):
         x0, y0, z0, w0 = q0
