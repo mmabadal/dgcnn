@@ -16,7 +16,7 @@ import get_instances
 import conversion_utils
 from natsort import natsorted
 from scipy.spatial.transform import Rotation as Rot
-from dgcnn.msg import Chart
+from multi_robot_slamon.msg import Chart
 import subprocess
 
 import message_filters
@@ -161,26 +161,26 @@ class Pointcloud_Seg:
         rospy.loginfo("msg is for me")
         if not chart.keyframe_stamps:
             rospy.loginfo("im asked to transfer pipe files")
-            path_local = "/home/user/pipe_files/"        # local folder path (with trailing slash)
-            path_remote = "/remote/path/pipe_files/"     # remote folder path (with trailing slash)
-            ip_remote = "192.168.1.20"                   # remote machine IP
-            user_remote = "username"                    # remote username
+        #     path_local = "/home/user/pipe_files/"        # local folder path (with trailing slash)
+        #     path_remote = "/remote/path/pipe_files/"     # remote folder path (with trailing slash)
+        #     ip_remote = "192.168.1.20"                   # remote machine IP
+        #     user_remote = "username"                    # remote username
 
-            # Rsync command to transfer only *info.npy files
-            rsync_command = ["rsync", "-avz", "--progress", "--include=*/", "--include=*info.npy", "--exclude=*", path_local, f"{user_remote}@{ip_remote}:{path_remote}"]
+        #     # Rsync command to transfer only *info.npy files
+        #     rsync_command = ["rsync", "-avz", "--progress", "--include=*/", "--include=*info.npy", "--exclude=*", path_local, f"{user_remote}@{ip_remote}:{path_remote}"]
 
-            try:
-                rospy.loginfo(f"Starting rsync from {path_local} to {user_remote}@{ip_remote}:{path_remote}")
-                subprocess.check_call(rsync_command)
-                rospy.loginfo("Rsync transfer completed successfully")
-            except subprocess.CalledProcessError as e:
-                rospy.logerr(f"Rsync failed: {e}")
+        #     try:
+        #         rospy.loginfo(f"Starting rsync from {path_local} to {user_remote}@{ip_remote}:{path_remote}")
+        #         subprocess.check_call(rsync_command)
+        #         rospy.loginfo("Rsync transfer completed successfully")
+        #     except subprocess.CalledProcessError as e:
+        #         rospy.logerr(f"Rsync failed: {e}")
         
         else:
             rospy.loginfo("im asked to update a map")
-            time.sleep(2)
-            self.update_positions(self.path_graph2, self.path_out2)            
-            self.get_map(self.path_out2)
+            # time.sleep(2)
+        #     self.update_positions(self.path_graph2, self.path_out2)            
+        #     self.get_map(self.path_out2)
 
     def cb_pc(self, pc, odom):
         self.pc = pc
