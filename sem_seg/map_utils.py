@@ -25,28 +25,73 @@ def check_near(arr1, arr2, dist):
                 return True
     return False
 
+def find_pipe_groups(pipes, threshold=0.10, check_near_func=None):
+    """
+    Group pipes based on proximity using manual merging.
+    
+    Args:
+        pipes (list): List of pipe positions, each pipe position assumed to be pipes[i][0].
+        threshold (float): Distance threshold for proximity.
+        check_near_func (callable): Function to check proximity between two points,
+                                    signature: check_near_func(p1, p2, threshold) -> bool.
+    
+    Returns:
+        List[List[int]]: List of groups, each group is a list of pipe indices.
+    """
+    if check_near_func is None:
+        raise ValueError("You must provide a 'check_near_func' for proximity check.")
+        
+    merge_list_all = []
+    n = len(pipes)
 
-def get_info_map(info_map, info_world):
+    for i in range(n):
+        current_group = [i]
+        for j in range(n):
+            if i != j:
+                if check_near_func(pipes[i][0], pipes[j][0], threshold):
+                    current_group.append(j)
 
-    info_pipes_map_list = info_map[0]
-    info_connexions_map_list = info_map[1]
-    info_valves_map_list = info_map[2]
-    pipe_inst_map_list = info_map[3]
+        merged = False
+        for group in merge_list_all:
+            if any(pipe in group for pipe in current_group):
+                group.extend(p for p in current_group if p not in group)
+                merged = True
+                break
+
+        if not merged:
+            merge_list_all.append(current_group)
+
+    # Merge overlapping groups
+    i = 0
+    while i < len(merge_list_all):
+        j = i + 1
+        while j < len(merge_list_all):
+            if any(p in merge_list_all[i] for p in merge_list_all[j]):
+                merge_list_all[i].extend(p for p in merge_list_all[j] if p not in merge_list_all[i])
+                del merge_list_all[j]
+            else:
+                j += 1
+        i += 1
+
+    # Sort groups for clarity
+    merge_list_all = [sorted(group) for group in merge_list_all]
+
+    return merge_list_all
+
+def get_info_map(info_world):
+
+
+    info_pipes_map_list = list()
+    info_connexions_map_list = list()
+    info_valves_map_list = list()
+    pipe_inst_map_list = list()
 
     info_pipes_world_list = info_world[0]
     info_connnexions_world_list = info_world[1]
     info_valves_world_list = info_world[2]
     pipe_inst_world_list = info_world[3]
 
-    merge_list_all = list()
-
-    for i, pipe_world in enumerate(info_pipes_world_list):
-        merge_list = list()
-        for j, pipe_map in enumerate(info_pipes_map_list):
-            near = check_near(pipe_map[0], pipe_world[0], 0.10)
-            if near == True:
-                merge_list.append(j)
-        merge_list_all.append(merge_list)
+    merge_list_all = find_pipe_groups(info_pipes_world_list, threshold=0.10, check_near_func=check_near):
 
     del_list = list()
 
