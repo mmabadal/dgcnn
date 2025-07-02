@@ -91,7 +91,7 @@ def get_info_map(info_world):
     info_valves_world_list = info_world[2]
     pipe_inst_world_list = info_world[3]
 
-    merge_list_all = find_pipe_groups(info_pipes_world_list, threshold=0.10, check_near_func=check_near):
+    merge_list_all = find_pipe_groups(info_pipes_world_list, threshold=0.10, check_near_func=check_near)
 
     del_list = list()
 
@@ -109,8 +109,8 @@ def get_info_map(info_world):
             count = 0
 
             for pipe_idx in merge_list:
-                skeleton_list.append(info_pipes_map_list[pipe_idx][0]) 
-                count = count + info_pipes_map_list[pipe_idx][4]
+                skeleton_list.append(info_pipes_world_list[pipe_idx][0]) 
+                count = count + info_pipes_world_list[pipe_idx][4]
                 
             skeleton_stack = np.vstack(skeleton_list)
             count = count +1
