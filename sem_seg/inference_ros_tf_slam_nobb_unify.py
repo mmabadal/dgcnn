@@ -755,6 +755,7 @@ class Pointcloud_Seg:
         info_valves_slam_map_list = list()
         info_inst_pipe_slam_map_list = list()
         info_slam_map = [info_pipes_slam_map_list, info_connexions_slam_map_list, info_valves_slam_map_list, info_inst_pipe_slam_map_list]
+        info_slam = [[], [], [], []]  # [pipes, connexions, valves, inst_pipes]
         map_count = 0
         map_count_target = 10       # each count_target clean map
         map_count_thr = 1
@@ -783,11 +784,15 @@ class Pointcloud_Seg:
                 for i in range(len(info_valves_slam_list)):                         # create a list of valve types, so when valver are merged, the final 
                     info_valves_slam_list[i].append([info_valves_slam_list[i][2]])  # type is the most common one in this list
 
-                info_slam = [info_pipes_slam_list, info_connexions_slam_list, info_valves_slam_list, info_inst_pipe_slam_list]
-                info_slam_map = map_utils.get_info_map(info_slam_map, info_slam)
+                info_slam[0].extend(info_pipes_slam_list)
+                info_slam[1].extend(info_connexions_slam_list)
+                info_slam[2].extend(info_valves_slam_list)
+                info_slam[3].extend(info_inst_pipe_slam_list)
+                
+        info_slam_map = map_utils.get_info_map(info_slam_map, info_slam)
 
-                if map_count%map_count_target==0:
-                    info_slam_map = map_utils.clean_map(info_slam_map, map_count_thr)
+        if map_count%map_count_target==0:
+            info_slam_map = map_utils.clean_map(info_slam_map, map_count_thr)
                     
         path_out_slam_map = os.path.join(path_files, name+"_map.ply")
         conversion_utils.info_to_ply(info_slam_map, path_out_slam_map)
