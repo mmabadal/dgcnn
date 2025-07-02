@@ -33,54 +33,13 @@ endif()
 
 find_package(
     catkin REQUIRED COMPONENTS
-        tf
-        roscpp
+        rospy
         std_msgs
         nav_msgs
-        cv_bridge
         sensor_msgs
+        stereo_msgs
         geometry_msgs
-        image_geometry
-        image_transport
         message_filters
-        message_generation
+
+        multi_robot_slamon
 )
-
-
-###################################
-## Catkin specific configuration ##
-###################################
-
-# Declare custom ROS messages
-add_message_files(
-    DIRECTORY 
-        msg 
-    FILES
-        Chart.msg
-        Link.msg
-        Node.msg
-)
-
-# Declare custom ROS services
-
-
-# Generate custom ROS messages & services                    
-generate_messages(
-    DEPENDENCIES
-        std_msgs
-        sensor_msgs
-        geometry_msgs
-)
-
-catkin_package(
-  CATKIN_DEPENDS message_runtime std_msgs
-)
-
-###########
-## Build ##
-###########
-
-include_directories(include 
-                    ${catkin_INCLUDE_DIRS} 
-)
-

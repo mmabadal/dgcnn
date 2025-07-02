@@ -16,7 +16,7 @@ import get_instances
 import conversion_utils
 from natsort import natsorted
 from scipy.spatial.transform import Rotation as Rot
-from dgcnn.msg import Chart
+from multi_robot_slamon.msg import Chart
 import subprocess
 
 import message_filters
