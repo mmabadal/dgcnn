@@ -750,11 +750,6 @@ class Pointcloud_Seg:
 
     def get_map(self, path_files):
 
-        info_pipes_slam_map_list = list()
-        info_connexions_slam_map_list = list()
-        info_valves_slam_map_list = list()
-        info_inst_pipe_slam_map_list = list()
-        info_slam_map = [info_pipes_slam_map_list, info_connexions_slam_map_list, info_valves_slam_map_list, info_inst_pipe_slam_map_list]
         info_slam = [[], [], [], []]  # [pipes, connexions, valves, inst_pipes]
         map_count = 0
         map_count_target = 10       # each count_target clean map
@@ -789,7 +784,7 @@ class Pointcloud_Seg:
                 info_slam[2].extend(info_valves_slam_list)
                 info_slam[3].extend(info_inst_pipe_slam_list)
                 
-        info_slam_map = map_utils.get_info_map(info_slam_map, info_slam)
+        info_slam_map = map_utils.get_info_map(info_slam)
 
         if map_count%map_count_target==0:
             info_slam_map = map_utils.clean_map(info_slam_map, map_count_thr)
