@@ -161,19 +161,26 @@ class Pointcloud_Seg:
         rospy.loginfo("msg is for me")
         if not chart.keyframe_stamps:
             rospy.loginfo("im asked to transfer pipe files")
-        #     path_local = "/home/user/pipe_files/"       # local folder path (note trailing slash for rsync)
-        #     path_remote = "/remote/path/pipe_files/"    # remote folder path
-        #     ip_remote = "192.168.1.20"                   # remote machine IP or hostname
-        #     user_remote = "username"                      # remote username
+            path_local = "/home/user/pipe_files/"        # local folder path (with trailing slash)
+            path_remote = "/remote/path/pipe_files/"     # remote folder path (with trailing slash)
+            ip_remote = "192.168.1.20"                   # remote machine IP
+            user_remote = "username"                    # remote username
 
-        #     rsync_command = ["rsync","-avz","--progress",path_local,f"{user_remote}@{ip_remote}:{path_remote}"]
-            
-        #     try:
-        #         rospy.loginfo(f"Starting rsync from {path_local} to {user_remote}@{ip_remote}:{path_remote}")
-        #         subprocess.check_call(rsync_command)
-        #         rospy.loginfo("Rsync transfer completed successfully")
-        #     except subprocess.CalledProcessError as e:
-        #         rospy.logerr(f"Rsync failed: {e}")
+            # Rsync command to transfer only *info.npy files
+            rsync_command = ["rsync", "-avz", "--progress", "--include=*/", "--include=*info.npy", "--exclude=*", path_local, f"{user_remote}@{ip_remote}:{path_remote}"]
+
+            try:
+                rospy.loginfo(f"Starting rsync from {path_local} to {user_remote}@{ip_remote}:{path_remote}")
+                subprocess.check_call(rsync_command)
+                rospy.loginfo("Rsync transfer completed successfully")
+            except subprocess.CalledProcessError as e:
+                rospy.logerr(f"Rsync failed: {e}")
+        
+        else:
+            rospy.loginfo("im asked to update a map")
+            time.sleep(2)
+            self.update_positions(self.path_graph2, self.path_out2)            
+            self.get_map(self.path_out2)
 
     def cb_pc(self, pc, odom):
         self.pc = pc
@@ -189,9 +196,9 @@ class Pointcloud_Seg:
                 print("processing loop is: " + str(self.loop))
                 self.loop = loop.data
                 print("updating positions")
-                self.update_positions()
+                self.update_positions(self.path_graph, self.path_out)
                 print("generating map")
-                self.get_map()
+                self.get_map(self.path_out)
             self.lock = False
 
 
@@ -664,7 +671,7 @@ class Pointcloud_Seg:
         return tr_ned_leftoptical
     
 
-    def update_positions(self):
+    def update_positions(self, path_graph, path_files):
 
         tq_baselink_stereodown = np.array([0.57, -0.062, 0.505, 0.0, 0.0, 0.0, 1.0])
         t_baselink_stereodown = tq_baselink_stereodown[:3]
@@ -677,7 +684,7 @@ class Pointcloud_Seg:
         tr_baselink_stereodown = self.get_tr(t_baselink_stereodown, q_baselink_stereodown)
         tr_stereodown_leftoptical = self.get_tr(t_stereodown_leftoptical, q_stereodown_leftoptical)
 
-        file_tq = open(self.path_graph, 'r')
+        file_tq = open(path_graph, 'r')
 
         lines = file_tq.readlines()[1:]
 
@@ -694,7 +701,7 @@ class Pointcloud_Seg:
 
             ts_float = info[0]
 
-            files = os.listdir(self.path_out)
+            files = os.listdir(path_files)
 
             found = False
 
@@ -718,7 +725,7 @@ class Pointcloud_Seg:
 
                 print("updating position of: " + file_name)
 
-                file_pc = os.path.join(self.path_out, name + '_info.npy')
+                file_pc = os.path.join(path_files, name + '_info.npy')
                 if os.path.exists(file_pc):
                     info_array = np.load(file_pc)
 
@@ -731,17 +738,17 @@ class Pointcloud_Seg:
                         xyz_trans_rot = np.matmul(tr_ned_leftoptical, xyz) # np.matmul(tr_ned_baselink, xyz)   -  Change for lanty
                         info_array_slam[i,0:3] = [xyz_trans_rot[0], xyz_trans_rot[1], xyz_trans_rot[2]]
 
-                    path_out_info_npy_slam = os.path.join(self.path_out, name + "_info_slam.npy")
+                    path_out_info_npy_slam = os.path.join(path_files, name + "_info_slam.npy")
                     np.save(path_out_info_npy_slam, info_array_slam)  
 
-                    path_out_slam_info = os.path.join(self.path_out, name + "_info_slam.ply")
+                    path_out_slam_info = os.path.join(path_files, name + "_info_slam.ply")
                     info_pipes_slam_list, info_connexions_slam_list, info_valves_slam_list, info_inst_pipe_slam_list = conversion_utils.array_to_info(info_array_slam)
                     info_slam = [info_pipes_slam_list, info_connexions_slam_list, info_valves_slam_list, info_inst_pipe_slam_list]
                     conversion_utils.info_to_ply(info_slam, path_out_slam_info)
         file_tq.close()
 
 
-    def get_map(self):
+    def get_map(self, path_files):
 
         info_pipes_slam_map_list = list()
         info_connexions_slam_map_list = list()
@@ -752,7 +759,7 @@ class Pointcloud_Seg:
         map_count_target = 10       # each count_target clean map
         map_count_thr = 1
 
-        for file_name in natsorted(os.listdir(self.path_out)):
+        for file_name in natsorted(os.listdir(path_files)):
 
             if "_info_slam.npy" in file_name:
 
@@ -766,7 +773,7 @@ class Pointcloud_Seg:
                 h.stamp = rospy.Time(header_float)
                 h.frame_id = "world_ned"
 
-                file_path = os.path.join(self.path_out, file_name)
+                file_path = os.path.join(path_files, file_name)
 
                 print("adding to map: " + file_path)
 
@@ -782,8 +789,12 @@ class Pointcloud_Seg:
                 if map_count%map_count_target==0:
                     info_slam_map = map_utils.clean_map(info_slam_map, map_count_thr)
                     
-        path_out_slam_map = os.path.join(self.path_out, name+"_map.ply")
+        path_out_slam_map = os.path.join(path_files, name+"_map.ply")
         conversion_utils.info_to_ply(info_slam_map, path_out_slam_map)
+
+        path_out_slam_map = os.path.join(path_files, name+"_map.npy")
+        array_slam_map = conversion_utils.info_to_array(info_slam_map)
+        np.save(path_out_slam_map, array_slam_map)  
         
         if len(info_slam_map[0])!=0 or len(info_slam_map[0])!=0 or len(info_slam_map[0])!=0 or len(info_slam_map[0])!=0:
             info_slam_map_array = conversion_utils.info_to_array(info_slam_map)
