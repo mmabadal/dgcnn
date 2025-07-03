@@ -115,7 +115,7 @@ def get_info_map(info_world):
         # ------------------------
 
         new_pipe.append([0])               # TODO holder for belong inst, remove from everywhere??
-        new_pipe.append(len(merge_list))    # count is as many pipes have been merged
+        new_pipe.append(len(pipe_merge_list))    # count is as many pipes have been merged
         info_pipes_map_list.append(new_pipe)
 
     # del_list = list(set(del_list))
