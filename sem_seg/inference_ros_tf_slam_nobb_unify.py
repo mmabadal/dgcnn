@@ -849,7 +849,7 @@ if __name__ == '__main__':
         # Global variables
         robot_name = "girona500"
         slam_name = "multi_robot_slamon"
-        rospy.init_node(f"/{robot_name}/seg_pc")
+        rospy.init_node(robot_name + "_seg_pc")
         Pointcloud_Seg(rospy.get_name(), robot_name, slam_name)
 
         rospy.spin()
