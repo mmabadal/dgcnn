@@ -25,7 +25,7 @@ def check_near(arr1, arr2, dist):
                 return True
     return False
 
-def find_pipe_groups(pipes, threshold=0.10, check_near_func):
+def find_pipe_groups(pipes, threshold=0.10, check_near_func=None):
 
     merge_lists = []
     n = len(pipes)
@@ -89,39 +89,19 @@ def get_info_map(info_world):
         info_pipes_map_list.append(new_pipe)
 
     for merge_list in merge_list_all:
-        skeleton_list = list()       # se hace con skeletons y no con inst pq inst es todo, skeleton es cada tuberia
+        inst_idx_list = list()   
         for i in merge_list:
-            skeleton_list.append(info_pipes_world_list[i][0])
-                
-        skeleton_stack = np.vstack(skeleton_list)
+            inst_idx_list.append(info_pipes_world_list[i][2])
 
-        new_inst_l1 = copy.deepcopy(skeleton_stack)
-        new_inst_r1 = copy.deepcopy(skeleton_stack)
-        new_inst_t1 = copy.deepcopy(skeleton_stack)
-        new_inst_b1 = copy.deepcopy(skeleton_stack)            
-        new_inst_l2 = copy.deepcopy(skeleton_stack)
-        new_inst_r2 = copy.deepcopy(skeleton_stack)
-        new_inst_t2 = copy.deepcopy(skeleton_stack)
-        new_inst_b2 = copy.deepcopy(skeleton_stack)
+        merge_inst_idx_list = sorted({item for sublist in inst_idx_list for item in sublist})
 
-        for j in range(new_inst_l1.shape[0]):
-            new_inst_l1[j,0] = new_inst_l1[j,0]-0.020
-        for j in range(new_inst_r1.shape[0]):
-            new_inst_r1[j,0] = new_inst_r1[j,0]+0.020                   
-        for j in range(new_inst_t1.shape[0]):
-            new_inst_t1[j,1] = new_inst_t1[j,1]+0.020
-        for j in range(new_inst_b1.shape[0]):
-            new_inst_b1[j,1] = new_inst_b1[j,1]-0.020
-        for j in range(new_inst_l2.shape[0]):
-            new_inst_l2[j,0] = new_inst_l2[j,0]-0.010
-        for j in range(new_inst_r2.shape[0]):
-            new_inst_r2[j,0] = new_inst_r2[j,0]+0.010                   
-        for j in range(new_inst_t2.shape[0]):
-            new_inst_t2[j,1] = new_inst_t2[j,1]+0.010
-        for j in range(new_inst_b2.shape[0]):
-            new_inst_b2[j,1] = new_inst_b2[j,1]-0.010
+        inst_list = list()
+        for inst_idx in merge_inst_idx_list:
 
-        new_inst = np.vstack((skeleton_stack, new_inst_l1, new_inst_r1, new_inst_t1, new_inst_b1, new_inst_l2, new_inst_r2, new_inst_t2, new_inst_b2))
+            inst = pipe_inst_world_list(inst_idx)
+            inst_list.append(inst)
+            
+        new_inst = np.vstack(inst_list)
         new_inst = np.hstack((new_inst,new_inst))  # add fake colors
         #print("NEW INST SHAPE: " + str(new_inst.shape))
 
