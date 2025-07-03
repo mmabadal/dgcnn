@@ -14,6 +14,8 @@ from plyfile import PlyData, PlyElement
 from mpl_toolkits.mplot3d import Axes3D
 from skimage.morphology import skeletonize
 import conversion_utils
+import matplotlib.pyplot as plt
+
 
 
 '''
@@ -289,11 +291,30 @@ def get_info_classes(cls_path):
 
     return classes, labels, label2color
 
-def angle_between_vectors(v1, v2):
-    v1_u = v1/np.linalg.norm(v1)
-    v2_u = v2/np.linalg.norm(v2)
-    angle = np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0))
+
+def angle_between_vectors(v1, v2, dim=3):
+    if dim == 2:
+        # Drop the z-component (assumes it's the third component)
+        v1 = v1[:2]
+        v2 = v2[:2]
+    v1_u = v1 / np.linalg.norm(v1)
+    v2_u = v2 / np.linalg.norm(v2)
+    dot = np.dot(v1_u, v2_u)
+    angle = np.arccos(np.clip(dot, -1.0, 1.0))
     return np.degrees(angle)
+
+
+def print_chain(chain, maxs = np.array([])):
+
+    if maxs.size == 0:
+        maxs = np.amax(chain, axis=0)  # get voxel maxs
+
+    matrix = np.zeros((maxs[1]+1, maxs[2]+1), dtype=int)
+    for i, v in enumerate(chain):
+        matrix[v[0],v[1]] = 1
+
+    plt.imshow(matrix)
+    plt.show()
 
 
 def get_distance(p1, p2, dim):
@@ -663,22 +684,54 @@ def get_info_skeleton(instance, close):
 
     xyz_max = np.amax(voxels_np, axis=0)                                                        # get voxel maxs
 
+    if print_opt == True:
+        voxels_matrix = np.zeros(xyz_max+1, dtype=int)                                            
+        for i, v in enumerate(voxels_np):
+            voxels_matrix[v[0],v[1],v[2]] = 1
+        z,x,y = voxels_matrix.nonzero()
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        ax.scatter(x, y, z, zdir='z', c= 'red')
+        fig.suptitle('3D VOXELS', fontsize=12)
+        plt.show()
+
     voxels_matrix_2d = np.zeros((xyz_max[1]+1, xyz_max[2]+1), dtype=int)                        # voxels to 2D matrix
     for i, v in enumerate(voxels_np):
         voxels_matrix_2d[v[1],v[2]] = 1
 
-    #voxels_matrix_2d =  np.rot90(voxels_matrix_2d, k=1, axes=(1,0)) # for figure prints only, it breaks chain generation
+    if print_opt == True:
+        plt.imshow(voxels_matrix_2d)
+        plt.show()
 
     closing_dist = close                                                                                                           # distance to perform closing //PARAM
     voxels_matrix_2d_proc = scp.ndimage.binary_closing(voxels_matrix_2d, structure=np.ones((closing_dist,closing_dist)))       # closing
+    
+    if print_opt == True:
+        plt.imshow(voxels_matrix_2d_proc)
+        plt.show()
 
     opening_dist = 2                                                                                                           # distance to perform opening //PARAM
     voxels_matrix_2d_proc = scp.ndimage.binary_opening(voxels_matrix_2d_proc, structure=np.ones((opening_dist,opening_dist)))  # opening
 
+    if print_opt == True:
+        plt.imshow(voxels_matrix_2d_proc)  
+        plt.show()
+
     skeleton = skeletonize(voxels_matrix_2d_proc)           # obtain skeleton of 2d closed opened matrix
     skeleton = skeleton.astype(int)
 
+    if print_opt == True:
+        fig = plt.figure()
+        fig.suptitle('SKELETON', fontsize=12)
+        plt.imshow(skeleton)
+        plt.show()
+
     chains, connexions = get_connectivity(skeleton)     # get skeleton conectivity -> chains and connexions
+
+    if print_opt == True:
+        print("CHAINS ORIGINALS")
+        for chain in chains:
+            print_chain(chain, xyz_max)
 
     # delete short chains
     chain_del_list = list()
@@ -688,7 +741,26 @@ def get_info_skeleton(instance, close):
     for i in sorted(chain_del_list, reverse=True):  # delete chains
         del chains[i]                               
 
+    if print_opt == True:
+        print("CHAINS SMALL DELETED")
+        for chain in chains:
+            print_chain(chain, xyz_max)
+
     connexions, chains = get_info_connexions(connexions, chains)    # get info from connexions, also refines chains
+
+    if print_opt == True:
+        print("CHAINS INFO")
+
+        for chain in chains:
+            print_chain(chain, xyz_max)
+
+        print("OVERVIEW")
+        chainoverview = chains[0]
+        for i, chain in enumerate(chains):
+            if i != 0:
+                chainoverview = np.vstack((chainoverview, chain))
+        print_chain(chainoverview, xyz_max)
+
 
     # project to nearest real voxel, as we performed a closing, information voxels may not really exist
     connexions_proj = list()
@@ -773,6 +845,7 @@ def get_info_skeleton(instance, close):
     info = [info_chains, connexions_points]
 
     return info
+
 
 def refine_valves(valves_info, pipes_info):
 
@@ -1014,7 +1087,7 @@ def get_elbows(chain):
 
     look_ahead = 10                                                 # look ahead distance to find changes in direction (elbows) in chain points //PARAM
     elbow_size = 7                                                  # elbow size in chain points   //PARAM
-    angle_elbow = 60                                                # angle thr to consider an elow   //PARAM   
+    angle_elbow = 70                                                # angle thr to consider an elow   //PARAM   
 
     angle_list = list()
     elbow_idx_list = list()
@@ -1022,7 +1095,7 @@ def get_elbows(chain):
         for i in range(look_ahead, chain.shape[0]-look_ahead):      # from chain start to finish (with a offset of look_ahead points in both ends)
             vector1 = chain[i] - chain[i-look_ahead]                # vector from actual_point-look_ahead to actual_point
             vector2 = chain[i+look_ahead] - chain[i]                # vector from actual point to actual_point+look_ahead
-            angle = angle_between_vectors(vector1, vector2)         # calculate angle between vectors
+            angle = angle_between_vectors(vector1, vector2, 3)         # calculate angle between vectors
             angle_list.append(angle)
 
         while 1:                                                    # always

@@ -88,68 +88,63 @@ def get_info_map(info_world):
         new_pipe.append(1)                                          # count 1
         info_pipes_map_list.append(new_pipe)
 
+    k_pipe = 0
+
     for pipe_merge_list in pipe_merge_list_all:
         inst_idx_list = list()   
         for pipe in pipe_merge_list:
-            for pipe_info in info_pipes_world_list[pipe][0]:
-                inst_idx_list.append(pipe_info[3])
+            inst_idx_list.append(info_pipes_world_list[pipe][3])
 
         merge_inst_idx_list = sorted({item for sublist in inst_idx_list for item in sublist})
 
         inst_list = list()
         for inst_idx in merge_inst_idx_list:
-
-            inst = pipe_inst_world_list(inst_idx)
+            inst = pipe_inst_world_list[inst_idx]
             inst_list.append(inst)
             
         new_inst = np.vstack(inst_list)
         new_inst = np.hstack((new_inst,new_inst))  # add fake colors
-        #print("NEW INST SHAPE: " + str(new_inst.shape))
 
-        # transform instance to o3d pointcloud
-        # new_inst_o3d = o3d.geometry.PointCloud()
-        # new_inst_o3d.points = o3d.utility.Vector3dVector(new_inst[:,0:3])
+        info_pipe_map = get_info.get_info(new_inst, models=0, method="skeleton", close = 12) # get pipe instance info list( list( list(chain1, start1, end1, elbow_list1, vector_chain_list1), ...), list(connexions_points)) 
+        
+        for j, pipe_info in enumerate(info_pipe_map[0]):                         # add corresponding inst i to all chains              
+            pipe_info.append(merge_inst_idx_list)
+            info_pipes_map_list.append(pipe_info)                                # stack pipes info
 
-        info_pipe_map = get_info.get_info(new_inst, models=0, method="skeleton", close = 8) # get pipe instance info list( list( list(chain1, start1, end1, elbow_list1, vector_chain_list1), ...), list(connexions_points)) 
-        new_pipe = info_pipe_map[0][0]                             
-        # ------------------------
+        for j, connexion_info in enumerate(info_pipe_map[1]):                    # stack conenexions info
+            connexion_info[1] = [x+k_pipe for x in connexion_info[1]]
+            info_connexions_map_list.append(connexion_info)
 
-        new_pipe.append([0])               # TODO holder for belong inst, remove from everywhere??
-        new_pipe.append(len(pipe_merge_list))    # count is as many pipes have been merged
-        info_pipes_map_list.append(new_pipe)
+        k_pipe += len(info_pipe_map[0])                                          # update actual pipe idx
 
-    # del_list = list(set(del_list))
-    # for j in sorted(del_list, reverse=True):  # delete chains
-    #     del info_pipes_map_list[j]  
+    # for i, info_connexion_world in enumerate(info_connnexions_world_list):
+    #     merged = False
 
-    for i, info_connexion_world in enumerate(info_connnexions_world_list):
-        merged = False
+    #     for j, info_connexion_map in enumerate(info_connexions_map_list):
+    #         dist = get_instances.get_distance(info_connexion_world[0], info_connexion_map[0], 2) 
+    #         if dist < 0.15:  # las valvulas tienen una longitud de 0.18
+    #             info_connexions_map_list[j][0] = (info_connexions_map_list[j][0] + info_connexion_world[0])/2
+    #             info_connexions_map_list[j][2] = info_connexions_map_list[j][2]+1         # count +1
+    #             merged = True
+    #             break
 
-        for j, info_connexion_map in enumerate(info_connexions_map_list):
-            dist = get_instances.get_distance(info_connexion_world[0], info_connexion_map[0], 2) 
-            if dist < 0.15:  # las valvulas tienen una longitud de 0.18
-                info_connexions_map_list[j][0] = (info_connexions_map_list[j][0] + info_connexion_world[0])/2
-                info_connexions_map_list[j][2] = info_connexions_map_list[j][2]+1         # count +1
-                merged = True
-                break
+    #     if merged == False:
+    #         count_c = 1     # count 1
+    #         info_connexion_world.append(count_c)
+    #         info_connexions_map_list.append(info_connexion_world)
 
-        if merged == False:
-            count_c = 1     # count 1
-            info_connexion_world.append(count_c)
-            info_connexions_map_list.append(info_connexion_world)
+    # for i, info_connexion_map in enumerate(info_connexions_map_list):        # for each connexion
 
-    for i, info_connexion_map in enumerate(info_connexions_map_list):        # for each connexion
+    #     near_pipes_list = list()
+    #     for j, info_pipe_map in enumerate(info_pipes_map_list):                     # get near pipes
+    #         c_p = info_connexions_map_list[i][0]                                   # central point
+    #         d_to_start = get_instances.get_distance(c_p, info_pipe_map[0][0], 3)    # get distance from conn central point to pipe start
+    #         d_to_end = get_instances.get_distance(c_p, info_pipe_map[0][-1], 3)     # get distance from conn central point to pipe end
+    #         if d_to_start <= 0.05 or d_to_end <= 0.05:                              # if distance < thr             //PARAM
+    #             near_pipes_list.append(j)                                           # append pipe as near
+    #             break  
 
-        near_pipes_list = list()
-        for j, info_pipe_map in enumerate(info_pipes_map_list):                     # get near pipes
-            c_p = info_connexions_map_list[i][0]                                   # central point
-            d_to_start = get_instances.get_distance(c_p, info_pipe_map[0][0], 3)    # get distance from valve central point to pipe start
-            d_to_end = get_instances.get_distance(c_p, info_pipe_map[0][-1], 3)     # get distance from valve central point to pipe end
-            if d_to_start <= 0.05 or d_to_end <= 0.05:                              # if distance < thr             //PARAM
-                near_pipes_list.append(j)                                           # append pipe as near
-                break  
-
-        info_connexions_map_list[i][1] = near_pipes_list                           # replace near pipes to valve info [central_point, near_pipes]
+    #     info_connexions_map_list[i][1] = near_pipes_list                           # replace near pipes to conn info [central_point, near_pipes]
 
     for i, info_valve_world in enumerate(info_valves_world_list):
         merged = False
@@ -234,11 +229,6 @@ def clean_map(info_map, count_thr):
 
 if __name__ == "__main__":
 
-    print(" ")
-    print(" ")
-    print("------------------------------")
-    print(" ")
-    print(" ")
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--path_in', help='path in info.')
@@ -248,74 +238,63 @@ if __name__ == "__main__":
     path_in = parsed_args.path_in
     path_out = parsed_args.path_out
 
-    info_pipes_map_list = list()
-    info_connexions_map_list = list()
-    info_valves_map_list = list()
-    info_inst_pipe_map_list = list()
-    info_map = [info_pipes_map_list, info_connexions_map_list, info_valves_map_list, info_inst_pipe_map_list]
-
     count = 0
-    count2 = 0
-    count_target = 5
+    count_target = 10
     count_thr = 1
-    total_time = 0
-    n_infos = 0
 
     T_time = 0
 
+    info_slam = [[], [], [], []]  # [pipes, connexions, valves, inst_pipes]
+
+    inst_idx = 0
+
     for file in natsorted(os.listdir(path_in)):
 
-        if "_info_map.npy" in file:
+        if "_info_slam.npy" in file:
 
-            n_infos = n_infos + 1
-
+            print("\n\n")
             print("working on: " + file)
 
             file_name, _ = os.path.splitext(file)
             count += 1
-            count2 += 1
 
             file_path = os.path.join(path_in, file)
             info_array_world = np.load(file_path)
 
-            info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list = conversion_utils.array_to_info(info_array_world)
-
-            for i in range(len(info_valves_world_list)):                            # create a list of valve types, so when valver are merged, the final 
-                info_valves_world_list[i].append([info_valves_world_list[i][2]])    # type is the most common one in this list
+            info_pipes_slam_list, info_connexions_slam_list, info_valves_slam_list, info_inst_pipe_slam_list = conversion_utils.array_to_info(info_array_world)
 
 
+            for i in range(len(info_pipes_slam_list)):                            # create a list of valve types, so when valver are merged, the final 
+                old_idx = info_pipes_slam_list[i][3]
+                new_idx = [x + inst_idx for x in old_idx]
+                info_pipes_slam_list[i][3] = new_idx
 
-            info_world = [info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list]
+            inst_idx+=len(info_inst_pipe_slam_list)
 
-            a = time.time()
-            info_map = get_info_map(info_map, info_world)
-            b = time.time()
-            c = b-a
-            
-            total_time = total_time+c
-            average_time = T_time/count2
+            for i in range(len(info_valves_slam_list)):                            # create a list of valve types, so when valver are merged, the final 
+                info_valves_slam_list[i].append([info_valves_slam_list[i][2]])    # type is the most common one in this list
 
-            print("time: " + str(c))
-            print("average time: " + str(average_time))
+            info_slam[0].extend(info_pipes_slam_list)
+            info_slam[1].extend(info_connexions_slam_list)
+            info_slam[2].extend(info_valves_slam_list)
+            info_slam[3].extend(info_inst_pipe_slam_list)
 
-            path_out_map = os.path.join(path_out, file_name+"_map.ply")
-            conversion_utils.info_to_ply(info_map, path_out_map)
+    info_map = get_info_map(info_slam)
 
-            if count == count_target:
-                count = 0
-                info_map = clean_map(info_map, count_thr)
+    path_out_map = os.path.join(path_out, file_name+"_map.ply")
+    conversion_utils.info_to_ply(info_map, path_out_map)
 
-                path_out_map_clean = os.path.join(path_out, file_name+"_map_clean.ply")
-                conversion_utils.info_to_ply(info_map, path_out_map_clean)
+    path_out_map = os.path.join(path_out, file_name+"_map.npy")
+    array_slam_map = conversion_utils.info_to_array(info_map)
+    np.save(path_out_map, array_slam_map)  
+
+    if count == count_target:
+        count = 0
+        info_map = clean_map(info_map, count_thr)
+
+        path_out_map_clean = os.path.join(path_out, file_name+"_map_clean.ply")
+        conversion_utils.info_to_ply(info_map, path_out_map_clean)
 
 
-            mean_time = total_time/n_infos
-
-            print(" ")
-            print("------------------------------")
-            print(" ")
-            
-
-    print("mean_time: " + str(mean_time))
 
 
