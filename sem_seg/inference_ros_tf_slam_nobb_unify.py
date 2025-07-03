@@ -201,8 +201,6 @@ class Pointcloud_Seg:
                 self.get_map(self.path_out)
             self.lock = False
 
-
-
     def set_model(self):
         with tfw.device('/gpu:'+str(self.gpu_index)):
             pointclouds_pl, labels_pl = placeholder_inputs(self.batch_size, self.points_sub)
@@ -268,7 +266,7 @@ class Pointcloud_Seg:
         left2worldned = self.get_transform()
 
         if self.out == True:
-            path_out_base_orig = os.path.join(self.path_out, pc_id+"_base_orig.obj")
+            path_out_base_orig = os.path.join(self.path_out, pc_id + "_" + str(header.stamp) + "_base_orig.obj")
             fout_base = open(path_out_base_orig, 'w')
             for i in range(pc_np.shape[0]):
                 fout_base.write('v %f %f %f %d %d %d\n' % (pc_np[i,0], pc_np[i,1], pc_np[i,2], pc_np[i,3], pc_np[i,4], pc_np[i,5]))
@@ -409,17 +407,17 @@ class Pointcloud_Seg:
 
             if self.out == True:   
 
-                path_out_info_ply = os.path.join(self.path_out, pc_id + "_info.ply")
+                path_out_info_ply = os.path.join(self.path_out, pc_id + "_" + str(header.stamp) + "_info.ply")
 
-                path_out_info_npy = os.path.join(self.path_out, pc_id + "_info.npy")
+                path_out_info_npy = os.path.join(self.path_out, pc_id + "_" + str(header.stamp) + "_info.npy")
                 np.save(path_out_info_npy, info_array)
 
-                path_out_info_npy_world = os.path.join(self.path_out, pc_id + "_info_odom.npy")
+                path_out_info_npy_world = os.path.join(self.path_out, pc_id + "_" + str(header.stamp) + "_info_odom.npy")
                 np.save(path_out_info_npy_world, info_array_world)
 
                 conversion_utils.info_to_ply(info_list, path_out_info_ply)
               
-                path_out_world_info = os.path.join(self.path_out, pc_id + "_info_odom.ply")
+                path_out_world_info = os.path.join(self.path_out, pc_id + "_" + str(header.stamp) + "_info_odom.ply")
                 info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list = conversion_utils.array_to_info(info_array_world)
                 info_world = [info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list]
                 conversion_utils.info_to_ply(info_world, path_out_world_info)
@@ -433,8 +431,8 @@ class Pointcloud_Seg:
                     xyz_trans_rot = np.matmul(left2worldned, xyz)
                     pred_sub_world[i,0:3] = [xyz_trans_rot[0], xyz_trans_rot[1], xyz_trans_rot[2]]
 
-                path_out_base = os.path.join(self.path_out, pc_id + "_base.obj")
-                path_out_pred = os.path.join(self.path_out, pc_id + "_pred.obj")
+                path_out_base = os.path.join(self.path_out, pc_id + "_" + str(header.stamp) + "_base.obj")
+                path_out_pred = os.path.join(self.path_out, pc_id + "_" + str(header.stamp) + "_pred.obj")
                 fout_base = open(path_out_base, 'w')
                 fout_pred = open(path_out_pred, 'w')
                 for i in range(pred_sub.shape[0]):
@@ -444,8 +442,8 @@ class Pointcloud_Seg:
                     fout_pred.write('v %f %f %f %d %d %d\n' % (pred_sub[i,0], pred_sub[i,1], pred_sub[i,2], color[0], color[1], color[2]))
                 
 
-                path_out_world_base = os.path.join(self.path_out, pc_id + "_base_odom.obj")
-                path_out_world_pred = os.path.join(self.path_out, pc_id + "_pred_odom.obj")
+                path_out_world_base = os.path.join(self.path_out, pc_id + "_" + str(header.stamp) + "_base_odom.obj")
+                path_out_world_pred = os.path.join(self.path_out, pc_id + "_" + str(header.stamp) + "_pred_odom.obj")
                 fout_base = open(path_out_world_base, 'w')
                 fout_pred = open(path_out_world_pred, 'w')
                 for i in range(pred_sub_world.shape[0]):
@@ -709,14 +707,16 @@ class Pointcloud_Seg:
             found = False
 
             for file_name in files:
-                file_id = file_name.split('_')[0]
+                file_name_splitted = file_name.split('_')
+                file_id = file_name_splitted[0]
+                file_stamp = file_name_splitted[1]
                 if int(txt_id) == int(file_id):
                     found = True
                     break
 
             if found:
 
-                file_pc = os.path.join(path_files, str(file_id) + '_info.npy')
+                file_pc = os.path.join(path_files, str(file_id) + "_" + str(file_stamp) + '_info.npy')
                 if os.path.exists(file_pc):
                     print("updating position of: " + file_pc)
                     info_array = np.load(file_pc)
@@ -730,10 +730,10 @@ class Pointcloud_Seg:
                         xyz_trans_rot = np.matmul(tr_ned_leftoptical, xyz) # np.matmul(tr_ned_baselink, xyz)   -  Change for lanty
                         info_array_slam[i,0:3] = [xyz_trans_rot[0], xyz_trans_rot[1], xyz_trans_rot[2]]
 
-                    path_out_info_npy_slam = os.path.join(path_files, str(file_id) + "_info_slam.npy")
+                    path_out_info_npy_slam = os.path.join(path_files, str(file_id) + "_" + str(file_stamp) + "_info_slam.npy")
                     np.save(path_out_info_npy_slam, info_array_slam)  
 
-                    path_out_slam_info = os.path.join(path_files, str(file_id) + "_info_slam.ply")
+                    path_out_slam_info = os.path.join(path_files, str(file_id) + "_" + str(file_stamp) + "_info_slam.ply")
                     info_pipes_slam_list, info_connexions_slam_list, info_valves_slam_list, info_inst_pipe_slam_list = conversion_utils.array_to_info(info_array_slam)
                     info_slam = [info_pipes_slam_list, info_connexions_slam_list, info_valves_slam_list, info_inst_pipe_slam_list]
                     conversion_utils.info_to_ply(info_slam, path_out_slam_info)
@@ -753,13 +753,14 @@ class Pointcloud_Seg:
 
                 map_count += 1
 
-                name = file_name.split('_')[0]
-                # header_float = float(name[:10] + '.' + name[10:])
+                file_name_splitted = file_name.split('_')
+                file_id = file_name_splitted[0]
+                file_stamp = file_name_splitted[1]
+                stamp = float(file_stamp[:10] + '.' + file_stamp[10:])
 
-                # h = Header()
-                # h.seq = map_count
-                # h.stamp = rospy.Time(header_float)
-                # h.frame_id = "world_ned"
+                header = Header()
+                header.stamp = rospy.Time(stamp)
+                header.frame_id = "world_ned"
 
                 file_path = os.path.join(path_files, file_name)
 
@@ -781,17 +782,17 @@ class Pointcloud_Seg:
         if map_count%map_count_target==0:
             info_slam_map = map_utils.clean_map(info_slam_map, map_count_thr)
                     
-        path_out_slam_map = os.path.join(path_files, name+"_map.ply")
+        path_out_slam_map = os.path.join(path_files, str(file_id) + "_" + str(file_stamp) + "_map.ply")
         conversion_utils.info_to_ply(info_slam_map, path_out_slam_map)
 
-        path_out_slam_map = os.path.join(path_files, name+"_map.npy")
+        path_out_slam_map = os.path.join(path_files, str(file_id) + "_" + str(file_stamp) + "_map.npy")
         array_slam_map = conversion_utils.info_to_array(info_slam_map)
         np.save(path_out_slam_map, array_slam_map)  
         
-        # if len(info_slam_map[0])!=0 or len(info_slam_map[0])!=0 or len(info_slam_map[0])!=0 or len(info_slam_map[0])!=0:
-        #     info_slam_map_array = conversion_utils.info_to_array(info_slam_map)
-        #     pc_info_slam_map = self.array2pc_info(h, info_slam_map_array)
-        #     self.pub_pc_info_slam_map.publish(pc_info_slam_map)
+        if len(info_slam_map[0])!=0 or len(info_slam_map[0])!=0 or len(info_slam_map[0])!=0 or len(info_slam_map[0])!=0:
+            info_slam_map_array = conversion_utils.info_to_array(info_slam_map)
+            pc_info_slam_map = self.array2pc_info(header, info_slam_map_array)
+            self.pub_pc_info_slam_map.publish(pc_info_slam_map)
 
     def quaternion_multiply(self, q0, q1):
         x0, y0, z0, w0 = q0
