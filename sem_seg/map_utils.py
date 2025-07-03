@@ -119,21 +119,21 @@ def get_info_map(info_world):
         new_inst_b2 = copy.deepcopy(skeleton_stack)
 
         for j in range(new_inst_l1.shape[0]):
-            new_inst_l1[j,0] = new_inst_l1[j,0]-0.040
+            new_inst_l1[j,0] = new_inst_l1[j,0]-0.020
         for j in range(new_inst_r1.shape[0]):
-            new_inst_r1[j,0] = new_inst_r1[j,0]+0.040                   
+            new_inst_r1[j,0] = new_inst_r1[j,0]+0.020                   
         for j in range(new_inst_t1.shape[0]):
-            new_inst_t1[j,1] = new_inst_t1[j,1]+0.040
+            new_inst_t1[j,1] = new_inst_t1[j,1]+0.020
         for j in range(new_inst_b1.shape[0]):
-            new_inst_b1[j,1] = new_inst_b1[j,1]-0.040
+            new_inst_b1[j,1] = new_inst_b1[j,1]-0.020
         for j in range(new_inst_l2.shape[0]):
-            new_inst_l2[j,0] = new_inst_l2[j,0]-0.020
+            new_inst_l2[j,0] = new_inst_l2[j,0]-0.010
         for j in range(new_inst_r2.shape[0]):
-            new_inst_r2[j,0] = new_inst_r2[j,0]+0.020                   
+            new_inst_r2[j,0] = new_inst_r2[j,0]+0.010                   
         for j in range(new_inst_t2.shape[0]):
-            new_inst_t2[j,1] = new_inst_t2[j,1]+0.020
+            new_inst_t2[j,1] = new_inst_t2[j,1]+0.010
         for j in range(new_inst_b2.shape[0]):
-            new_inst_b2[j,1] = new_inst_b2[j,1]-0.020
+            new_inst_b2[j,1] = new_inst_b2[j,1]-0.010
 
         new_inst = np.vstack((skeleton_stack, new_inst_l1, new_inst_r1, new_inst_t1, new_inst_b1, new_inst_l2, new_inst_r2, new_inst_t2, new_inst_b2))
         new_inst = np.hstack((new_inst,new_inst))  # add fake colors
