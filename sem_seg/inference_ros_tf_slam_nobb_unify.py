@@ -135,7 +135,8 @@ class Pointcloud_Seg:
         else:
             loop_sub = rospy.Subscriber(f"/{self.robot_name}/{self.slam_name}_map/loop_closure_num", Int32, self.cb_loop)
 
-        chart_sub = rospy.Subscriber("/multi_robot_slamon_map/inter_robot_chart", Chart, self.cb_chart)
+        chart_sub = message_filters.Subscriber("/multi_robot_slamon_map/inter_robot_chart", Chart, queue_size=10)
+        chart_sub.registerCallback(self.cb_chart)
 
         # Set class image publishers
         self.pub_pc_base = rospy.Publisher(f"/{self.robot_name}/{self.slam_name}_map/points2_base", PointCloud2, queue_size=4)
