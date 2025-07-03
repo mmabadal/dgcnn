@@ -36,7 +36,8 @@ import sensor_msgs.point_cloud2 as pc2
 
 class Pointcloud_Seg:
 
-    def __init__(self, name):
+    def __init__(self, name, robot_name, slam_name):
+
         self.name = name
         
         # Params inference
@@ -97,8 +98,8 @@ class Pointcloud_Seg:
         self.model_path = os.path.join(self.train_path, "model.ckpt")         # path to model         //PARAM
         self.path_cls =  os.path.join(self.train_path, "cls.txt")             # path to clases info   //PARAM
         self.classes, self.labels, self.label2color = indoor3d_util.get_info_classes(self.path_cls) # get classes info
-        self.robot_name = "girona500"
-        self.slam_name = "multi_robot_slamon"
+        self.robot_name = robot_name
+        self.slam_name = slam_name
 
         self.loop = 0
 
@@ -843,9 +844,13 @@ class Pointcloud_Seg:
 
 
 if __name__ == '__main__':
+
     try:
-        rospy.init_node('seg_pc')
-        Pointcloud_Seg(rospy.get_name())
+        # Global variables
+        robot_name = "girona500"
+        slam_name = "multi_robot_slamon"
+        rospy.init_node(f"/{robot_name}/seg_pc")
+        Pointcloud_Seg(rospy.get_name(), robot_name, slam_name)
 
         rospy.spin()
     except rospy.ROSInterruptException:
