@@ -77,9 +77,9 @@ def get_info_map(info_world):
     info_valves_world_list = info_world[2]
     pipe_inst_world_list = info_world[3]
 
-    merge_list_all = find_pipe_groups(info_pipes_world_list, threshold=0.10, check_near_func=check_near)
+    pipe_merge_list_all = find_pipe_groups(info_pipes_world_list, threshold=0.10, check_near_func=check_near)
 
-    grouped_indices = set(i for merge_list in merge_list_all for i in merge_list)
+    grouped_indices = set(i for merge_list in pipe_merge_list_all for i in merge_list)
     all_indices = set(range(len(info_pipes_world_list)))
     isolated = sorted(all_indices - grouped_indices)
 
@@ -88,10 +88,11 @@ def get_info_map(info_world):
         new_pipe.append(1)                                          # count 1
         info_pipes_map_list.append(new_pipe)
 
-    for merge_list in merge_list_all:
+    for pipe_merge_list in pipe_merge_list_all:
         inst_idx_list = list()   
-        for i in merge_list:
-            inst_idx_list.append(info_pipes_world_list[i][2])
+        for pipe in pipe_merge_list:
+            for chain in pipe[0]:
+                inst_idx_list.append(info_pipes_world_list[i][3])
 
         merge_inst_idx_list = sorted({item for sublist in inst_idx_list for item in sublist})
 
