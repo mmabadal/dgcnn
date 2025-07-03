@@ -94,7 +94,7 @@ def get_info_map(info_world):
     merge_list_all = find_pipe_groups(info_pipes_world_list, threshold=0.10, check_near_func=check_near)
 
     grouped_indices = set(i for merge_list in merge_list_all for i in merge_list)
-    all_indices = set(range(len(pipes)))
+    all_indices = set(range(len(info_pipes_world_list)))
     isolated = sorted(all_indices - grouped_indices)
 
     for i in isolated:
