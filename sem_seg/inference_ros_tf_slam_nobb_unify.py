@@ -97,17 +97,17 @@ class Pointcloud_Seg:
         self.model_path = os.path.join(self.train_path, "model.ckpt")         # path to model         //PARAM
         self.path_cls =  os.path.join(self.train_path, "cls.txt")             # path to clases info   //PARAM
         self.classes, self.labels, self.label2color = indoor3d_util.get_info_classes(self.path_cls) # get classes info
-        robot_name = "girona501"
-        slam_name = "multi_robot_slamon"
+        self.robot_name = "girona500"
+        self.slam_name = "multi_robot_slamon"
 
         self.loop = 0
 
         self.out = True
         self.print = True
         self.time = True
-        self.robot_id = rospy.get_param(f"/{robot_name}/{slam_name}/robot_id", 0)
-        self.path = rospy.get_param(f"/{robot_name}/{slam_name}/working_path", "../out")
-        self.path_out = os.path.join(self.path, "pipes")
+        self.robot_id = rospy.get_param(f"/{self.robot_name}/{self.slam_name}/robot_id", 0)
+        self.path = rospy.get_param(f"/{self.robot_name}/{self.slam_name}/working_path", "../out")
+        self.path_out = os.path.join(self.path, f"pipes_{self.robot_id}")
         self.path_graph = os.path.join(self.path, f"keyframes_poses_{self.robot_id}.txt")
 
         if not os.path.exists(self.path_out):
@@ -123,26 +123,26 @@ class Pointcloud_Seg:
         self.lock = False
 
         # set subscribers
-        pc_sub = message_filters.Subscriber(f"/{robot_name}/{slam_name}_map/keycloud", PointCloud2)      # //PARAM
-        odom_sub = message_filters.Subscriber(f"/{robot_name}/{slam_name}_map/robot_map", Odometry)      # //PARAM
+        pc_sub = message_filters.Subscriber(f"/{self.robot_name}/{self.slam_name}_map/keycloud", PointCloud2)      # //PARAM
+        odom_sub = message_filters.Subscriber(f"/{self.robot_name}/{self.slam_name}_map/robot_map", Odometry)      # //PARAM
 
         ts_pc_odom = message_filters.ApproximateTimeSynchronizer([pc_sub, odom_sub], queue_size=10, slop=0.001)
         ts_pc_odom.registerCallback(self.cb_pc)
 
-        if "multi_" in slam_name:
-            loop_sub = rospy.Subscriber(f"/{robot_name}/{slam_name}_map/intra_loop_closure_num", Int32, self.cb_loop)
+        if "multi_" in self.slam_name:
+            loop_sub = rospy.Subscriber(f"/{self.robot_name}/{self.slam_name}_map/intra_loop_closure_num", Int32, self.cb_loop)
         else:
-            loop_sub = rospy.Subscriber(f"/{robot_name}/{slam_name}_map/loop_closure_num", Int32, self.cb_loop)
+            loop_sub = rospy.Subscriber(f"/{self.robot_name}/{self.slam_name}_map/loop_closure_num", Int32, self.cb_loop)
 
         chart_sub = rospy.Subscriber("/multi_robot_slamon_map/inter_robot_chart", Chart, self.cb_chart)
 
         # Set class image publishers
-        self.pub_pc_base = rospy.Publisher(f"/{robot_name}/{slam_name}_map/points2_base", PointCloud2, queue_size=4)
-        self.pub_pc_seg = rospy.Publisher(f"/{robot_name}/{slam_name}_map/points2_seg", PointCloud2, queue_size=4)
-        self.pub_pc_inst = rospy.Publisher(f"/{robot_name}/{slam_name}_map/points2_inst", PointCloud2, queue_size=4)
-        self.pub_pc_info = rospy.Publisher(f"/{robot_name}/{slam_name}_map/points2_info", PointCloud2, queue_size=4)
-        self.pub_pc_info_world = rospy.Publisher(f"/{robot_name}/{slam_name}_map/points2_info_world", PointCloud2, queue_size=4)
-        self.pub_pc_info_slam_map = rospy.Publisher(f"/{robot_name}/{slam_name}_map/points2_info_slam_map", PointCloud2, queue_size=4)
+        self.pub_pc_base = rospy.Publisher(f"/{self.robot_name}/{self.slam_name}_map/points2_base", PointCloud2, queue_size=4)
+        self.pub_pc_seg = rospy.Publisher(f"/{self.robot_name}/{self.slam_name}_map/points2_seg", PointCloud2, queue_size=4)
+        self.pub_pc_inst = rospy.Publisher(f"/{self.robot_name}/{self.slam_name}_map/points2_inst", PointCloud2, queue_size=4)
+        self.pub_pc_info = rospy.Publisher(f"/{self.robot_name}/{self.slam_name}_map/points2_info", PointCloud2, queue_size=4)
+        self.pub_pc_info_world = rospy.Publisher(f"/{self.robot_name}/{self.slam_name}_map/points2_info_world", PointCloud2, queue_size=4)
+        self.pub_pc_info_slam_map = rospy.Publisher(f"/{self.robot_name}/{self.slam_name}_map/points2_info_slam_map", PointCloud2, queue_size=4)
 
         # Set segmentation timer
 
@@ -157,30 +157,48 @@ class Pointcloud_Seg:
         if self.robot_id != chart.receiver:
             rospy.loginfo("msg is not for me")
             return
-
         rospy.loginfo("msg is for me")
+
+        # Split into text and number.
+        prefix = ''.join(filter(str.isalpha, self.robot_name))
+        number = ''.join(filter(str.isdigit, self.robot_name))
+
+        # Modify number.
+        remote_number = int(number) + (chart.emitter - self.robot_id)
+
+        # Combine again.
+        remote_robot_name = f"{prefix}{remote_number}"
+
         if not chart.keyframe_stamps:
             rospy.loginfo("im asked to transfer pipe files")
-        #     path_local = "/home/user/pipe_files/"        # local folder path (with trailing slash)
-        #     path_remote = "/remote/path/pipe_files/"     # remote folder path (with trailing slash)
-        #     ip_remote = "192.168.1.20"                   # remote machine IP
-        #     user_remote = "username"                    # remote username
+            path_local = self.path_out + "/"
 
-        #     # Rsync command to transfer only *info.npy files
-        #     rsync_command = ["rsync", "-avz", "--progress", "--include=*/", "--include=*info.npy", "--exclude=*", path_local, f"{user_remote}@{ip_remote}:{path_remote}"]
+            # Get the working path of the other robot.
+            remote_working_path = rospy.get_param(f"/{remote_robot_name}/{self.slam_name}/working_path", "../out")
+            remote_path = os.path.join(remote_working_path, f"pipes_{self.robot_id}") + "/"
 
-        #     try:
-        #         rospy.loginfo(f"Starting rsync from {path_local} to {user_remote}@{ip_remote}:{path_remote}")
-        #         subprocess.check_call(rsync_command)
-        #         rospy.loginfo("Rsync transfer completed successfully")
-        #     except subprocess.CalledProcessError as e:
-        #         rospy.logerr(f"Rsync failed: {e}")
+            # Get the IP of the other robot.
+            remote_ip = rospy.get_param(f"/{remote_robot_name}/{self.slam_name}/ip", "192.168.1.178")
+
+            # Get the username of the other robot.
+            remote_username = rospy.get_param(f"/{remote_robot_name}/{self.slam_name}/username", "user")
+
+            # Rsync command to transfer only *info.npy files
+            rsync_command = ["rsync", "-avz", "--progress", "--include=*/", "--include=*info.npy", "--exclude=*", path_local, f"{remote_username}@{remote_ip}:{remote_path}"]
+
+            try:
+                rospy.loginfo(f"Starting rsync from {path_local} to {remote_username}@{remote_ip}:{remote_path}")
+                subprocess.check_call(rsync_command)
+                rospy.loginfo("Rsync transfer completed successfully")
+            except subprocess.CalledProcessError as e:
+                rospy.logerr(f"Rsync failed: {e}")
         
         else:
             rospy.loginfo("im asked to update a map")
-            # time.sleep(2)
-        #     self.update_positions(self.path_graph2, self.path_out2)            
-        #     self.get_map(self.path_out2)
+            time.sleep(10)
+            path_out_2 = os.path.join(self.path, f"pipes_{chart.emitter}")
+            self.update_positions(self.path_graph, path_out_2)            
+            self.get_map(path_out_2)
 
     def cb_pc(self, pc, odom):
         self.pc = pc
