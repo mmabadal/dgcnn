@@ -91,8 +91,8 @@ def get_info_map(info_world):
     for pipe_merge_list in pipe_merge_list_all:
         inst_idx_list = list()   
         for pipe in pipe_merge_list:
-            for chain in pipe[0]:
-                inst_idx_list.append(info_pipes_world_list[i][3])
+            for pipe_info in info_pipes_world_list[pipe][0]:
+                inst_idx_list.append(pipe_info[3])
 
         merge_inst_idx_list = sorted({item for sublist in inst_idx_list for item in sublist})
 
