@@ -263,8 +263,7 @@ if __name__ == "__main__":
 
             info_pipes_slam_list, info_connexions_slam_list, info_valves_slam_list, info_inst_pipe_slam_list = conversion_utils.array_to_info(info_array_world)
 
-
-            for i in range(len(info_pipes_slam_list)):                            # create a list of valve types, so when valver are merged, the final 
+            for i in range(len(info_pipes_slam_list)):                            # update pipe idx
                 old_idx = info_pipes_slam_list[i][3]
                 new_idx = [x + inst_idx for x in old_idx]
                 info_pipes_slam_list[i][3] = new_idx

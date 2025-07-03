@@ -746,6 +746,7 @@ class Pointcloud_Seg:
         map_count = 0
         map_count_target = 10       # each count_target clean map
         map_count_thr = 1
+        inst_idx = 0
 
         for file_name in natsorted(os.listdir(path_files)):
 
@@ -768,6 +769,13 @@ class Pointcloud_Seg:
 
                 info_array_slam = np.load(file_path)
                 info_pipes_slam_list, info_connexions_slam_list, info_valves_slam_list, info_inst_pipe_slam_list = conversion_utils.array_to_info(info_array_slam)
+            
+                for i in range(len(info_pipes_slam_list)):                            # update pipe idx
+                    old_idx = info_pipes_slam_list[i][3]
+                    new_idx = [x + inst_idx for x in old_idx]
+                    info_pipes_slam_list[i][3] = new_idx
+
+                inst_idx+=len(info_inst_pipe_slam_list)
 
                 for i in range(len(info_valves_slam_list)):                         # create a list of valve types, so when valver are merged, the final 
                     info_valves_slam_list[i].append([info_valves_slam_list[i][2]])  # type is the most common one in this list
@@ -778,16 +786,23 @@ class Pointcloud_Seg:
                 info_slam[3].extend(info_inst_pipe_slam_list)
                 
         info_slam_map = map_utils.get_info_map(info_slam)
-
-        if map_count%map_count_target==0:
-            info_slam_map = map_utils.clean_map(info_slam_map, map_count_thr)
-                    
+  
         path_out_slam_map = os.path.join(path_files, str(file_id) + "_" + str(file_stamp) + "_map.ply")
         conversion_utils.info_to_ply(info_slam_map, path_out_slam_map)
 
         path_out_slam_map = os.path.join(path_files, str(file_id) + "_" + str(file_stamp) + "_map.npy")
         array_slam_map = conversion_utils.info_to_array(info_slam_map)
         np.save(path_out_slam_map, array_slam_map)  
+
+        if map_count%map_count_target==0:
+            info_slam_map_clean = map_utils.clean_map(info_slam_map, map_count_thr)
+
+            path_out_slam_map_clean = os.path.join(path_files, str(file_id) + "_" + str(file_stamp) + "_map_clean.ply")
+            conversion_utils.info_to_ply(info_slam_map_clean, path_out_slam_map_clean)
+
+            path_out_slam_map_clean = os.path.join(path_files, str(file_id) + "_" + str(file_stamp) + "_map_clean.npy")
+            array_slam_map_clean = conversion_utils.info_to_array(info_slam_map_clean)
+            np.save(array_slam_map_clean, array_slam_map_clean)  
         
         if len(info_slam_map[0])!=0 or len(info_slam_map[0])!=0 or len(info_slam_map[0])!=0 or len(info_slam_map[0])!=0:
             info_slam_map_array = conversion_utils.info_to_array(info_slam_map)
