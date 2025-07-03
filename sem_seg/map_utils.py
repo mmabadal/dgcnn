@@ -93,80 +93,67 @@ def get_info_map(info_world):
 
     merge_list_all = find_pipe_groups(info_pipes_world_list, threshold=0.10, check_near_func=check_near)
 
-    del_list = list()
+    grouped_indices = set(i for group in groups for i in group)
+    all_indices = set(range(len(pipes)))
+    isolated = sorted(all_indices - grouped_indices)
 
-    for i, merge_list in enumerate(merge_list_all):
+    for i in isolated:
+        new_pipe = info_pipes_world_list[i]
+        new_pipe.append(1)                                          # count 1
+        info_pipes_map_list.append(new_pipe)
 
-        if len(merge_list) == 0:
-            new_pipe = info_pipes_world_list[i]
-            new_pipe.append(1)                                          # count 1
-            info_pipes_map_list.append(new_pipe)
-
-        else:
-            del_list = del_list + merge_list
-            skeleton_list = list()                                      # se hace con skeletons y no con inst pq inst es todo, skeleton es cada tuberia
+    for merge_list in enumerate(merge_list_all):
+        skeleton_list = list()                                      # se hace con skeletons y no con inst pq inst es todo, skeleton es cada tuberia
+        for i in merge_list:
             skeleton_list.append(info_pipes_world_list[i][0])
-            count = 0
-
-            for pipe_idx in merge_list:
-                skeleton_list.append(info_pipes_world_list[pipe_idx][0]) 
-                count = count + info_pipes_world_list[pipe_idx][4]
                 
-            skeleton_stack = np.vstack(skeleton_list)
-            count = count +1
+        skeleton_stack = np.vstack(skeleton_list)
 
-            new_inst_l1 = copy.deepcopy(skeleton_stack)
-            new_inst_r1 = copy.deepcopy(skeleton_stack)
-            new_inst_t1 = copy.deepcopy(skeleton_stack)
-            new_inst_b1 = copy.deepcopy(skeleton_stack)            
-            new_inst_l2 = copy.deepcopy(skeleton_stack)
-            new_inst_r2 = copy.deepcopy(skeleton_stack)
-            new_inst_t2 = copy.deepcopy(skeleton_stack)
-            new_inst_b2 = copy.deepcopy(skeleton_stack)
+        new_inst_l1 = copy.deepcopy(skeleton_stack)
+        new_inst_r1 = copy.deepcopy(skeleton_stack)
+        new_inst_t1 = copy.deepcopy(skeleton_stack)
+        new_inst_b1 = copy.deepcopy(skeleton_stack)            
+        new_inst_l2 = copy.deepcopy(skeleton_stack)
+        new_inst_r2 = copy.deepcopy(skeleton_stack)
+        new_inst_t2 = copy.deepcopy(skeleton_stack)
+        new_inst_b2 = copy.deepcopy(skeleton_stack)
 
-            for j in range(new_inst_l1.shape[0]):
-                new_inst_l1[j,0] = new_inst_l1[j,0]-0.040
-            for j in range(new_inst_r1.shape[0]):
-                new_inst_r1[j,0] = new_inst_r1[j,0]+0.040                   
-            for j in range(new_inst_t1.shape[0]):
-                new_inst_t1[j,1] = new_inst_t1[j,1]+0.040
-            for j in range(new_inst_b1.shape[0]):
-                new_inst_b1[j,1] = new_inst_b1[j,1]-0.040
-            for j in range(new_inst_l2.shape[0]):
-                new_inst_l2[j,0] = new_inst_l2[j,0]-0.020
-            for j in range(new_inst_r2.shape[0]):
-                new_inst_r2[j,0] = new_inst_r2[j,0]+0.020                   
-            for j in range(new_inst_t2.shape[0]):
-                new_inst_t2[j,1] = new_inst_t2[j,1]+0.020
-            for j in range(new_inst_b2.shape[0]):
-                new_inst_b2[j,1] = new_inst_b2[j,1]-0.020
+        for j in range(new_inst_l1.shape[0]):
+            new_inst_l1[j,0] = new_inst_l1[j,0]-0.040
+        for j in range(new_inst_r1.shape[0]):
+            new_inst_r1[j,0] = new_inst_r1[j,0]+0.040                   
+        for j in range(new_inst_t1.shape[0]):
+            new_inst_t1[j,1] = new_inst_t1[j,1]+0.040
+        for j in range(new_inst_b1.shape[0]):
+            new_inst_b1[j,1] = new_inst_b1[j,1]-0.040
+        for j in range(new_inst_l2.shape[0]):
+            new_inst_l2[j,0] = new_inst_l2[j,0]-0.020
+        for j in range(new_inst_r2.shape[0]):
+            new_inst_r2[j,0] = new_inst_r2[j,0]+0.020                   
+        for j in range(new_inst_t2.shape[0]):
+            new_inst_t2[j,1] = new_inst_t2[j,1]+0.020
+        for j in range(new_inst_b2.shape[0]):
+            new_inst_b2[j,1] = new_inst_b2[j,1]-0.020
 
-            new_inst = np.vstack((skeleton_stack, new_inst_l1, new_inst_r1, new_inst_t1, new_inst_b1, new_inst_l2, new_inst_r2, new_inst_t2, new_inst_b2))
-            new_inst = np.hstack((new_inst,new_inst))  # add fake colors
-            #print("NEW INST SHAPE: " + str(new_inst.shape))
+        new_inst = np.vstack((skeleton_stack, new_inst_l1, new_inst_r1, new_inst_t1, new_inst_b1, new_inst_l2, new_inst_r2, new_inst_t2, new_inst_b2))
+        new_inst = np.hstack((new_inst,new_inst))  # add fake colors
+        #print("NEW INST SHAPE: " + str(new_inst.shape))
 
-            # transform instance to o3d pointcloud
-            # new_inst_o3d = o3d.geometry.PointCloud()
-            # new_inst_o3d.points = o3d.utility.Vector3dVector(new_inst[:,0:3])
+        # transform instance to o3d pointcloud
+        # new_inst_o3d = o3d.geometry.PointCloud()
+        # new_inst_o3d.points = o3d.utility.Vector3dVector(new_inst[:,0:3])
 
-            info_pipe_map = get_info.get_info(new_inst, models=0, method="skeleton", close = 8) # get pipe instance info list( list( list(chain1, start1, end1, elbow_list1, vector_chain_list1), ...), list(connexions_points)) 
-            new_pipe = info_pipe_map[0][0]
+        info_pipe_map = get_info.get_info(new_inst, models=0, method="skeleton", close = 8) # get pipe instance info list( list( list(chain1, start1, end1, elbow_list1, vector_chain_list1), ...), list(connexions_points)) 
+        new_pipe = info_pipe_map[0][0]                             
+        # ------------------------
 
-            # proj skeleton - untested
-            old_skeleton = copy.deepcopy(skeleton_stack) 
-            new_skeleton = new_pipe[0]
+        new_pipe.append([0])               # TODO holder for belong inst, remove from everywhere??
+        new_pipe.append(len(merge_list))    # count is as many pipes have been merged
+        info_pipes_map_list.append(new_pipe)
 
-            proj_skeleton = get_info.proj_points(old_skeleton, new_skeleton, 0.4, 3)    # project skeleton
-            new_pipe[0] = proj_skeleton                               
-            # ------------------------
-
-            new_pipe.append([0])               # TODO holder for belong inst, remove from everywhere??
-            new_pipe.append(count)
-            info_pipes_map_list.append(new_pipe)
-
-    del_list = list(set(del_list))
-    for j in sorted(del_list, reverse=True):  # delete chains
-        del info_pipes_map_list[j]  
+    # del_list = list(set(del_list))
+    # for j in sorted(del_list, reverse=True):  # delete chains
+    #     del info_pipes_map_list[j]  
 
     for i, info_connexion_world in enumerate(info_connnexions_world_list):
         merged = False
