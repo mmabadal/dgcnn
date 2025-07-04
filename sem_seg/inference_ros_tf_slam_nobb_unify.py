@@ -804,30 +804,32 @@ class Pointcloud_Seg:
                 info_slam[1].extend(info_connexions_slam_list)
                 info_slam[2].extend(info_valves_slam_list)
                 info_slam[3].extend(info_inst_pipe_slam_list)
-                
-        info_slam_map = map_utils.get_info_map(info_slam)
-  
-        path_out_slam_map = os.path.join(path_files, str(file_id) + "_" + str(file_stamp) + "_map.ply")
-        conversion_utils.info_to_ply(info_slam_map, path_out_slam_map)
 
-        path_out_slam_map = os.path.join(path_files, str(file_id) + "_" + str(file_stamp) + "_map.npy")
-        array_slam_map = conversion_utils.info_to_array(info_slam_map)
-        np.save(path_out_slam_map, array_slam_map)  
+        if map_count>0:
 
-        if map_count%map_count_target==0:
-            info_slam_map_clean = map_utils.clean_map(info_slam_map, map_count_thr)
+            info_slam_map = map_utils.get_info_map(info_slam)
+    
+            path_out_slam_map = os.path.join(path_files, str(file_id) + "_" + str(file_stamp) + "_map.ply")
+            conversion_utils.info_to_ply(info_slam_map, path_out_slam_map)
 
-            path_out_slam_map_clean = os.path.join(path_files, str(file_id) + "_" + str(file_stamp) + "_map_clean.ply")
-            conversion_utils.info_to_ply(info_slam_map_clean, path_out_slam_map_clean)
+            path_out_slam_map = os.path.join(path_files, str(file_id) + "_" + str(file_stamp) + "_map.npy")
+            array_slam_map = conversion_utils.info_to_array(info_slam_map)
+            np.save(path_out_slam_map, array_slam_map)  
 
-            path_out_slam_map_clean = os.path.join(path_files, str(file_id) + "_" + str(file_stamp) + "_map_clean.npy")
-            array_slam_map_clean = conversion_utils.info_to_array(info_slam_map_clean)
-            np.save(array_slam_map_clean, array_slam_map_clean)  
-        
-        if len(info_slam_map[0])!=0 or len(info_slam_map[0])!=0 or len(info_slam_map[0])!=0 or len(info_slam_map[0])!=0:
-            info_slam_map_array = conversion_utils.info_to_array(info_slam_map)
-            pc_info_slam_map = self.array2pc_info(header, info_slam_map_array)
-            self.pub_pc_info_slam_map.publish(pc_info_slam_map)
+            if map_count%map_count_target==0:
+                info_slam_map_clean = map_utils.clean_map(info_slam_map, map_count_thr)
+
+                path_out_slam_map_clean = os.path.join(path_files, str(file_id) + "_" + str(file_stamp) + "_map_clean.ply")
+                conversion_utils.info_to_ply(info_slam_map_clean, path_out_slam_map_clean)
+
+                path_out_slam_map_clean = os.path.join(path_files, str(file_id) + "_" + str(file_stamp) + "_map_clean.npy")
+                array_slam_map_clean = conversion_utils.info_to_array(info_slam_map_clean)
+                np.save(array_slam_map_clean, array_slam_map_clean)  
+            
+            if len(info_slam_map[0])!=0 or len(info_slam_map[0])!=0 or len(info_slam_map[0])!=0 or len(info_slam_map[0])!=0:
+                info_slam_map_array = conversion_utils.info_to_array(info_slam_map)
+                pc_info_slam_map = self.array2pc_info(header, info_slam_map_array)
+                self.pub_pc_info_slam_map.publish(pc_info_slam_map)
 
     def quaternion_multiply(self, q0, q1):
         x0, y0, z0, w0 = q0
