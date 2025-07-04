@@ -161,29 +161,20 @@ class Pointcloud_Seg:
             return
         rospy.loginfo("msg is for me")
 
-        # Split into text and number.
-        prefix = ''.join(filter(str.isalpha, self.robot_name))
-        number = ''.join(filter(str.isdigit, self.robot_name))
-
-        # Modify number.
-        remote_number = int(number) + (chart.emitter - self.robot_id)
-
-        # Combine again.
-        remote_robot_name = f"{prefix}{remote_number}"
-
         if not chart.keyframe_stamps:
             rospy.loginfo("im asked to transfer pipe files")
+            
             path_local = self.path_out + "/"
 
             # Get the working path of the other robot.
-            remote_working_path = rospy.get_param(f"/{remote_robot_name}/{self.slam_name}/working_path", "../out")
+            remote_working_path = chart.w_path
             remote_path = os.path.join(remote_working_path, f"pipes_{self.robot_id}") + "/"
 
             # Get the IP of the other robot.
-            remote_ip = rospy.get_param(f"/{remote_robot_name}/{self.slam_name}/ip", "192.168.1.178")
+            remote_ip = chart.ip
 
             # Get the username of the other robot.
-            remote_username = rospy.get_param(f"/{remote_robot_name}/{self.slam_name}/username", "user")
+            remote_username = chart.username
 
             # Rsync command to transfer only *info.npy files
             rsync_command = ["rsync", "-avz", "--progress", "--include=*/", "--include=*info.npy", "--exclude=*", path_local, f"{remote_username}@{remote_ip}:{remote_path}"]
