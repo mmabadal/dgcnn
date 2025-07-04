@@ -1095,7 +1095,7 @@ def get_elbows(chain):
         for i in range(look_ahead, chain.shape[0]-look_ahead):      # from chain start to finish (with a offset of look_ahead points in both ends)
             vector1 = chain[i] - chain[i-look_ahead]                # vector from actual_point-look_ahead to actual_point
             vector2 = chain[i+look_ahead] - chain[i]                # vector from actual point to actual_point+look_ahead
-            angle = angle_between_vectors(vector1, vector2, 3)         # calculate angle between vectors
+            angle = angle_between_vectors(vector1, vector2, 2)         # calculate angle between vectors
             angle_list.append(angle)
 
         while 1:                                                    # always
