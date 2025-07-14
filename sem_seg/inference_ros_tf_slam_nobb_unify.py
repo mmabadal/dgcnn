@@ -190,7 +190,8 @@ class Pointcloud_Seg:
             rospy.loginfo("im asked to update a map")
             time.sleep(10)
             path_out_2 = os.path.join(self.path, f"pipes_{chart.emitter}")
-            self.update_positions(self.path_graph, path_out_2)            
+            path_graph_2 = os.path.join(self.path, f"keyframes_poses_merged_v2.txt")
+            self.update_positions(path_graph_2, path_out_2)            
             self.get_map(path_out_2)
 
     def cb_pc(self, pc, odom):
@@ -841,8 +842,8 @@ if __name__ == '__main__':
 
     try:
         # Global variables
-        robot_name = "girona500"
-        slam_name = "multi_robot_slamon"
+        robot_name = "girona501"
+        slam_name = "slamon"
         rospy.init_node(robot_name + "_seg_pc")
         Pointcloud_Seg(rospy.get_name(), robot_name, slam_name)
 
