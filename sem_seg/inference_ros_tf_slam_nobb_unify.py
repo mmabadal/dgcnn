@@ -110,8 +110,12 @@ class Pointcloud_Seg:
         self.time = True
         self.robot_id = rospy.get_param(f"/{self.robot_name}/{self.slam_name}/robot_id", 0)
         self.path = rospy.get_param(f"/{self.robot_name}/{self.slam_name}/working_path", os.path.join(self.package_path, "out"))
-        self.path_out = os.path.join(self.path, f"pipes_{self.robot_id}")
-        self.path_graph = os.path.join(self.path, f"keyframes_poses_{self.robot_id}.txt")
+        if "multi_" in self.slam_name:
+            self.path_out = os.path.join(self.path, f"pipes_{self.robot_id}")
+            self.path_graph = os.path.join(self.path, f"keyframes_poses_{self.robot_id}.txt")
+        else:
+            self.path_out = os.path.join(self.path, f"pipes")
+            self.path_graph = os.path.join(self.path, f"keyframes_poses.txt")
 
         if not os.path.exists(self.path_out):
             os.makedirs(self.path_out)
@@ -844,7 +848,7 @@ if __name__ == '__main__':
 
     try:
         # Global variables
-        robot_name = "girona501"
+        robot_name = "girona500"
         slam_name = "slamon"
         rospy.init_node(robot_name + "_seg_pc")
         Pointcloud_Seg(rospy.get_name(), robot_name, slam_name)

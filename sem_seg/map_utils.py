@@ -77,6 +77,10 @@ def get_info_map(info_world):
     info_valves_world_list = info_world[2]
     pipe_inst_world_list = info_world[3]
 
+    print(f"info_pipes_world_list:\n {info_pipes_world_list}\n")
+    print(f"type(info_pipes_world_list[0][0]):\n {type(info_pipes_world_list[0][0])}\n")
+    print(f"info_pipes_world_list[0][0]:\n {info_pipes_world_list[0][0]}\n")
+
     pipe_merge_list_all = find_pipe_groups(info_pipes_world_list, threshold=0.10, check_near_func=check_near)
 
     grouped_indices = set(i for merge_list in pipe_merge_list_all for i in merge_list)
@@ -188,6 +192,10 @@ def get_info_map(info_world):
         info_valves_map_list[i][3] = near_pipes_list                                # replace near pipes to valve info [central_point, vector, max_id, near_pipes]
 
     info_map = [info_pipes_map_list, info_connexions_map_list, info_valves_map_list, pipe_inst_map_list]
+
+    print(f"info_pipes_map_list:\n {info_pipes_map_list}\n")
+
+    print(f"info_connexions_map_list:\n {info_connexions_map_list}")
 
     return info_map
 
