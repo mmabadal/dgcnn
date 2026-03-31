@@ -77,10 +77,6 @@ def get_info_map(info_world):
     info_valves_world_list = info_world[2]
     pipe_inst_world_list = info_world[3]
 
-    print(f"info_pipes_world_list:\n {info_pipes_world_list}\n")
-    print(f"type(info_pipes_world_list[0][0]):\n {type(info_pipes_world_list[0][0])}\n")
-    print(f"info_pipes_world_list[0][0]:\n {info_pipes_world_list[0][0]}\n")
-
     pipe_merge_list_all = find_pipe_groups(info_pipes_world_list, threshold=0.10, check_near_func=check_near)
 
     grouped_indices = set(i for merge_list in pipe_merge_list_all for i in merge_list)
@@ -154,8 +150,8 @@ def get_info_map(info_world):
         merged = False
 
         for j, info_valve_map in enumerate(info_valves_map_list):
-            print(info_valves_map_list)
-            print("----")
+            # print(info_valves_map_list)
+            # print("----")
             dist = get_instances.get_distance(info_valve_world[0], info_valve_map[0], 2) 
             if dist < 0.15: # las valvulas tienen una longitud de 0.18
                 info_valves_map_list[j][0] = (info_valves_map_list[j][0] + info_valve_world[0])/2
@@ -169,7 +165,7 @@ def get_info_map(info_world):
                 info_valves_map_list[j][2] = new_type
 
                 merged = True
-                print(info_valves_map_list)
+                # print(info_valves_map_list)
 
                 break
         
@@ -194,10 +190,6 @@ def get_info_map(info_world):
     info_pipes_map_list_elongated = elongate_pipes(info_pipes_map_list, info_connexions_map_list, info_valves_map_list, 0.05, 0.10)
 
     info_map = [info_pipes_map_list_elongated, info_connexions_map_list, info_valves_map_list, pipe_inst_map_list]
-
-    print(f"info_pipes_map_list:\n {info_pipes_map_list}\n")
-
-    print(f"info_connexions_map_list:\n {info_connexions_map_list}")
 
     return info_map
 
@@ -229,7 +221,7 @@ def elongate_pipes(info_pipes_list, info_connexions_list, info_valves_list, elon
 
 def near_conn(point, info_connexions_list, thr_near):
     for info_connexion in info_connexions_list:
-        if np.linalg.norm(point[:2] - info_connexion[0, :2]) < thr_near:
+        if np.linalg.norm(point[:2] - info_connexion[0][:2]) < thr_near:
             return True
     return False
 
