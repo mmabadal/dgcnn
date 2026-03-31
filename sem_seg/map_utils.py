@@ -187,9 +187,43 @@ def get_info_map(info_world):
 
         info_valves_map_list[i][3] = near_pipes_list                                # replace near pipes to valve info [central_point, vector, max_id, near_pipes]
 
-    info_map = [info_pipes_map_list, info_connexions_map_list, info_valves_map_list, pipe_inst_map_list]
+    info_pipes_map_list_elongated = elongate_pipes(info_pipes_map_list, info_connexions_map_list, info_valves_map_list, 0.10, 0.10)
+
+    info_map = [info_pipes_map_list_elongated, info_connexions_map_list, info_valves_map_list, pipe_inst_map_list]
 
     return info_map
+
+
+def elongate_pipes(info_pipes_list, info_connexions_list, info_valves_list, elongation, thr_near):
+
+    for info_pipe in info_pipes_list:
+        start = info_pipe[0][0]
+        end = info_pipe[0][-1]
+
+        if not info_pipe[1]:   # no elbow
+            vector = info_pipe[2][0]
+            vector_length= np.linalg.norm(vector)
+            vector_unit = vector / vector_length
+            vector_elong = vector_unit * elongation
+
+            if start not near_conn(start,info_connexions_list,thr_near):
+                newstart = start-vector_elong
+                info_pipe[0]= np.concatenate([newstart,info_pipe[0]])   # new startpoint
+                info_pipe[2][0] = info_pipe[2][0]+vector_elong          # elongate vector
+
+            if end not near_conn(end,info_connexions_list,thr_near):
+                newend = end + vector_elong
+                info_pipe[0]= np.concatenate([info_pipe[0],newend])     # new endpoint
+                info_pipe[2][0] = info_pipe[2][0]+vector_elong          #elongate vector
+
+    return info_pipes_list
+        
+
+def near_conn(point, info_connexions_list, thr_near):
+    for info_connexion in info_connexions_list:
+        if np.linalg.norm(point - info_connexion[0]) < thr_near:
+            return True
+    return False
 
 
 def clean_map(info_map, count_thr):
