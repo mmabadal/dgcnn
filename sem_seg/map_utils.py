@@ -250,7 +250,7 @@ if __name__ == "__main__":
 
     for file in natsorted(os.listdir(path_in)):
 
-        if "_info_slam.npy" in file:
+        if "_info_map.npy" in file:
 
             print("\n\n")
             print("working on: " + file)

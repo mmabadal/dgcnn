@@ -47,8 +47,10 @@ class Pointcloud_Seg:
         self.gpu_index = 0          #                     //PARAM
         self.desired_points = int(20000/(128/self.points_sub))  # n of points to wich the received pc will be downsampled    //PARAM
 
+        self.package_path = os.path.expanduser("~/catkin_ws/src/dgcnn") # //PARAM
+
         # get valve matching targets
-        self.targets_path = "../valve_targets"      # //PARAM
+        self.targets_path = os.path.join(self.package_path, "valve_targets")      # //PARAM
         self.targets_list = list()
         for file_name in natsorted(os.listdir(self.targets_path)):
             target_path = os.path.join(self.targets_path, file_name)
@@ -90,10 +92,10 @@ class Pointcloud_Seg:
         self.min_p_v = 40 # 40 80 140   # minimum number of points to consider a blob as a valve    //PARAM
 
         # self.train_path = "RUNS/4_128_11_c9" # path to train
-        self.train_path = "../trained_models/12" # path to train
+        self.train_path = os.path.join(self.package_path, os.path.join("trained_models", "12")) # path to train
         # self.train_path = "../trained_models/overfit"
-        self.model_path = os.path.join(self.train_path, "model.ckpt")         # path to model         //PARAM
-        self.path_cls =  os.path.join(self.train_path, "cls.txt")             # path to clases info   //PARAM
+        self.model_path = os.path.join(self.train_path, "model.ckpt")          # path to model        //PARAM
+        self.path_cls =  os.path.join(self.train_path, "cls.txt")              # path to clases info  //PARAM
         self.classes, self.labels, self.label2color = indoor3d_util.get_info_classes(self.path_cls) # get classes info
         robot_name = "girona501"
         slam_name = "multi_robot_slamon"
@@ -104,7 +106,7 @@ class Pointcloud_Seg:
         self.print = True
         self.time = True
         robot_id = rospy.get_param(f"/{robot_name}/{slam_name}/robot_id", 0)
-        self.path = rospy.get_param(f"/{robot_name}/{slam_name}/working_path", "../out")
+        self.path = rospy.get_param(f"/{robot_name}/{slam_name}/working_path", os.path.join(self.package_path, "out"))
         self.path_out = os.path.join(self.path, "pipes")
         self.path_graph = os.path.join(self.path, f"keyframes_poses_{robot_id}.txt")
 
