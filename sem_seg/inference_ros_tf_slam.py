@@ -361,7 +361,7 @@ class Pointcloud_Seg:
 
                 conversion_utils.info_to_ply(info_list, path_out_info_ply)
               
-                path_out_world_info = os.path.join(self.path_out, str(header.stamp)+"_info_odom.ply")
+                path_out_world_info = os.path.join(self.path_out, str(header.stamp)+"_info_local.ply")
                 info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list = conversion_utils.array_to_info(info_array_world)
                 info_world = [info_pipes_world_list, info_connexions_world_list, info_valves_world_list, info_inst_pipe_world_list]
                 conversion_utils.info_to_ply(info_world, path_out_world_info)
