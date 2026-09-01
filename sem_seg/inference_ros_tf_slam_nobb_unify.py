@@ -523,6 +523,11 @@ class Pointcloud_Seg:
             instances_ref[i,4] = color[1]
             instances_ref[i,5] = color[2]
 
+        if instances_ref is not None: # if instances were found
+            fout_inst = open(os.path.join(self.path_out,  pc_id + "_" + str(header.stamp) + '_pred_inst_ref.obj'), 'w')
+            for i in range(instances_ref.shape[0]):
+                fout_inst.write('v %f %f %f %d %d %d %d %d\n' % (instances_ref[i,0], instances_ref[i,1], instances_ref[i,2], instances_ref[i,3], instances_ref[i,4], instances_ref[i,5], instances_ref[i,6], instances_ref[i,7]))
+
         pc_base = self.array2pc(header, pc_np_base)
         pc_seg = self.array2pc(header, pred_sub)
         pc_inst = self.array2pc(header, instances_ref)
@@ -827,7 +832,7 @@ class Pointcloud_Seg:
             if len(info_slam_map[0])!=0 or len(info_slam_map[0])!=0 or len(info_slam_map[0])!=0 or len(info_slam_map[0])!=0:
                 info_slam_map_array = conversion_utils.info_to_array(info_slam_map)
                 pc_info_slam_map = self.array2pc_info(header, info_slam_map_array)
-                self.pub_pc_info_slam_global.publish(pc_info_slam_map)
+                self.pub_pc_info_slam_map.publish(pc_info_slam_map)
 
     def quaternion_multiply(self, q0, q1):
         x0, y0, z0, w0 = q0
